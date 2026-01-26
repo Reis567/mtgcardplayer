@@ -11,326 +11,624 @@
             background: #0a0a12;
             color: #eee;
             min-height: 100vh;
+            overflow: hidden;
         }
         .game-container {
             display: grid;
-            grid-template-columns: 1fr 300px;
-            grid-template-rows: auto 1fr auto;
+            grid-template-rows: auto 1fr auto auto;
             height: 100vh;
-            gap: 10px;
-            padding: 10px;
+            gap: 6px;
+            padding: 6px;
         }
+
+        /* ===== HEADER ===== */
         .game-header {
-            grid-column: 1 / -1;
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: rgba(255,255,255,0.05);
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 6px 12px;
+            border-radius: 6px;
         }
-        .turn-info {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
+        .turn-info { display: flex; gap: 12px; align-items: center; font-size: 0.9rem; }
         .turn-info .turn { color: #e94560; font-weight: bold; }
         .turn-info .phase { color: #4ecdc4; }
         .turn-info .active { color: #ffc107; }
-        .connection-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-        }
-        .connection-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #c0392b;
-        }
+        .connection-status { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; }
+        .connection-dot { width: 8px; height: 8px; border-radius: 50%; background: #c0392b; }
         .connection-dot.connected { background: #27ae60; }
         .game-controls button {
-            padding: 8px 15px;
-            margin-left: 10px;
+            padding: 5px 10px;
+            margin-left: 6px;
             background: rgba(255,255,255,0.1);
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             color: white;
             cursor: pointer;
+            font-size: 0.8rem;
             transition: all 0.2s;
         }
         .game-controls button:hover { background: rgba(255,255,255,0.2); }
-        .game-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
         .game-controls button.primary { background: #e94560; }
-        .battlefield-area {
+
+        /* ===== PLAYERS GRID ===== */
+        .players-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            overflow-y: auto;
+            gap: 6px;
+            overflow: hidden;
+            min-height: 0;
         }
+        /* Dynamic grids based on player count */
+        .players-grid[data-players="2"] { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+        .players-grid[data-players="3"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        .players-grid[data-players="4"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        .players-grid[data-players="5"] { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; }
+        .players-grid[data-players="6"] { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; }
+        .players-grid[data-players="7"] { grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr 1fr; }
+        .players-grid[data-players="8"] { grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr 1fr; }
+
+        /* ===== PLAYER AREA ===== */
         .player-area {
-            background: rgba(255,255,255,0.03);
-            border-radius: 10px;
-            padding: 15px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
             border: 2px solid transparent;
-            position: relative;
             transition: border-color 0.3s;
+            position: relative;
         }
-        .player-area.active { border-color: #ffc107; }
-        .player-area.is-me { border-color: #e94560; }
+        .player-area.is-me { border-color: rgba(233, 69, 96, 0.3); }
+        .player-area.active-turn { border-color: #ffc107; }
+        .player-area.dead { opacity: 0.5; }
+        .player-area.drag-over-player {
+            border-color: #4ecdc4 !important;
+            background: rgba(78, 205, 196, 0.08);
+        }
+
         .player-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-        }
-        .player-name {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            gap: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 4px;
+            flex-shrink: 0;
         }
         .player-avatar {
-            width: 35px;
-            height: 35px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 0.85rem;
         }
-        .life-counter {
+        .player-info { flex: 1; min-width: 0; }
+        .player-info .name { font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-info .stats { display: flex; gap: 8px; font-size: 0.7rem; color: #888; }
+        .player-life {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 3px;
         }
-        .life-counter .life {
-            font-size: 1.5rem;
+        .player-life .life {
+            font-size: 1.1rem;
             font-weight: bold;
             color: #4ecdc4;
-            min-width: 40px;
+            min-width: 30px;
             text-align: center;
-            transition: all 0.3s;
         }
-        .life-counter .life.changed {
-            transform: scale(1.3);
-            color: #e94560;
-        }
-        .life-counter button {
-            width: 28px;
-            height: 28px;
+        .player-life button {
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             border: none;
             background: rgba(255,255,255,0.1);
             color: white;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 0.85rem;
+            line-height: 1;
         }
-        .life-counter button:hover { background: rgba(255,255,255,0.2); }
-        .zone {
-            margin-top: 10px;
-            min-height: 60px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            padding: 8px;
+        .player-life button:hover { background: rgba(255,255,255,0.2); }
+
+        .player-zones-mini {
+            display: flex;
+            gap: 4px;
+            font-size: 0.65rem;
+            margin-left: auto;
         }
-        .zone-label {
-            font-size: 0.75rem;
-            color: #888;
-            margin-bottom: 5px;
+        .mini-zone {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 5px;
+            border-radius: 3px;
+            cursor: pointer;
         }
-        .zone-cards {
+        .mini-zone:hover { background: rgba(255,255,255,0.1); }
+
+        /* ===== BATTLEFIELD ===== */
+        .player-battlefield {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-height: 0;
+            overflow-y: auto;
+        }
+        .battlefield-row {
+            min-height: 45px;
+            border-radius: 4px;
+            padding: 3px 6px;
+            position: relative;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .battlefield-row.drag-over {
+            background: rgba(78, 205, 196, 0.15) !important;
+            outline: 2px dashed #4ecdc4;
+        }
+        .creatures-row { background: rgba(233, 69, 96, 0.06); }
+        .enchantments-row { background: rgba(78, 205, 196, 0.06); }
+        .lands-row { background: rgba(255, 193, 7, 0.06); }
+        .row-label {
+            position: absolute;
+            top: 2px;
+            left: 6px;
+            font-size: 0.55rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .cards-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 4px;
+            padding-top: 12px;
+            min-height: 30px;
+            align-content: flex-start;
         }
-        .card {
-            width: 70px;
-            height: 98px;
-            border-radius: 5px;
-            overflow: hidden;
+
+        /* ===== BOTTOM ZONES + COMMAND ===== */
+        .my-zones-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: flex-end;
+            padding: 6px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        .zone-stack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             cursor: pointer;
             position: relative;
             transition: transform 0.2s;
-            border: 2px solid transparent;
         }
-        .card:hover { transform: scale(1.05); z-index: 10; }
-        .card.tapped { transform: rotate(90deg); margin: 10px; }
-        .card.selected { border-color: #e94560; }
-        .card.commander { border-color: #ffc107; }
-        .card img {
+        .zone-stack:hover { transform: translateY(-2px); }
+        .stack-visual {
+            position: relative;
+            width: 45px;
+            height: 63px;
+        }
+        .card-back {
+            position: absolute;
+            width: 45px;
+            height: 63px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #333;
+            border-radius: 3px;
+        }
+        .card-back.offset-1 { top: 2px; left: 2px; }
+        .card-back.offset-2 { top: 4px; left: 4px; }
+        .zone-count {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+        .zone-label {
+            margin-top: 3px;
+            font-size: 0.6rem;
+            color: #777;
+        }
+        .graveyard-zone .top-card,
+        .exile-zone .top-card {
+            width: 45px;
+            height: 63px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .graveyard-zone .top-card img,
+        .exile-zone .top-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .card .counters {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            background: rgba(0,0,0,0.8);
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 0.7rem;
-        }
-        .card-placeholder {
-            width: 70px;
-            height: 98px;
-            background: rgba(255,255,255,0.05);
+        .command-zone-stack {
+            border: 2px dashed #e94560;
+            padding: 4px;
             border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #555;
-            font-size: 0.75rem;
-        }
-        .sidebar {
+            min-width: 55px;
+            min-height: 70px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            align-items: center;
+        }
+        .command-zone-stack .commanders-container {
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .command-zone-stack .card { width: 45px; height: 63px; }
+
+        /* ===== MY HAND ===== */
+        .my-hand-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px 6px 0 0;
+            padding: 8px;
+            border-top: 2px solid #e94560;
+            flex-shrink: 0;
+        }
+        .my-hand-container h3 { margin-bottom: 6px; font-size: 0.8rem; }
+        .hand-cards {
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .hand-cards .card {
+            width: 80px;
+            height: 112px;
+            cursor: grab;
+            transition: transform 0.2s, margin 0.2s;
+        }
+        .hand-cards .card:hover {
+            transform: translateY(-12px) scale(1.06);
+            z-index: 100;
+        }
+        .hand-cards .card.dragging { opacity: 0.5; cursor: grabbing; }
+
+        /* ===== SIDEBAR (Chat/Log) ===== */
+        .sidebar-toggle {
+            position: fixed;
+            top: 50px;
+            right: 10px;
+            z-index: 100;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 260px;
+            height: 100vh;
+            background: rgba(10, 10, 18, 0.98);
+            border-left: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            z-index: 200;
+            padding: 8px;
+        }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-close {
+            align-self: flex-end;
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 1.2rem;
         }
         .chat-panel {
             background: rgba(255,255,255,0.03);
-            border-radius: 10px;
-            padding: 15px;
-            max-height: 200px;
+            border-radius: 6px;
+            padding: 8px;
+            max-height: 160px;
             display: flex;
             flex-direction: column;
+            margin-bottom: 8px;
         }
-        .chat-panel h3 { margin-bottom: 10px; font-size: 0.9rem; color: #888; }
+        .chat-panel h3 { margin-bottom: 6px; font-size: 0.75rem; color: #888; }
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            margin-bottom: 10px;
-            max-height: 100px;
+            margin-bottom: 6px;
+            max-height: 70px;
         }
-        .chat-message {
-            font-size: 0.8rem;
-            padding: 3px 0;
-        }
+        .chat-message { font-size: 0.7rem; padding: 2px 0; }
         .chat-message .sender { color: #4ecdc4; }
-        .chat-input-container {
-            display: flex;
-            gap: 5px;
-        }
+        .chat-input-container { display: flex; gap: 4px; }
         .chat-input-container input {
             flex: 1;
-            padding: 8px;
+            padding: 5px;
             border: none;
-            border-radius: 5px;
+            border-radius: 3px;
             background: rgba(255,255,255,0.1);
             color: white;
+            font-size: 0.75rem;
         }
         .chat-input-container button {
-            padding: 8px 15px;
+            padding: 5px 8px;
             border: none;
-            border-radius: 5px;
+            border-radius: 3px;
             background: #e94560;
             color: white;
             cursor: pointer;
+            font-size: 0.75rem;
         }
         .log-panel {
             flex: 1;
             background: rgba(255,255,255,0.03);
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 6px;
+            padding: 8px;
             overflow-y: auto;
         }
-        .log-panel h3 { margin-bottom: 10px; font-size: 0.9rem; color: #888; }
+        .log-panel h3 { margin-bottom: 6px; font-size: 0.75rem; color: #888; }
         .log-entry {
-            font-size: 0.8rem;
-            padding: 3px 0;
+            font-size: 0.7rem;
+            padding: 2px 0;
             border-bottom: 1px solid rgba(255,255,255,0.05);
-            animation: fadeIn 0.3s ease;
         }
         .log-entry .turn-num { color: #e94560; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        /* ===== CARDS ===== */
+        .card {
+            width: 50px;
+            height: 70px;
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.15s;
+            border: 2px solid transparent;
         }
-        .my-hand {
-            grid-column: 1;
-            background: rgba(255,255,255,0.05);
+        .card:hover { transform: scale(1.08); z-index: 10; }
+        .card.tapped { transform: rotate(90deg); margin: 6px 10px; }
+        .card.tapped:hover { transform: rotate(90deg) scale(1.08); }
+        .card.selected { border-color: #e94560; box-shadow: 0 0 8px rgba(233, 69, 96, 0.5); }
+        .card.commander { border-color: #ffc107; }
+        .card.dragging { opacity: 0.4; }
+        .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        .card .counters {
+            position: absolute;
+            bottom: 1px;
+            right: 1px;
+            background: rgba(0,0,0,0.85);
+            padding: 1px 3px;
+            border-radius: 2px;
+            font-size: 0.5rem;
+        }
+
+        /* ===== SELECTION BOX ===== */
+        .selection-box {
+            position: fixed;
+            border: 2px dashed #e94560;
+            background: rgba(233, 69, 96, 0.15);
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+
+        /* ===== CONTEXT MENU ===== */
+        .context-menu {
+            position: fixed;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 2000;
+            min-width: 150px;
+            overflow: hidden;
+            display: none;
+        }
+        .context-menu.show { display: block; }
+        .context-menu-item {
+            padding: 7px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .context-menu-item:hover { background: rgba(233, 69, 96, 0.2); }
+        .context-menu-item.disabled { opacity: 0.5; cursor: not-allowed; }
+        .context-menu-divider { height: 1px; background: #333; margin: 3px 0; }
+
+        /* ===== ZONE VIEWER MODAL ===== */
+        .zone-viewer-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .zone-viewer-modal.show { display: flex; }
+        .zone-viewer-content {
+            background: #16213e;
             border-radius: 10px;
             padding: 15px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow: auto;
         }
-        .my-hand h3 { margin-bottom: 10px; font-size: 0.9rem; }
-        .hand-cards {
+        .zone-viewer-header {
             display: flex;
-            gap: 5px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .zone-viewer-header button {
+            background: #333;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .zone-viewer-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .zone-viewer-cards .card { width: 90px; height: 126px; }
+
+        /* ===== SCRY MODAL ===== */
+        .scry-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .scry-modal.show { display: flex; }
+        .scry-content {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            max-width: 90vw;
+        }
+        .scry-content h3 { margin-bottom: 12px; }
+        .scry-cards {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 12px 0;
             flex-wrap: wrap;
         }
-        .hand-cards .card { width: 100px; height: 140px; }
+        .scry-cards .card { width: 100px; height: 140px; cursor: grab; }
+        .scry-zones {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 12px 0;
+        }
+        .scry-zone {
+            min-width: 120px;
+            min-height: 70px;
+            border: 2px dashed #444;
+            border-radius: 6px;
+            padding: 8px;
+            transition: all 0.2s;
+        }
+        .scry-zone.drag-over { border-color: #4ecdc4; background: rgba(78, 205, 196, 0.1); }
+        .scry-zone span { font-size: 0.75rem; color: #888; display: block; margin-bottom: 6px; }
+        .scry-zone .scry-cards-list { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+        .scry-zone .card { width: 50px; height: 70px; }
+        .scry-content .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+        .scry-content .btn.primary { background: #e94560; color: white; }
+
+        /* ===== REVEAL OVERLAY ===== */
+        .reveal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .reveal-overlay.show { display: flex; animation: fadeIn 0.3s; }
+        .reveal-overlay img {
+            max-height: 50vh;
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(233, 69, 96, 0.5);
+        }
+        .reveal-overlay p { margin-top: 12px; font-size: 1rem; color: #fff; }
+
+        /* ===== CARD MODAL ===== */
         .card-modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.9);
             z-index: 1000;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            gap: 20px;
+            gap: 12px;
         }
         .card-modal.show { display: flex; }
-        .card-modal img { max-height: 70vh; border-radius: 15px; }
-        .card-modal .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .card-modal img { max-height: 60vh; border-radius: 10px; }
+        .card-modal .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
         .card-modal button {
-            padding: 10px 20px;
+            padding: 7px 14px;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
         .card-modal .close { background: #333; color: white; }
         .card-modal .action-btn { background: #e94560; color: white; }
-        .command-zone {
-            border: 2px dashed #e94560;
-        }
+
+        /* ===== OVERLAYS ===== */
         .dead-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.7);
             display: flex;
             align-items: center;
             justify-content: center;
             color: #e94560;
             font-weight: bold;
-            border-radius: 10px;
+            font-size: 0.9rem;
+            border-radius: 6px;
             z-index: 5;
         }
         .winner-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.9);
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             z-index: 2000;
         }
-        .winner-overlay h1 { color: #ffc107; font-size: 3rem; margin-bottom: 20px; }
+        .winner-overlay.show { display: flex; }
+        .winner-overlay h1 { color: #ffc107; font-size: 2rem; margin-bottom: 12px; }
         .winner-overlay a {
-            padding: 15px 30px;
+            padding: 10px 20px;
             background: #e94560;
             color: white;
             text-decoration: none;
-            border-radius: 10px;
+            border-radius: 6px;
         }
         .loading-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.7);
             display: flex;
             align-items: center;
@@ -339,19 +637,52 @@
         }
         .loading-overlay.hidden { display: none; }
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255,255,255,0.1);
+            width: 35px;
+            height: 35px;
+            border: 3px solid rgba(255,255,255,0.1);
             border-top-color: #e94560;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes cardDraw {
+            from { transform: translateY(-40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes shuffle {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px) rotate(-1deg); }
+            75% { transform: translateX(2px) rotate(1deg); }
+        }
+        .card.drawing { animation: cardDraw 0.3s ease-out; }
+        .zone-stack.shuffling .card-back { animation: shuffle 0.1s ease-in-out 5; }
     </style>
 </head>
 <body>
     <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
+    </div>
+
+    <button class="sidebar-toggle" onclick="toggleSidebar()">Chat/Log</button>
+
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
+        <div class="chat-panel">
+            <h3>Chat</h3>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-container">
+                <input type="text" id="chatInput" placeholder="Mensagem..." onkeypress="if(event.key==='Enter') sendChat()">
+                <button onclick="sendChat()">Enviar</button>
+            </div>
+        </div>
+        <div class="log-panel">
+            <h3>Log</h3>
+            <div id="actionLog"></div>
+        </div>
     </div>
 
     <div class="game-container" id="gameContainer" style="display: none;">
@@ -366,114 +697,176 @@
                 <span id="connectionText">Conectando...</span>
             </div>
             <div class="game-controls">
-                <button onclick="sendAction('draw_card')">Comprar</button>
-                <button onclick="sendAction('next_phase')">Proxima Fase</button>
-                <button onclick="sendAction('next_turn')" class="primary">Passar Turno</button>
-                <button onclick="sendAction('shuffle_library')">Embaralhar</button>
-                <button onclick="if(confirm('Conceder a partida?')) sendAction('concede')" style="background:#c0392b;">Conceder</button>
+                <button onclick="sendAction('draw_card')" title="D">Comprar</button>
+                <button onclick="sendAction('next_phase')" title="N">Fase</button>
+                <button onclick="sendAction('next_turn')" class="primary" title="P">Passar</button>
+                <button onclick="if(confirm('Conceder?')) sendAction('concede')" style="background:#c0392b;">Conceder</button>
             </div>
         </div>
 
-        <div class="battlefield-area" id="battlefieldArea">
-            <!-- Players will be rendered here by JavaScript -->
-        </div>
+        <!-- Dynamic Players Grid -->
+        <div class="players-grid" id="playersGrid"></div>
 
-        <div class="sidebar">
-            <div class="chat-panel">
-                <h3>Chat</h3>
-                <div class="chat-messages" id="chatMessages"></div>
-                <div class="chat-input-container">
-                    <input type="text" id="chatInput" placeholder="Digite sua mensagem..." onkeypress="if(event.key==='Enter') sendChat()">
-                    <button onclick="sendChat()">Enviar</button>
+        <!-- Bottom Zones Row (Library, Graveyard, Exile, Command) -->
+        <div class="my-zones-row">
+            <div class="zone-stack library-zone" id="myLibrary"
+                 onclick="showLibraryMenu()" oncontextmenu="showLibraryContextMenu(event); return false;">
+                <div class="stack-visual">
+                    <div class="card-back"></div>
+                    <div class="card-back offset-1"></div>
+                    <div class="card-back offset-2"></div>
                 </div>
+                <span class="zone-count" id="libraryCount">0</span>
+                <span class="zone-label">Biblioteca</span>
             </div>
-            <div class="log-panel">
-                <h3>Log de Acoes</h3>
-                <div id="actionLog"></div>
+            <div class="zone-stack graveyard-zone" id="myGraveyard"
+                 onclick="showZoneViewer('graveyard')"
+                 ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                 ondrop="handleDropToMyZone(event, 'graveyard')">
+                <div class="top-card" id="graveyardTopCard"></div>
+                <span class="zone-count" id="graveyardCount">0</span>
+                <span class="zone-label">Cemiterio</span>
+            </div>
+            <div class="zone-stack exile-zone" id="myExile"
+                 onclick="showZoneViewer('exile')"
+                 ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                 ondrop="handleDropToMyZone(event, 'exile')">
+                <div class="top-card" id="exileTopCard"></div>
+                <span class="zone-count" id="exileCount">0</span>
+                <span class="zone-label">Exilio</span>
+            </div>
+            <div class="command-zone-stack" id="myCommandZone"
+                 ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                 ondrop="handleDropToMyZone(event, 'command')">
+                <div class="commanders-container" id="commanderCards"></div>
+                <span class="zone-label">Comando</span>
             </div>
         </div>
 
-        <div class="my-hand" id="myHandContainer">
+        <!-- My Hand -->
+        <div class="my-hand-container" id="myHandContainer">
             <h3>Sua Mao (<span id="handCount">0</span>)</h3>
             <div class="hand-cards" id="myHand"></div>
         </div>
     </div>
 
+    <!-- Selection Box for multi-select -->
+    <div class="selection-box" id="selectionBox"></div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div id="contextMenuItems"></div>
+    </div>
+
+    <!-- Zone Viewer Modal -->
+    <div class="zone-viewer-modal" id="zoneViewerModal">
+        <div class="zone-viewer-content">
+            <div class="zone-viewer-header">
+                <h3 id="zoneViewerTitle">Zona</h3>
+                <button onclick="closeZoneViewer()">Fechar</button>
+            </div>
+            <div class="zone-viewer-cards" id="zoneViewerCards"></div>
+        </div>
+    </div>
+
+    <!-- Scry Modal -->
+    <div class="scry-modal" id="scryModal">
+        <div class="scry-content">
+            <h3 id="scryTitle">Videncia</h3>
+            <div class="scry-cards" id="scryCards"></div>
+            <div class="scry-zones">
+                <div class="scry-zone" id="scryTop"
+                     ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                     ondrop="handleScryDrop(event, 'top')">
+                    <span>Topo da Biblioteca</span>
+                    <div class="scry-cards-list" id="scryTopCards"></div>
+                </div>
+                <div class="scry-zone" id="scryBottom"
+                     ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                     ondrop="handleScryDrop(event, 'bottom')">
+                    <span>Fundo da Biblioteca</span>
+                    <div class="scry-cards-list" id="scryBottomCards"></div>
+                </div>
+            </div>
+            <button class="btn primary" onclick="confirmScry()">Confirmar</button>
+            <button class="btn" style="background:#333;color:white;margin-left:8px;" onclick="closeScryModal()">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Reveal Overlay -->
+    <div class="reveal-overlay" id="revealOverlay">
+        <img id="revealedCardImage" src="" alt="">
+        <p id="revealedCardText"></p>
+    </div>
+
+    <!-- Card Modal -->
     <div class="card-modal" id="cardModal">
         <img id="modalImage" src="" alt="">
         <div class="actions" id="modalActions"></div>
     </div>
 
-    <div class="winner-overlay" id="winnerOverlay" style="display: none;">
+    <!-- Winner Overlay -->
+    <div class="winner-overlay" id="winnerOverlay">
         <h1 id="winnerText">Vencedor!</h1>
         <a id="lobbyLink" href="/lobby/">Voltar ao Lobby</a>
     </div>
 
     <script>
+        // ===== CONSTANTS =====
         const gameId = '{{ game.id }}';
         const myPlayerId = '{{ player.id }}';
         const mySeat = {{ game_player.seat_position }};
+        const myNickname = '{{ player.nickname }}';
         const csrfToken = '{{ csrf_token }}';
         const tabId = '{{ tab_id|default:"" }}';
 
+        // ===== STATE =====
         let socket = null;
         let gameState = null;
         let selectedCard = null;
+        let selectedCards = new Set(); // For multi-select
         let reconnectAttempts = 0;
         const maxReconnectAttempts = 5;
+        let draggedCard = null;
+        let draggedCardData = null;
+        let scryCardsData = [];
 
-        // WebSocket Connection
+        // Selection box state
+        let isSelecting = false;
+        let selectionStart = { x: 0, y: 0 };
+
+        // ===== WEBSOCKET =====
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            // Pass tab_id and player_id through query string for correct identification
             const params = new URLSearchParams();
             if (tabId) params.set('tab', tabId);
             params.set('player_id', myPlayerId);
-            const queryStr = params.toString();
-            const wsUrl = `${protocol}//${window.location.host}/ws/game/${gameId}/?${queryStr}`;
-
+            const wsUrl = `${protocol}//${window.location.host}/ws/game/${gameId}/?${params.toString()}`;
             socket = new WebSocket(wsUrl);
 
             socket.onopen = function() {
-                console.log('WebSocket connected');
                 reconnectAttempts = 0;
                 updateConnectionStatus(true);
-                // Request initial state
                 socket.send(JSON.stringify({ action: 'get_state' }));
             };
 
-            socket.onclose = function(e) {
-                console.log('WebSocket closed', e);
+            socket.onclose = function() {
                 updateConnectionStatus(false);
-
-                // Try to reconnect
                 if (reconnectAttempts < maxReconnectAttempts) {
                     reconnectAttempts++;
                     setTimeout(connectWebSocket, 2000 * reconnectAttempts);
                 }
             };
 
-            socket.onerror = function(e) {
-                console.error('WebSocket error', e);
-                updateConnectionStatus(false);
-            };
-
-            socket.onmessage = function(e) {
-                const data = JSON.parse(e.data);
-                handleMessage(data);
-            };
+            socket.onerror = function() { updateConnectionStatus(false); };
+            socket.onmessage = function(e) { handleMessage(JSON.parse(e.data)); };
         }
 
         function updateConnectionStatus(connected) {
             const dot = document.getElementById('connectionDot');
             const text = document.getElementById('connectionText');
-            if (connected) {
-                dot.classList.add('connected');
-                text.textContent = 'Conectado';
-            } else {
-                dot.classList.remove('connected');
-                text.textContent = 'Desconectado';
-            }
+            dot.classList.toggle('connected', connected);
+            text.textContent = connected ? 'Conectado' : 'Desconectado';
         }
 
         function handleMessage(data) {
@@ -486,10 +879,22 @@
                     addChatMessage(data.sender, data.message);
                     break;
                 case 'action_result':
-                    if (!data.result.success) {
+                    if (!data.result.success && !data.result.private) {
                         alert(data.result.error || 'Erro ao executar acao');
                     }
                     break;
+                case 'private_action':
+                    handlePrivateAction(data);
+                    break;
+                case 'reveal':
+                    showRevealAnimation(data.card);
+                    break;
+            }
+        }
+
+        function handlePrivateAction(data) {
+            if (data.action === 'scry' || data.action === 'look_top') {
+                showScryModal(data.data.cards, data.action === 'scry');
             }
         }
 
@@ -506,11 +911,7 @@
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
             if (message && socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    action: 'chat',
-                    message: message,
-                    sender: '{{ player.nickname }}'
-                }));
+                socket.send(JSON.stringify({ action: 'chat', message, sender: myNickname }));
                 input.value = '';
             }
         }
@@ -524,129 +925,168 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // Render Functions
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // ===== RENDER =====
         function renderGame() {
             if (!gameState) return;
-
             document.getElementById('loadingOverlay').classList.add('hidden');
             document.getElementById('gameContainer').style.display = 'grid';
 
-            // Update header
             document.getElementById('turnNumber').textContent = `Turno ${gameState.turn_number}`;
             document.getElementById('currentPhase').textContent = gameState.phase_display;
             document.getElementById('activePlayer').textContent = `Vez de: ${gameState.active_player_name || '-'}`;
 
-            // Check for winner
             if (gameState.status === 'finished' && gameState.winner_id) {
                 const winner = gameState.players.find(p => p.id === gameState.winner_id);
                 if (winner) {
                     document.getElementById('winnerText').textContent = `${winner.nickname} venceu!`;
-                    document.getElementById('winnerOverlay').style.display = 'flex';
+                    document.getElementById('winnerOverlay').classList.add('show');
                 }
             }
 
-            // Render players
-            renderPlayers();
-
-            // Render my hand
+            renderPlayersGrid();
+            renderMyZones();
             renderMyHand();
-
-            // Render action log
             renderActionLog();
         }
 
-        function renderPlayers() {
-            const container = document.getElementById('battlefieldArea');
-            container.innerHTML = '';
+        function renderPlayersGrid() {
+            const container = document.getElementById('playersGrid');
+            const playerCount = gameState.players.length;
+            container.setAttribute('data-players', playerCount);
 
-            for (const player of gameState.players) {
+            // Sort players: me first (at bottom visually), then others by seat
+            const sortedPlayers = [...gameState.players].sort((a, b) => {
+                if (a.seat_position === mySeat) return 1; // Me goes last (renders at bottom)
+                if (b.seat_position === mySeat) return -1;
+                return a.seat_position - b.seat_position;
+            });
+
+            container.innerHTML = sortedPlayers.map(player => {
+                const isMe = player.seat_position === mySeat;
                 const zones = gameState.zones_data[player.seat_position];
                 const isActive = player.seat_position === gameState.active_player_seat;
-                const isMe = player.seat_position === mySeat;
 
-                const playerDiv = document.createElement('div');
-                playerDiv.className = `player-area ${isActive ? 'active' : ''} ${isMe ? 'is-me' : ''}`;
-                playerDiv.dataset.seat = player.seat_position;
-
-                let html = '';
-
-                if (!player.is_alive) {
-                    html += '<div class="dead-overlay">ELIMINADO</div>';
-                }
-
-                html += `
-                    <div class="player-header">
-                        <div class="player-name">
-                            <div class="player-avatar" style="background-color: ${player.avatar_color}">${player.nickname.charAt(0).toUpperCase()}</div>
-                            <span>${player.nickname}</span>
-                        </div>
-                        <div class="life-counter">
-                            <button onclick="changeLife(${player.seat_position}, -1)">-</button>
-                            <span class="life" id="life-${player.seat_position}">${player.life}</span>
-                            <button onclick="changeLife(${player.seat_position}, 1)">+</button>
-                        </div>
-                    </div>
-                `;
-
-                // Command zone
-                html += `
-                    <div class="zone command-zone">
-                        <div class="zone-label">Zona de Comando</div>
-                        <div class="zone-cards">
-                            ${renderCards(zones.command, 'command')}
-                        </div>
-                    </div>
-                `;
-
-                // Battlefield
-                html += `
-                    <div class="zone">
-                        <div class="zone-label">Campo de Batalha (${zones.battlefield.length})</div>
-                        <div class="zone-cards">
-                            ${renderCards(zones.battlefield, 'battlefield')}
-                        </div>
-                    </div>
-                `;
-
-                // Graveyard, Exile, Library counts
-                html += `
-                    <div class="zone">
-                        <div class="zone-label">Cemiterio (${zones.graveyard.length}) | Exilio (${zones.exile.length}) | Biblioteca (${zones.library_count})</div>
-                        <div class="zone-cards">
-                            ${renderCards(zones.graveyard, 'graveyard', true)}
-                            ${renderCards(zones.exile, 'exile', true)}
-                        </div>
-                    </div>
-                `;
-
-                playerDiv.innerHTML = html;
-                container.appendChild(playerDiv);
-            }
+                return renderPlayerArea(player, zones, isMe, isActive);
+            }).join('');
         }
 
-        function renderCards(cards, zone, small = false) {
-            if (!cards || cards.length === 0) {
-                return zone === 'command' ? '<div class="card-placeholder">Vazio</div>' : '';
-            }
+        function renderPlayerArea(player, zones, isMe, isActive) {
+            const classes = ['player-area'];
+            if (isMe) classes.push('is-me');
+            if (isActive) classes.push('active-turn');
+            if (!player.is_alive) classes.push('dead');
 
+            const creatures = [], enchantments = [], lands = [];
+            zones.battlefield.forEach(card => {
+                const row = card.battlefield_row || getCardRow(card.type_line);
+                if (row === 'creatures') creatures.push(card);
+                else if (row === 'lands') lands.push(card);
+                else enchantments.push(card);
+            });
+
+            return `
+                <div class="${classes.join(' ')}" data-seat="${player.seat_position}"
+                     ondragover="handlePlayerDragOver(event, ${player.seat_position})"
+                     ondragleave="handlePlayerDragLeave(event)"
+                     ondrop="handlePlayerDrop(event, ${player.seat_position})">
+                    ${!player.is_alive ? '<div class="dead-overlay">ELIMINADO</div>' : ''}
+                    <div class="player-header">
+                        <div class="player-avatar" style="background-color: ${player.avatar_color || '#e94560'}">${player.nickname.charAt(0).toUpperCase()}</div>
+                        <div class="player-info">
+                            <div class="name">${player.nickname}${isMe ? ' (Voce)' : ''}</div>
+                            <div class="stats">
+                                <span title="Veneno">${player.poison_counters > 0 ? player.poison_counters + ' veneno' : ''}</span>
+                            </div>
+                        </div>
+                        <div class="player-life">
+                            <button onclick="changeLife(${player.seat_position}, -1)">-</button>
+                            <span class="life">${player.life}</span>
+                            <button onclick="changeLife(${player.seat_position}, 1)">+</button>
+                        </div>
+                        <div class="player-zones-mini">
+                            <span class="mini-zone" title="Biblioteca" onclick="event.stopPropagation();">${zones.library_count}</span>
+                            <span class="mini-zone" title="Mao">${zones.hand.length}</span>
+                            <span class="mini-zone" title="Cemiterio" onclick="showOpponentZone(${player.seat_position}, 'graveyard')">${zones.graveyard.length}</span>
+                            <span class="mini-zone" title="Exilio" onclick="showOpponentZone(${player.seat_position}, 'exile')">${zones.exile.length}</span>
+                        </div>
+                    </div>
+                    <div class="player-battlefield">
+                        <div class="battlefield-row creatures-row" data-row="creatures" data-seat="${player.seat_position}"
+                             ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
+                             ondrop="handleRowDrop(event, ${player.seat_position}, 'creatures')">
+                            <span class="row-label">Criaturas</span>
+                            <div class="cards-container">${renderBattlefieldCards(creatures, isMe)}</div>
+                        </div>
+                        <div class="battlefield-row enchantments-row" data-row="enchantments" data-seat="${player.seat_position}"
+                             ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
+                             ondrop="handleRowDrop(event, ${player.seat_position}, 'enchantments')">
+                            <span class="row-label">Encant/Artefatos</span>
+                            <div class="cards-container">${renderBattlefieldCards(enchantments, isMe)}</div>
+                        </div>
+                        <div class="battlefield-row lands-row" data-row="lands" data-seat="${player.seat_position}"
+                             ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
+                             ondrop="handleRowDrop(event, ${player.seat_position}, 'lands')">
+                            <span class="row-label">Terrenos</span>
+                            <div class="cards-container">${renderBattlefieldCards(lands, isMe)}</div>
+                        </div>
+                        ${zones.command.length > 0 ? `
+                        <div class="command-mini" style="display:flex;gap:3px;padding:3px;border-top:1px dashed #e94560;">
+                            ${zones.command.map(c => renderCommanderCard(c, isMe)).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCommanderCard(card, isMe) {
+            const draggable = isMe ? 'draggable="true"' : '';
+            const dragStart = isMe ? `ondragstart="handleDragStart(event, '${card.id}', 'command')"` : '';
+            const contextMenu = isMe ? `oncontextmenu="showCommandContextMenu(event, '${card.id}'); return false;"` : '';
+            return `
+                <div class="card commander" data-id="${card.id}" ${draggable}
+                     ${dragStart}
+                     ondblclick="${isMe ? `moveCard('${card.id}', 'battlefield')` : ''}"
+                     onclick="showCard('${card.id}', '${card.image_normal}', '${card.name}', 'command', ${isMe})"
+                     ${contextMenu}>
+                    <img src="${card.image_small}" alt="${card.name}">
+                </div>
+            `;
+        }
+
+        function getCardRow(typeLine) {
+            if (!typeLine) return 'enchantments';
+            const lower = typeLine.toLowerCase();
+            if (lower.includes('creature')) return 'creatures';
+            if (lower.includes('land')) return 'lands';
+            return 'enchantments';
+        }
+
+        function renderBattlefieldCards(cards, isMe) {
+            if (!cards.length) return '';
             return cards.map(card => {
-                const tappedClass = card.is_tapped ? 'tapped' : '';
-                const commanderClass = card.is_commander ? 'commander' : '';
-                const sizeStyle = small ? 'width:50px;height:70px;' : '';
-
                 let countersHtml = '';
                 if (card.counters && Object.keys(card.counters).length > 0) {
-                    const countersText = Object.entries(card.counters)
-                        .map(([k, v]) => `${k}:${v}`)
-                        .join(' ');
-                    countersHtml = `<div class="counters">${countersText}</div>`;
+                    const text = Object.entries(card.counters).filter(([k,v]) => v > 0).map(([k,v]) => `${k}:${v}`).join(' ');
+                    if (text) countersHtml = `<div class="counters">${text}</div>`;
                 }
+                const isSelected = selectedCards.has(card.id);
+                const draggable = isMe ? 'draggable="true"' : '';
+                const dragStart = isMe ? `ondragstart="handleDragStart(event, '${card.id}', 'battlefield')"` : '';
+                const dblClick = isMe ? `ondblclick="toggleTap('${card.id}')"` : '';
+                const contextMenu = isMe ? `oncontextmenu="showBattlefieldContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}); return false;"` : '';
 
                 return `
-                    <div class="card ${tappedClass} ${commanderClass}"
-                         data-id="${card.id}"
-                         onclick="showCard('${card.id}', '${card.image_normal}', '${card.name}', '${zone}')"
-                         style="${sizeStyle}">
+                    <div class="card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''}"
+                         data-id="${card.id}" ${draggable}
+                         ${dragStart}
+                         ${dblClick}
+                         onclick="handleCardClick(event, '${card.id}', '${card.image_normal}', '${card.name}', 'battlefield', ${isMe})"
+                         ${contextMenu}>
                         <img src="${card.image_small}" alt="${card.name}">
                         ${countersHtml}
                     </div>
@@ -654,20 +1094,54 @@
             }).join('');
         }
 
+        function renderMyZones() {
+            const zones = gameState.zones_data[mySeat];
+            if (!zones) return;
+
+            document.getElementById('libraryCount').textContent = zones.library_count;
+            document.getElementById('graveyardCount').textContent = zones.graveyard.length;
+            document.getElementById('exileCount').textContent = zones.exile.length;
+
+            const gravTop = document.getElementById('graveyardTopCard');
+            if (zones.graveyard.length > 0) {
+                const top = zones.graveyard[zones.graveyard.length - 1];
+                gravTop.innerHTML = `<img src="${top.image_small}" alt="${top.name}">`;
+            } else gravTop.innerHTML = '';
+
+            const exileTop = document.getElementById('exileTopCard');
+            if (zones.exile.length > 0) {
+                const top = zones.exile[zones.exile.length - 1];
+                exileTop.innerHTML = `<img src="${top.image_small}" alt="${top.name}">`;
+            } else exileTop.innerHTML = '';
+
+            // Commanders in the bottom zone (if not on battlefield)
+            document.getElementById('commanderCards').innerHTML = zones.command.map(c => `
+                <div class="card commander" data-id="${c.id}" draggable="true"
+                     ondragstart="handleDragStart(event, '${c.id}', 'command')"
+                     ondblclick="moveCard('${c.id}', 'battlefield')"
+                     onclick="showCard('${c.id}', '${c.image_normal}', '${c.name}', 'command', true)"
+                     oncontextmenu="showCommandContextMenu(event, '${c.id}'); return false;">
+                    <img src="${c.image_small}" alt="${c.name}">
+                </div>
+            `).join('');
+        }
+
         function renderMyHand() {
             const zones = gameState.zones_data[mySeat];
             const handCards = zones ? zones.hand : [];
-
             document.getElementById('handCount').textContent = handCards.length;
 
             const container = document.getElementById('myHand');
-            if (handCards.length === 0) {
-                container.innerHTML = '<div class="card-placeholder">Mao vazia</div>';
+            if (!handCards.length) {
+                container.innerHTML = '<div style="color:#555;font-size:0.8rem;">Mao vazia</div>';
                 return;
             }
 
             container.innerHTML = handCards.map(card => `
-                <div class="card" data-id="${card.id}" onclick="showCard('${card.id}', '${card.image_normal}', '${card.name}', 'hand')">
+                <div class="card" data-id="${card.id}" draggable="true"
+                     ondragstart="handleDragStart(event, '${card.id}', 'hand')"
+                     onclick="showCard('${card.id}', '${card.image_normal}', '${card.name}', 'hand', true)"
+                     oncontextmenu="showHandContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}); return false;">
                     <img src="${card.image_normal}" alt="${card.name}">
                 </div>
             `).join('');
@@ -676,52 +1150,434 @@
         function renderActionLog() {
             const container = document.getElementById('actionLog');
             if (!gameState.recent_actions) return;
-
             container.innerHTML = gameState.recent_actions.map(action => `
-                <div class="log-entry">
-                    <span class="turn-num">[T${action.turn_number}]</span>
-                    ${action.display_text}
-                </div>
+                <div class="log-entry"><span class="turn-num">[T${action.turn_number}]</span> ${action.display_text}</div>
             `).join('');
         }
 
-        // Card Modal
-        function showCard(objId, imageUrl, cardName, zone) {
-            selectedCard = { id: objId, zone: zone, name: cardName };
+        // ===== DRAG AND DROP =====
+        function handleDragStart(e, cardId, zone) {
+            draggedCard = cardId;
+            draggedCardData = { id: cardId, zone };
+            e.dataTransfer.setData('text/plain', cardId);
+            e.dataTransfer.effectAllowed = 'move';
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handlePlayerDragOver(e, targetSeat) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over-player');
+        }
+
+        function handlePlayerDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over-player');
+        }
+
+        function handlePlayerDrop(e, targetSeat) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over-player');
+            // Don't handle here if dropped on a row
+            if (e.target.closest('.battlefield-row')) return;
+
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+            if (!draggedCard) return;
+
+            // Move card to another player's battlefield
+            sendAction('move_card', {
+                object_id: draggedCard,
+                zone: 'battlefield',
+                target_seat: targetSeat
+            });
+
+            draggedCard = null;
+            draggedCardData = null;
+        }
+
+        function handleRowDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleRowDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleRowDrop(e, targetSeat, row) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.classList.remove('drag-over');
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+            document.querySelectorAll('.drag-over-player').forEach(el => el.classList.remove('drag-over-player'));
+
+            if (!draggedCard) return;
+
+            // Move card to specific row on target player's battlefield
+            sendAction('move_card', {
+                object_id: draggedCard,
+                zone: 'battlefield',
+                target_seat: targetSeat,
+                row: row
+            });
+
+            draggedCard = null;
+            draggedCardData = null;
+        }
+
+        function handleDropToMyZone(e, zone) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+
+            if (!draggedCard) return;
+            sendAction('move_card', { object_id: draggedCard, zone });
+            draggedCard = null;
+            draggedCardData = null;
+        }
+
+        // ===== CARD INTERACTIONS =====
+        function handleCardClick(e, cardId, imageUrl, cardName, zone, isMe) {
+            // If shift is held, toggle selection
+            if (e.shiftKey && isMe) {
+                e.stopPropagation();
+                if (selectedCards.has(cardId)) {
+                    selectedCards.delete(cardId);
+                } else {
+                    selectedCards.add(cardId);
+                }
+                renderGame();
+                return;
+            }
+            // Normal click shows card modal
+            showCard(cardId, imageUrl, cardName, zone, isMe);
+        }
+
+        function toggleTap(cardId) {
+            // If we have multiple selected cards and this is one of them, tap/untap all
+            if (selectedCards.size > 0 && selectedCards.has(cardId)) {
+                selectedCards.forEach(id => {
+                    sendAction('tap_card', { object_id: id });
+                });
+                selectedCards.clear();
+            } else {
+                sendAction('tap_card', { object_id: cardId });
+            }
+        }
+
+        // ===== MULTI-SELECT WITH DRAG =====
+        document.addEventListener('mousedown', function(e) {
+            // Only start selection if clicking on empty battlefield area
+            if (e.button !== 0) return;
+            if (e.target.closest('.card, .context-menu, .card-modal, button, input, .sidebar')) return;
+
+            const playerArea = e.target.closest('.player-area.is-me');
+            if (!playerArea) return;
+
+            isSelecting = true;
+            selectionStart = { x: e.clientX, y: e.clientY };
+            const box = document.getElementById('selectionBox');
+            box.style.left = e.clientX + 'px';
+            box.style.top = e.clientY + 'px';
+            box.style.width = '0px';
+            box.style.height = '0px';
+            box.style.display = 'block';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isSelecting) return;
+
+            const box = document.getElementById('selectionBox');
+            const x = Math.min(e.clientX, selectionStart.x);
+            const y = Math.min(e.clientY, selectionStart.y);
+            const w = Math.abs(e.clientX - selectionStart.x);
+            const h = Math.abs(e.clientY - selectionStart.y);
+
+            box.style.left = x + 'px';
+            box.style.top = y + 'px';
+            box.style.width = w + 'px';
+            box.style.height = h + 'px';
+        });
+
+        document.addEventListener('mouseup', function(e) {
+            if (!isSelecting) return;
+            isSelecting = false;
+
+            const box = document.getElementById('selectionBox');
+            const boxRect = box.getBoundingClientRect();
+            box.style.display = 'none';
+
+            // Only select if box is big enough
+            if (boxRect.width < 10 || boxRect.height < 10) return;
+
+            // Find all my cards in the selection box
+            const myArea = document.querySelector('.player-area.is-me');
+            if (!myArea) return;
+
+            const cards = myArea.querySelectorAll('.card[data-id]');
+            selectedCards.clear();
+
+            cards.forEach(card => {
+                const cardRect = card.getBoundingClientRect();
+                if (rectsIntersect(boxRect, cardRect)) {
+                    selectedCards.add(card.dataset.id);
+                }
+            });
+
+            renderGame();
+        });
+
+        function rectsIntersect(r1, r2) {
+            return !(r2.left > r1.right ||
+                     r2.right < r1.left ||
+                     r2.top > r1.bottom ||
+                     r2.bottom < r1.top);
+        }
+
+        // ===== CONTEXT MENUS =====
+        function showContextMenu(e, items) {
+            e.preventDefault();
+            hideContextMenu();
+            const menu = document.getElementById('contextMenu');
+            const container = document.getElementById('contextMenuItems');
+            container.innerHTML = items.map(item => {
+                if (item.divider) return '<div class="context-menu-divider"></div>';
+                return `<div class="context-menu-item" onclick="${item.action}">${item.label}</div>`;
+            }).join('');
+            menu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
+            menu.style.top = Math.min(e.clientY, window.innerHeight - menu.offsetHeight - 20) + 'px';
+            menu.classList.add('show');
+        }
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').classList.remove('show');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.context-menu')) hideContextMenu();
+        });
+
+        function showLibraryContextMenu(e) {
+            showContextMenu(e, [
+                { label: 'Comprar carta', action: "sendAction('draw_card'); hideContextMenu();" },
+                { divider: true },
+                { label: 'Ver topo (1)', action: "sendAction('look_top', {count: 1}); hideContextMenu();" },
+                { label: 'Ver topo (3)', action: "sendAction('look_top', {count: 3}); hideContextMenu();" },
+                { label: 'Videncia (Scry)...', action: "promptScry(); hideContextMenu();" },
+                { divider: true },
+                { label: 'Embaralhar', action: "sendAction('shuffle_library'); animateShuffle(); hideContextMenu();" },
+            ]);
+        }
+
+        function showLibraryMenu() {
+            showLibraryContextMenu({ clientX: window.innerWidth / 2, clientY: window.innerHeight / 2, preventDefault: () => {} });
+        }
+
+        function showHandContextMenu(e, card) {
+            showContextMenu(e, [
+                { label: 'Jogar no Campo', action: `moveCard('${card.id}', 'battlefield'); hideContextMenu();` },
+                { divider: true },
+                { label: 'Descartar', action: `moveCard('${card.id}', 'graveyard'); hideContextMenu();` },
+                { label: 'Exilar', action: `moveCard('${card.id}', 'exile'); hideContextMenu();` },
+                { divider: true },
+                { label: 'Revelar para todos', action: `sendAction('reveal_card', {object_id: '${card.id}'}); hideContextMenu();` },
+                { divider: true },
+                { label: 'Devolver ao topo', action: `sendAction('put_top', {object_id: '${card.id}'}); hideContextMenu();` },
+                { label: 'Devolver ao fundo', action: `sendAction('put_bottom', {object_id: '${card.id}'}); hideContextMenu();` },
+                { label: 'Embaralhar na biblioteca', action: `sendAction('shuffle_into', {object_id: '${card.id}'}); hideContextMenu();` },
+            ]);
+        }
+
+        function showBattlefieldContextMenu(e, card) {
+            const tapLabel = card.is_tapped ? 'Desvirar' : 'Virar';
+            const items = [
+                { label: tapLabel, action: `toggleTap('${card.id}'); hideContextMenu();` },
+            ];
+
+            // If multiple cards selected, add group tap/untap
+            if (selectedCards.size > 1) {
+                items.push({ label: `${tapLabel} Selecionadas (${selectedCards.size})`, action: `tapSelected(); hideContextMenu();` });
+            }
+
+            items.push({ divider: true });
+            items.push({ label: 'Enviar para Cemiterio', action: `moveCard('${card.id}', 'graveyard'); hideContextMenu();` });
+            items.push({ label: 'Exilar', action: `moveCard('${card.id}', 'exile'); hideContextMenu();` });
+            items.push({ label: 'Devolver a Mao', action: `moveCard('${card.id}', 'hand'); hideContextMenu();` });
+
+            // If it's a commander, add return to command zone option
+            if (card.is_commander) {
+                items.push({ label: 'Devolver a Zona de Comando', action: `moveCard('${card.id}', 'command'); hideContextMenu();` });
+            }
+
+            items.push({ divider: true });
+            items.push({ label: 'Adicionar +1/+1', action: `addCounter('${card.id}'); hideContextMenu();` });
+            items.push({ label: 'Remover +1/+1', action: `removeCounter('${card.id}'); hideContextMenu();` });
+
+            showContextMenu(e, items);
+        }
+
+        function showCommandContextMenu(e, cardId) {
+            showContextMenu(e, [
+                { label: 'Lancar Comandante', action: `moveCard('${cardId}', 'battlefield'); hideContextMenu();` },
+                { label: 'Exilar', action: `moveCard('${cardId}', 'exile'); hideContextMenu();` },
+            ]);
+        }
+
+        function tapSelected() {
+            selectedCards.forEach(id => {
+                sendAction('tap_card', { object_id: id });
+            });
+            selectedCards.clear();
+        }
+
+        function promptScry() {
+            const count = prompt('Quantas cartas? (1-10)', '3');
+            const num = parseInt(count);
+            if (num && num >= 1 && num <= 10) {
+                sendAction('scry', { count: num });
+            }
+        }
+
+        // ===== SCRY MODAL =====
+        function showScryModal(cards, isScry = true) {
+            scryCardsData = cards;
+            document.getElementById('scryTitle').textContent = isScry ? 'Videncia - Escolha a ordem' : 'Cartas do topo';
+            const container = document.getElementById('scryCards');
+            container.innerHTML = cards.map(c => `
+                <div class="card" data-id="${c.id}" draggable="true"
+                     ondragstart="handleScryDragStart(event, '${c.id}')">
+                    <img src="${c.image_normal || c.image_small}" alt="${c.name}">
+                </div>
+            `).join('');
+            document.getElementById('scryTopCards').innerHTML = '';
+            document.getElementById('scryBottomCards').innerHTML = '';
+            document.getElementById('scryModal').classList.add('show');
+        }
+
+        function handleScryDragStart(e, cardId) {
+            e.dataTransfer.setData('text/plain', cardId);
+        }
+
+        function handleScryDrop(e, position) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const cardId = e.dataTransfer.getData('text/plain');
+            const card = scryCardsData.find(c => c.id === cardId);
+            if (!card) return;
+
+            document.querySelectorAll(`[data-id="${cardId}"]`).forEach(el => el.remove());
+
+            const targetContainer = position === 'top' ? document.getElementById('scryTopCards') : document.getElementById('scryBottomCards');
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.dataset.id = cardId;
+            div.draggable = true;
+            div.ondragstart = (ev) => handleScryDragStart(ev, cardId);
+            div.innerHTML = `<img src="${card.image_small || card.image_normal}" alt="${card.name}">`;
+            targetContainer.appendChild(div);
+        }
+
+        function confirmScry() {
+            const topCards = Array.from(document.querySelectorAll('#scryTopCards .card')).map(el => ({ id: el.dataset.id, position: 'top' }));
+            const bottomCards = Array.from(document.querySelectorAll('#scryBottomCards .card')).map(el => ({ id: el.dataset.id, position: 'bottom' }));
+            if (topCards.length + bottomCards.length > 0) {
+                sendAction('reorder_scry', { order: [...topCards, ...bottomCards] });
+            }
+            closeScryModal();
+        }
+
+        function closeScryModal() {
+            document.getElementById('scryModal').classList.remove('show');
+            scryCardsData = [];
+        }
+
+        // ===== ZONE VIEWER =====
+        function showZoneViewer(zoneName, seat = mySeat) {
+            const zones = gameState.zones_data[seat];
+            if (!zones) return;
+            const cards = zones[zoneName] || [];
+            const titles = { graveyard: 'Cemiterio', exile: 'Exilio', hand: 'Mao' };
+            const player = gameState.players.find(p => p.seat_position === seat);
+            const playerName = player ? player.nickname : '';
+            document.getElementById('zoneViewerTitle').textContent = `${titles[zoneName] || zoneName} - ${playerName} (${cards.length})`;
+            document.getElementById('zoneViewerCards').innerHTML = cards.map(c => `
+                <div class="card" data-id="${c.id}"
+                     onclick="showCard('${c.id}', '${c.image_normal}', '${c.name}', '${zoneName}', ${seat === mySeat})">
+                    <img src="${c.image_normal}" alt="${c.name}">
+                </div>
+            `).join('');
+            document.getElementById('zoneViewerModal').classList.add('show');
+        }
+
+        function showOpponentZone(seat, zoneName) {
+            showZoneViewer(zoneName, seat);
+        }
+
+        function closeZoneViewer() {
+            document.getElementById('zoneViewerModal').classList.remove('show');
+        }
+
+        // ===== REVEAL ANIMATION =====
+        function showRevealAnimation(cardData) {
+            document.getElementById('revealedCardImage').src = cardData.image_normal;
+            document.getElementById('revealedCardText').textContent = `${cardData.player} revelou ${cardData.name}`;
+            const overlay = document.getElementById('revealOverlay');
+            overlay.classList.add('show');
+            setTimeout(() => overlay.classList.remove('show'), 2500);
+        }
+
+        function animateShuffle() {
+            const lib = document.getElementById('myLibrary');
+            lib.classList.add('shuffling');
+            setTimeout(() => lib.classList.remove('shuffling'), 500);
+        }
+
+        // ===== CARD MODAL =====
+        function showCard(objId, imageUrl, cardName, zone, isMe = false) {
+            selectedCard = { id: objId, zone, name: cardName };
             document.getElementById('modalImage').src = imageUrl;
 
             let actions = '<button class="close" onclick="closeModal()">Fechar</button>';
 
-            if (zone === 'hand') {
-                actions += `
-                    <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Jogar no Campo</button>
-                    <button class="action-btn" onclick="moveCard('${objId}', 'graveyard')">Descartar</button>
-                    <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
-                `;
-            } else if (zone === 'battlefield') {
-                actions += `
-                    <button class="action-btn" onclick="tapCard('${objId}')">Virar/Desvirar</button>
-                    <button class="action-btn" onclick="moveCard('${objId}', 'graveyard')">Cemiterio</button>
-                    <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
-                    <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Devolver Mao</button>
-                    <button class="action-btn" onclick="addCounter('${objId}')">+1/+1</button>
-                    <button class="action-btn" onclick="removeCounter('${objId}')">-1/-1</button>
-                `;
-            } else if (zone === 'command') {
-                actions += `
-                    <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Lancar Comandante</button>
-                `;
-            } else if (zone === 'graveyard') {
-                actions += `
-                    <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Devolver Mao</button>
-                    <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Reanimar</button>
-                    <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
-                `;
-            } else if (zone === 'exile') {
-                actions += `
-                    <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Devolver Mao</button>
-                    <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Campo</button>
-                `;
+            if (isMe) {
+                if (zone === 'hand') {
+                    actions += `
+                        <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Jogar</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'graveyard')">Descartar</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
+                    `;
+                } else if (zone === 'battlefield') {
+                    actions += `
+                        <button class="action-btn" onclick="toggleTap('${objId}')">Virar/Desvirar</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'graveyard')">Cemiterio</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Mao</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'command')">Zona Comando</button>
+                        <button class="action-btn" onclick="addCounter('${objId}')">+1/+1</button>
+                        <button class="action-btn" onclick="removeCounter('${objId}')">-1/-1</button>
+                    `;
+                } else if (zone === 'command') {
+                    actions += `<button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Lancar</button>`;
+                } else if (zone === 'graveyard') {
+                    actions += `
+                        <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Mao</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Reanimar</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
+                    `;
+                } else if (zone === 'exile') {
+                    actions += `
+                        <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Mao</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Campo</button>
+                    `;
+                }
             }
 
             document.getElementById('modalActions').innerHTML = actions;
@@ -733,10 +1589,12 @@
             selectedCard = null;
         }
 
-        // Game Actions
-        function moveCard(objId, zone) {
+        // ===== GAME ACTIONS =====
+        function moveCard(objId, zone, targetSeat = null) {
             closeModal();
-            sendAction('move_card', { object_id: objId, zone: zone });
+            const data = { object_id: objId, zone };
+            if (targetSeat !== null) data.target_seat = targetSeat;
+            sendAction('move_card', data);
         }
 
         function tapCard(objId) {
@@ -745,14 +1603,7 @@
         }
 
         function changeLife(seat, delta) {
-            sendAction('change_life', { target_seat: seat, delta: delta });
-
-            // Visual feedback
-            const lifeEl = document.getElementById(`life-${seat}`);
-            if (lifeEl) {
-                lifeEl.classList.add('changed');
-                setTimeout(() => lifeEl.classList.remove('changed'), 300);
-            }
+            sendAction('change_life', { target_seat: seat, delta });
         }
 
         function addCounter(objId) {
@@ -765,25 +1616,42 @@
             sendAction('remove_counter', { object_id: objId, counter_type: '+1/+1' });
         }
 
-        // Modal close on background click
+        // ===== EVENT LISTENERS =====
         document.getElementById('cardModal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
         });
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeModal();
-            if (e.key === 'd' && !e.target.matches('input')) sendAction('draw_card');
-            if (e.key === 'n' && !e.target.matches('input')) sendAction('next_phase');
-            if (e.key === 'p' && !e.target.matches('input')) sendAction('next_turn');
+        document.getElementById('zoneViewerModal').addEventListener('click', function(e) {
+            if (e.target === this) closeZoneViewer();
         });
 
-        // Update lobby link with tab_id
+        document.addEventListener('keydown', function(e) {
+            if (e.target.matches('input, textarea')) return;
+            switch(e.key.toLowerCase()) {
+                case 'escape':
+                    closeModal();
+                    closeZoneViewer();
+                    closeScryModal();
+                    hideContextMenu();
+                    selectedCards.clear();
+                    renderGame();
+                    break;
+                case 'd': sendAction('draw_card'); break;
+                case 'n': sendAction('next_phase'); break;
+                case 'p': sendAction('next_turn'); break;
+                case 's': sendAction('shuffle_library'); animateShuffle(); break;
+                case 'g': showZoneViewer('graveyard'); break;
+                case 'e': showZoneViewer('exile'); break;
+                case 'l': showLibraryMenu(); break;
+                case 'c': toggleSidebar(); break;
+            }
+        });
+
         if (tabId) {
             document.getElementById('lobbyLink').href = `/lobby/?tab=${tabId}`;
         }
 
-        // Start WebSocket connection
+        // Start connection
         connectWebSocket();
     </script>
 </body>

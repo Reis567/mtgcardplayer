@@ -459,12 +459,18 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         'id': str(obj.id),
                         'card_id': str(obj.card.id),
                         'name': obj.card.name,
+                        'type_line': obj.card.type_line or '',
+                        'mana_cost': obj.card.mana_cost or '',
+                        'oracle_text': obj.card.oracle_text or '',
+                        'power': obj.card.power,
+                        'toughness': obj.card.toughness,
                         'image_small': obj.card.image_small or '',
                         'image_normal': obj.card.image_normal or '',
                         'is_tapped': obj.is_tapped,
                         'counters': obj.counters or {},
                         'is_commander': obj.is_commander,
                         'zone': obj.zone,
+                        'battlefield_row': obj.battlefield_row,
                         'owner_seat': obj.owner.seat_position,
                         'controller_seat': obj.controller.seat_position
                     }
@@ -544,21 +550,57 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             if action == 'move_card':
                 obj_id = data.get('object_id')
                 new_zone = data.get('zone')
+                target_seat = data.get('target_seat')  # For moving to another player
+                row = data.get('row')  # For battlefield organization
+
                 obj = GameObject.objects.filter(id=obj_id, game=game).first()
                 if not obj:
                     return {'success': False, 'error': 'Object not found'}
 
                 old_zone = obj.zone
+                old_controller = obj.controller
                 obj.zone = new_zone
                 obj.is_tapped = False
+
+                # Handle moving to another player's battlefield
+                if target_seat is not None:
+                    new_controller = GamePlayer.objects.filter(game=game, seat_position=target_seat).first()
+                    if new_controller:
+                        obj.controller = new_controller
+
+                # Handle battlefield row
+                if new_zone == 'battlefield' and row:
+                    obj.battlefield_row = row
+                elif new_zone == 'battlefield' and not obj.battlefield_row:
+                    # Auto-detect row based on card type
+                    type_line = (obj.card.type_line or '').lower()
+                    if 'creature' in type_line:
+                        obj.battlefield_row = 'creatures'
+                    elif 'land' in type_line:
+                        obj.battlefield_row = 'lands'
+                    else:
+                        obj.battlefield_row = 'enchantments'
+
                 obj.save()
+
+                # Build display text
+                if target_seat is not None and obj.controller != old_controller:
+                    display_text = f"{game_player.player.nickname} moveu {obj.card.name} para o campo de {obj.controller.player.nickname}"
+                else:
+                    display_text = f"{game_player.player.nickname} moveu {obj.card.name} de {old_zone} para {new_zone}"
 
                 GameAction.objects.create(
                     game=game,
                     action_type='zone_change',
                     player=game_player,
-                    data={'card': obj.card.name, 'from': old_zone, 'to': new_zone},
-                    display_text=f"{game_player.player.nickname} moveu {obj.card.name} de {old_zone} para {new_zone}",
+                    data={
+                        'card': obj.card.name,
+                        'from': old_zone,
+                        'to': new_zone,
+                        'target_seat': target_seat,
+                        'row': row
+                    },
+                    display_text=display_text,
                     turn_number=game.turn_number,
                     phase=game.current_phase
                 )
@@ -783,6 +825,229 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 self._check_winner(game)
                 return {'success': True}
 
+            # ========== NEW LIBRARY MANIPULATION ACTIONS ==========
+
+            elif action == 'scry':
+                # Look at top X cards - private action (only sender sees)
+                count = min(data.get('count', 1), 10)  # Max 10 cards
+                library_cards = list(GameObject.objects.filter(
+                    game=game,
+                    owner=game_player,
+                    zone='library'
+                ).select_related('card').order_by('zone_position')[:count])
+
+                cards_data = [{
+                    'id': str(c.id),
+                    'name': c.card.name,
+                    'type_line': c.card.type_line or '',
+                    'image_normal': c.card.image_normal or '',
+                    'image_small': c.card.image_small or ''
+                } for c in library_cards]
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='scry',
+                    player=game_player,
+                    data={'count': count},
+                    display_text=f"{game_player.player.nickname} fez videncia {count}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+
+                return {'success': True, 'cards': cards_data, 'private': True}
+
+            elif action == 'look_top':
+                # Look at top X cards without logging (internal use)
+                count = min(data.get('count', 1), 10)
+                library_cards = list(GameObject.objects.filter(
+                    game=game,
+                    owner=game_player,
+                    zone='library'
+                ).select_related('card').order_by('zone_position')[:count])
+
+                cards_data = [{
+                    'id': str(c.id),
+                    'name': c.card.name,
+                    'type_line': c.card.type_line or '',
+                    'image_normal': c.card.image_normal or '',
+                    'image_small': c.card.image_small or ''
+                } for c in library_cards]
+
+                return {'success': True, 'cards': cards_data, 'private': True}
+
+            elif action == 'put_top':
+                # Put a card on top of library
+                obj_id = data.get('object_id')
+                obj = GameObject.objects.filter(id=obj_id, game=game).first()
+                if not obj:
+                    return {'success': False, 'error': 'Object not found'}
+
+                old_zone = obj.zone
+                # Get minimum position (top of library)
+                min_pos = GameObject.objects.filter(
+                    game=game,
+                    owner=obj.owner,
+                    zone='library'
+                ).order_by('zone_position').values_list('zone_position', flat=True).first()
+
+                obj.zone = 'library'
+                obj.zone_position = (min_pos or 0) - 1
+                obj.is_tapped = False
+                obj.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='put_top',
+                    player=game_player,
+                    data={'card': obj.card.name, 'from': old_zone},
+                    display_text=f"{game_player.player.nickname} colocou {obj.card.name} no topo da biblioteca",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True}
+
+            elif action == 'put_bottom':
+                # Put a card on bottom of library
+                obj_id = data.get('object_id')
+                obj = GameObject.objects.filter(id=obj_id, game=game).first()
+                if not obj:
+                    return {'success': False, 'error': 'Object not found'}
+
+                old_zone = obj.zone
+                # Get maximum position (bottom of library)
+                max_pos = GameObject.objects.filter(
+                    game=game,
+                    owner=obj.owner,
+                    zone='library'
+                ).order_by('-zone_position').values_list('zone_position', flat=True).first()
+
+                obj.zone = 'library'
+                obj.zone_position = (max_pos or 0) + 1
+                obj.is_tapped = False
+                obj.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='put_bottom',
+                    player=game_player,
+                    data={'card': obj.card.name, 'from': old_zone},
+                    display_text=f"{game_player.player.nickname} colocou {obj.card.name} no fundo da biblioteca",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True}
+
+            elif action == 'reveal_card':
+                # Reveal a card to all players
+                obj_id = data.get('object_id')
+                obj = GameObject.objects.filter(id=obj_id, game=game).select_related('card').first()
+                if not obj:
+                    return {'success': False, 'error': 'Object not found'}
+
+                obj.is_revealed = True
+                obj.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='reveal',
+                    player=game_player,
+                    data={'card': obj.card.name, 'zone': obj.zone},
+                    display_text=f"{game_player.player.nickname} revelou {obj.card.name}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+
+                return {
+                    'success': True,
+                    'broadcast_reveal': True,
+                    'revealed_card': {
+                        'id': str(obj.id),
+                        'name': obj.card.name,
+                        'image_normal': obj.card.image_normal or '',
+                        'player': game_player.player.nickname
+                    }
+                }
+
+            elif action == 'shuffle_into':
+                # Put a card into library and shuffle
+                obj_id = data.get('object_id')
+                obj = GameObject.objects.filter(id=obj_id, game=game).first()
+                if not obj:
+                    return {'success': False, 'error': 'Object not found'}
+
+                old_zone = obj.zone
+                card_name = obj.card.name
+
+                # Move to library
+                obj.zone = 'library'
+                obj.is_tapped = False
+                obj.save()
+
+                # Shuffle all library cards
+                library_cards = list(GameObject.objects.filter(
+                    game=game,
+                    owner=game_player,
+                    zone='library'
+                ))
+                random.shuffle(library_cards)
+                for i, card in enumerate(library_cards):
+                    card.zone_position = i
+                    card.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='shuffle_into',
+                    player=game_player,
+                    data={'card': card_name, 'from': old_zone},
+                    display_text=f"{game_player.player.nickname} embaralhou {card_name} na biblioteca",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True}
+
+            elif action == 'reorder_scry':
+                # Reorder cards after scrying - receives list of {id, position: 'top'|'bottom'}
+                order = data.get('order', [])
+
+                # First, get current min and max positions
+                library_positions = GameObject.objects.filter(
+                    game=game,
+                    owner=game_player,
+                    zone='library'
+                ).order_by('zone_position').values_list('zone_position', flat=True)
+
+                positions_list = list(library_positions)
+                min_pos = positions_list[0] if positions_list else 0
+                max_pos = positions_list[-1] if positions_list else 0
+
+                top_offset = 0
+                bottom_offset = 0
+
+                for item in order:
+                    obj = GameObject.objects.filter(id=item['id'], game=game).first()
+                    if obj and obj.zone == 'library':
+                        if item.get('position') == 'bottom':
+                            bottom_offset += 1
+                            obj.zone_position = max_pos + bottom_offset
+                        else:  # top (default)
+                            top_offset += 1
+                            obj.zone_position = min_pos - top_offset
+                        obj.save()
+
+                return {'success': True, 'private': True}
+
+            elif action == 'set_battlefield_row':
+                # Move a card to a specific battlefield row
+                obj_id = data.get('object_id')
+                row = data.get('row', 'other')
+                obj = GameObject.objects.filter(id=obj_id, game=game, zone='battlefield').first()
+                if not obj:
+                    return {'success': False, 'error': 'Object not found on battlefield'}
+
+                obj.battlefield_row = row
+                obj.save()
+                return {'success': True}
+
             return {'success': False, 'error': 'Unknown action'}
 
         except Exception as e:
@@ -815,9 +1080,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             await self.send_game_state()
 
         elif action in ['move_card', 'tap_card', 'change_life', 'add_counter', 'remove_counter',
-                        'next_phase', 'next_turn', 'draw_card', 'shuffle_library', 'concede']:
+                        'next_phase', 'next_turn', 'draw_card', 'shuffle_library', 'concede',
+                        'scry', 'look_top', 'put_top', 'put_bottom', 'reveal_card',
+                        'shuffle_into', 'reorder_scry', 'set_battlefield_row']:
             result = await self.execute_game_action(action, content.get('data', {}))
 
+            # Send action result to the sender
             await self.send_json({
                 'type': 'action_result',
                 'action': action,
@@ -825,7 +1093,27 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             })
 
             if result.get('success'):
-                await self.broadcast_game_state()
+                # Check if it's a private action (only sender sees)
+                if result.get('private'):
+                    # Send private data only to sender
+                    await self.send_json({
+                        'type': 'private_action',
+                        'action': action,
+                        'data': result
+                    })
+                # Check if we need to broadcast a reveal
+                elif result.get('broadcast_reveal'):
+                    await self.channel_layer.group_send(
+                        self.group_name,
+                        {
+                            'type': 'card_revealed',
+                            'card': result['revealed_card']
+                        }
+                    )
+                    await self.broadcast_game_state()
+                else:
+                    # Normal broadcast to all players
+                    await self.broadcast_game_state()
 
     async def send_game_state(self):
         state = await self.get_game_state()
@@ -857,4 +1145,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             'type': 'game_state',
             'state': event['state']
+        })
+
+    async def card_revealed(self, event):
+        """Broadcast when a card is revealed to all players"""
+        await self.send_json({
+            'type': 'reveal',
+            'card': event['card']
         })

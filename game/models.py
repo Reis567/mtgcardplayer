@@ -118,6 +118,13 @@ class GameObject(models.Model):
         ('stack', 'Pilha'),
     ]
 
+    BATTLEFIELD_ROW_CHOICES = [
+        ('creatures', 'Criaturas'),
+        ('enchantments', 'Encantamentos/Artefatos'),
+        ('lands', 'Terrenos'),
+        ('other', 'Outros'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='game_objects')
     card = models.ForeignKey(Card, on_delete=models.PROTECT)
@@ -128,8 +135,15 @@ class GameObject(models.Model):
     zone = models.CharField(max_length=20, choices=ZONE_CHOICES)
     zone_position = models.PositiveIntegerField(default=0)
 
+    # Battlefield organization
+    battlefield_row = models.CharField(max_length=20, choices=BATTLEFIELD_ROW_CHOICES, default='other')
+
     is_tapped = models.BooleanField(default=False)
     is_face_down = models.BooleanField(default=False)
+
+    # Reveal mechanics (for scry, reveal effects)
+    is_revealed = models.BooleanField(default=False)
+    revealed_to = models.JSONField(default=list, blank=True)  # Player IDs who can see
 
     counters = models.JSONField(default=dict, blank=True)
     damage_marked = models.PositiveIntegerField(default=0)
@@ -167,6 +181,13 @@ class GameAction(models.Model):
         ('lose', 'Derrota'),
         ('chat', 'Chat'),
         ('manual', 'Acao Manual'),
+        # New actions for library manipulation
+        ('scry', 'Videncia'),
+        ('look_top', 'Ver Topo'),
+        ('put_top', 'Colocar no Topo'),
+        ('put_bottom', 'Colocar no Fundo'),
+        ('reveal', 'Revelar'),
+        ('shuffle_into', 'Embaralhar Dentro'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
