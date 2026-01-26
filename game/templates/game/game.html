@@ -796,6 +796,239 @@
         }
         .card.drawing { animation: cardDraw 0.25s ease-out; }
         .zone-stack.shuffling .card-back { animation: shuffle 0.1s ease-in-out 5; }
+
+        /* ===== HELP & KEYWORDS MODALS ===== */
+        .help-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .help-modal.show { display: flex; }
+        .help-content {
+            background: #16213e;
+            border-radius: 10px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .help-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid #333;
+        }
+        .help-header h2 { font-size: 1.1rem; color: #e94560; margin: 0; }
+        .help-header .close-btn {
+            background: #333;
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .help-header .close-btn:hover { background: #e94560; }
+        .help-tabs {
+            display: flex;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid #333;
+        }
+        .help-tab {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+        .help-tab:hover { color: #ccc; }
+        .help-tab.active {
+            color: #e94560;
+            border-bottom-color: #e94560;
+            background: rgba(233, 69, 96, 0.1);
+        }
+        .help-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .help-section { margin-bottom: 25px; }
+        .help-section h3 {
+            color: #4ecdc4;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(78, 205, 196, 0.3);
+        }
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+        }
+        .shortcut-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+        }
+        .shortcut-key {
+            background: #e94560;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            min-width: 28px;
+            text-align: center;
+        }
+        .shortcut-desc { font-size: 0.8rem; color: #ccc; }
+        .help-list {
+            list-style: none;
+            padding: 0;
+        }
+        .help-list li {
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.2);
+            margin-bottom: 5px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            border-left: 3px solid #4ecdc4;
+        }
+        .help-list li strong { color: #ffc107; }
+
+        /* Keywords Modal */
+        .keywords-search {
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.2);
+        }
+        .keywords-search input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            font-size: 0.9rem;
+        }
+        .keywords-search input:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+        .keywords-search input::placeholder { color: #666; }
+        .keywords-categories {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .category-filter {
+            padding: 4px 10px;
+            border: 1px solid #444;
+            border-radius: 15px;
+            background: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+        .category-filter:hover { border-color: #888; color: #ccc; }
+        .category-filter.active { background: #e94560; border-color: #e94560; color: white; }
+        .keywords-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 10px;
+        }
+        .keyword-item {
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            padding: 12px;
+            border-left: 3px solid #e94560;
+            transition: transform 0.15s;
+        }
+        .keyword-item:hover { transform: translateX(3px); }
+        .keyword-item.hidden { display: none; }
+        .keyword-name {
+            color: #e94560;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        .keyword-desc {
+            color: #aaa;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        .keyword-example {
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #888;
+            font-style: italic;
+        }
+        .keyword-category {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+        .keyword-category.evergreen { background: #27ae60; color: white; }
+        .keyword-category.evasion { background: #3498db; color: white; }
+        .keyword-category.triggered { background: #9b59b6; color: white; }
+        .keyword-category.static { background: #1abc9c; color: white; }
+        .keyword-category.combat { background: #e67e22; color: white; }
+        .keyword-category.mana { background: #f1c40f; color: #333; }
+        .keyword-category.protection { background: #e74c3c; color: white; }
+        .keyword-category.counter { background: #95a5a6; color: white; }
+        .keywords-count {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        /* Help buttons */
+        .help-buttons {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            display: flex;
+            gap: 5px;
+            z-index: 100;
+        }
+        .help-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .help-btn:hover { transform: scale(1.1); }
+        .help-btn.guide { background: #e94560; color: white; }
+        .help-btn.keywords { background: #4ecdc4; color: #000; font-weight: bold; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -1013,6 +1246,172 @@
                 <button onclick="adjustCounter(-1)" style="width:40px;height:40px;font-size:1.5rem;border:none;background:#e94560;color:white;border-radius:50%;cursor:pointer;">-</button>
                 <span id="counterValue" style="font-size:2rem;font-weight:bold;min-width:50px;">0</span>
                 <button onclick="adjustCounter(1)" style="width:40px;height:40px;font-size:1.5rem;border:none;background:#4ecdc4;color:white;border-radius:50%;cursor:pointer;">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Buttons -->
+    <div class="help-buttons">
+        <button class="help-btn guide" onclick="openGuideModal()" title="Guia (H)">?</button>
+        <button class="help-btn keywords" onclick="openKeywordsModal()" title="Keywords (K)">K</button>
+    </div>
+
+    <!-- User Guide Modal -->
+    <div class="help-modal" id="guideModal">
+        <div class="help-content">
+            <div class="help-header">
+                <h2>Guia do Jogador - MTG Commander</h2>
+                <button class="close-btn" onclick="closeGuideModal()">&times;</button>
+            </div>
+            <div class="help-tabs">
+                <button class="help-tab active" onclick="showGuideTab('shortcuts')">Atalhos</button>
+                <button class="help-tab" onclick="showGuideTab('actions')">Acoes</button>
+                <button class="help-tab" onclick="showGuideTab('phases')">Fases</button>
+                <button class="help-tab" onclick="showGuideTab('rules')">Regras</button>
+            </div>
+            <div class="help-body">
+                <!-- Shortcuts Tab -->
+                <div id="guideTab-shortcuts" class="guide-tab-content">
+                    <div class="help-section">
+                        <h3>Atalhos de Teclado</h3>
+                        <div class="shortcut-grid">
+                            <div class="shortcut-item"><span class="shortcut-key">D</span><span class="shortcut-desc">Comprar carta</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">N</span><span class="shortcut-desc">Proxima fase</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">P</span><span class="shortcut-desc">Passar turno</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">S</span><span class="shortcut-desc">Embaralhar biblioteca</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">G</span><span class="shortcut-desc">Ver cemiterio</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">E</span><span class="shortcut-desc">Ver exilio</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">L</span><span class="shortcut-desc">Menu da biblioteca</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">C</span><span class="shortcut-desc">Abrir/fechar chat</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">X</span><span class="shortcut-desc">Limpar todas setas</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">H</span><span class="shortcut-desc">Este guia</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">K</span><span class="shortcut-desc">Keywords de Magic</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">Esc</span><span class="shortcut-desc">Fechar modais/cancelar</span></div>
+                        </div>
+                    </div>
+                    <div class="help-section">
+                        <h3>Acoes do Mouse</h3>
+                        <div class="shortcut-grid">
+                            <div class="shortcut-item"><span class="shortcut-key">2x</span><span class="shortcut-desc">Virar/desvirar carta</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">Shift+Clique</span><span class="shortcut-desc">Multi-selecao</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">Clique Direito</span><span class="shortcut-desc">Menu de contexto</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">Arrastar</span><span class="shortcut-desc">Mover carta</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions Tab -->
+                <div id="guideTab-actions" class="guide-tab-content" style="display:none;">
+                    <div class="help-section">
+                        <h3>Como Jogar Cartas</h3>
+                        <ul class="help-list">
+                            <li><strong>Mao para Campo:</strong> Arraste a carta da mao para uma linha do seu campo, ou clique direito e selecione "Jogar no Campo"</li>
+                            <li><strong>Lancar Comandante:</strong> Clique duplo no comandante na zona de comando, ou clique direito e "Lancar"</li>
+                            <li><strong>Virar/Desvirar:</strong> Clique duplo na carta no campo, ou selecione varias com Shift e clique duplo</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h3>Mover Cartas Entre Zonas</h3>
+                        <ul class="help-list">
+                            <li><strong>Para Cemiterio:</strong> Arraste para o cemiterio ou clique direito > "Enviar para Cemiterio"</li>
+                            <li><strong>Para Exilio:</strong> Arraste para o exilio ou clique direito > "Exilar"</li>
+                            <li><strong>Devolver a Mao:</strong> Clique direito > "Devolver a Mao"</li>
+                            <li><strong>Zona de Comando:</strong> Comandantes podem voltar > "Devolver a Zona de Comando"</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h3>Setas e Alvos</h3>
+                        <ul class="help-list">
+                            <li><strong>Criar Seta:</strong> Clique direito na carta > "Criar seta" > clique no alvo (jogador ou carta)</li>
+                            <li><strong>Remover Seta:</strong> Clique direito na carta > "Remover seta" ou pressione X para limpar todas</li>
+                            <li>Setas podem apontar para jogadores ou outras cartas (uteis para auras, equipamentos, alvos)</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h3>Biblioteca (Tutor, Scry)</h3>
+                        <ul class="help-list">
+                            <li><strong>Ver Biblioteca:</strong> Clique direito na biblioteca > "Ver toda biblioteca"</li>
+                            <li><strong>Buscar Carta:</strong> Na visualizacao, clique na carta desejada e escolha onde colocar</li>
+                            <li><strong>Videncia (Scry):</strong> Clique direito > "Videncia" > arraste cartas para Topo ou Fundo</li>
+                            <li>A biblioteca e embaralhada automaticamente ao fechar a visualizacao</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Phases Tab -->
+                <div id="guideTab-phases" class="guide-tab-content" style="display:none;">
+                    <div class="help-section">
+                        <h3>Fases do Turno</h3>
+                        <ul class="help-list">
+                            <li><strong>Desvirar (Untap):</strong> Todas suas permanentes desviram. Nenhum jogador pode fazer acoes.</li>
+                            <li><strong>Manutencao (Upkeep):</strong> Habilidades de "no inicio da manutencao" disparam. Jogadores podem responder.</li>
+                            <li><strong>Compra (Draw):</strong> Compre uma carta (exceto primeiro turno). Jogadores podem responder apos.</li>
+                            <li><strong>Fase Principal 1:</strong> Jogue terrenos, criaturas, feiticos, etc.</li>
+                            <li><strong>Inicio do Combate:</strong> Ultima chance de virar criaturas antes de declarar atacantes.</li>
+                            <li><strong>Declarar Atacantes:</strong> Escolha quais criaturas atacam e quais jogadores/planeswalkers.</li>
+                            <li><strong>Declarar Bloqueadores:</strong> Defensor escolhe bloqueadores.</li>
+                            <li><strong>Dano de Combate:</strong> Dano e causado simultaneamente (first strike primeiro).</li>
+                            <li><strong>Fim do Combate:</strong> Habilidades de "fim do combate" disparam.</li>
+                            <li><strong>Fase Principal 2:</strong> Igual a primeira fase principal.</li>
+                            <li><strong>Etapa Final (End):</strong> Habilidades de "no final do turno" disparam.</li>
+                            <li><strong>Limpeza (Cleanup):</strong> Descarte ate 7 cartas, remova dano marcado.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Rules Tab -->
+                <div id="guideTab-rules" class="guide-tab-content" style="display:none;">
+                    <div class="help-section">
+                        <h3>Regras de Commander</h3>
+                        <ul class="help-list">
+                            <li><strong>Vida Inicial:</strong> 40 pontos de vida</li>
+                            <li><strong>Dano de Comandante:</strong> 21 dano de combate de um mesmo comandante = derrota</li>
+                            <li><strong>Veneno:</strong> 10 marcadores de veneno = derrota</li>
+                            <li><strong>Biblioteca Vazia:</strong> Comprar de biblioteca vazia = derrota</li>
+                            <li><strong>Taxa de Comandante:</strong> +2 mana para cada vez que lancou o comandante</li>
+                            <li><strong>Identidade de Cor:</strong> Deck so pode ter cartas da identidade de cor do comandante</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h3>Marcadores Coloridos</h3>
+                        <ul class="help-list">
+                            <li><strong>Vermelho:</strong> Sugestao: Dano de comandante recebido</li>
+                            <li><strong>Azul:</strong> Sugestao: Contador de experiencia</li>
+                            <li><strong>Verde:</strong> Sugestao: Marcador de energia</li>
+                            <li><strong>Amarelo:</strong> Sugestao: Tesouro/Mana flutuante</li>
+                            <li><strong>Roxo:</strong> Sugestao: Contador generico</li>
+                            <li>Use como preferir! Clique para ajustar o valor.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keywords Modal -->
+    <div class="help-modal" id="keywordsModal">
+        <div class="help-content" style="max-width: 1000px;">
+            <div class="help-header">
+                <h2>Keywords de Magic: The Gathering</h2>
+                <button class="close-btn" onclick="closeKeywordsModal()">&times;</button>
+            </div>
+            <div class="keywords-search">
+                <input type="text" id="keywordSearch" placeholder="Buscar keyword... (ex: flying, trample, hexproof)" oninput="filterKeywords()">
+                <div class="keywords-categories">
+                    <button class="category-filter active" onclick="filterByCategory('all')">Todas</button>
+                    <button class="category-filter" onclick="filterByCategory('evergreen')">Evergreen</button>
+                    <button class="category-filter" onclick="filterByCategory('evasion')">Evasao</button>
+                    <button class="category-filter" onclick="filterByCategory('combat')">Combate</button>
+                    <button class="category-filter" onclick="filterByCategory('protection')">Protecao</button>
+                    <button class="category-filter" onclick="filterByCategory('triggered')">Gatilhos</button>
+                    <button class="category-filter" onclick="filterByCategory('static')">Estaticas</button>
+                    <button class="category-filter" onclick="filterByCategory('mana')">Mana</button>
+                    <button class="category-filter" onclick="filterByCategory('counter')">Marcadores</button>
+                </div>
+            </div>
+            <div class="help-body" id="keywordsBody">
+                <div class="keywords-grid" id="keywordsGrid"></div>
+                <div class="keywords-count" id="keywordsCount"></div>
             </div>
         </div>
     </div>
@@ -2084,6 +2483,8 @@
                     closeZoneViewer();
                     closeScryModal();
                     closeCounterModal();
+                    closeGuideModal();
+                    closeKeywordsModal();
                     hideContextMenu();
                     cancelArrowMode();
                     selectedCards.clear();
@@ -2098,6 +2499,8 @@
                 case 'l': showLibraryMenu(); break;
                 case 'c': toggleSidebar(); break;
                 case 'x': clearAllArrows(); break;
+                case 'h': openGuideModal(); break;
+                case 'k': openKeywordsModal(); break;
             }
         });
 
@@ -2107,6 +2510,222 @@
         if (tabId) {
             document.getElementById('lobbyLink').href = `/lobby/?tab=${tabId}`;
         }
+
+        // ===== GUIDE MODAL =====
+        function openGuideModal() {
+            document.getElementById('guideModal').classList.add('show');
+        }
+
+        function closeGuideModal() {
+            document.getElementById('guideModal').classList.remove('show');
+        }
+
+        function showGuideTab(tabName) {
+            document.querySelectorAll('.guide-tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.help-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('guideTab-' + tabName).style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        document.getElementById('guideModal').addEventListener('click', function(e) {
+            if (e.target === this) closeGuideModal();
+        });
+
+        // ===== KEYWORDS MODAL =====
+        const KEYWORDS_DATA = [
+            // Evergreen Keywords
+            { name: 'Flying', category: 'evasion', desc: 'Esta criatura so pode ser bloqueada por criaturas com voar ou alcance.', example: 'Serra Angel tem voar e vigilancia.' },
+            { name: 'First Strike', category: 'combat', desc: 'Esta criatura causa dano de combate antes de criaturas sem iniciativa.', example: 'Cavaleiros geralmente tem iniciativa.' },
+            { name: 'Double Strike', category: 'combat', desc: 'Esta criatura causa dano de combate na etapa de iniciativa E na etapa normal.', example: 'Efetivamente dobra o dano de combate.' },
+            { name: 'Deathtouch', category: 'combat', desc: 'Qualquer quantidade de dano que esta criatura cause a outra criatura e suficiente para destrui-la.', example: '1 dano de uma criatura com toque mortifero mata qualquer criatura.' },
+            { name: 'Trample', category: 'combat', desc: 'Se esta criatura causaria dano suficiente aos seus bloqueadores para destrui-los, voce pode fazer o dano excedente ao jogador ou planeswalker.', example: 'Criatura 6/6 com atropelar bloqueada por 2/2 causa 4 dano ao jogador.' },
+            { name: 'Haste', category: 'evergreen', desc: 'Esta criatura pode atacar e usar habilidades de tap no turno em que entrou no campo.', example: 'Criaturas vermelhas frequentemente tem impeto.' },
+            { name: 'Vigilance', category: 'evergreen', desc: 'Atacar com esta criatura nao faz ela virar.', example: 'Permite atacar e ainda bloquear no proximo turno.' },
+            { name: 'Reach', category: 'evasion', desc: 'Esta criatura pode bloquear criaturas com voar.', example: 'Aranhas geralmente tem alcance.' },
+            { name: 'Lifelink', category: 'evergreen', desc: 'Dano causado por esta criatura tambem faz voce ganhar essa quantidade de vida.', example: 'Atacar com 3/3 lifelink da 3 vida.' },
+            { name: 'Menace', category: 'evasion', desc: 'Esta criatura so pode ser bloqueada por duas ou mais criaturas.', example: 'Forca o oponente a usar mais recursos para bloquear.' },
+            { name: 'Hexproof', category: 'protection', desc: 'Esta permanente nao pode ser alvo de magias ou habilidades que seus oponentes controlam.', example: 'Protege contra remocoes direcionadas do oponente.' },
+            { name: 'Shroud', category: 'protection', desc: 'Esta permanente nao pode ser alvo de magias ou habilidades.', example: 'Nem voce nem oponentes podem mirar nela.' },
+            { name: 'Indestructible', category: 'protection', desc: 'Esta permanente nao pode ser destruida. Dano e efeitos que dizem "destrua" nao funcionam.', example: 'Ainda pode ser exilada ou sacrificada.' },
+            { name: 'Flash', category: 'evergreen', desc: 'Voce pode conjurar esta magia a qualquer momento que pudesse conjurar um instantaneo.', example: 'Permite surpresas no turno do oponente.' },
+            { name: 'Defender', category: 'static', desc: 'Esta criatura nao pode atacar.', example: 'Muralhas geralmente tem defensor.' },
+            { name: 'Ward', category: 'protection', desc: 'Sempre que esta permanente se tornar alvo de uma magia ou habilidade de um oponente, anule-a a menos que aquele jogador pague o custo.', example: 'Ward 2 exige pagar 2 mana extra para mirar.' },
+
+            // Triggered Abilities
+            { name: 'Enters the Battlefield (ETB)', category: 'triggered', desc: 'Habilidade que dispara quando a permanente entra no campo de batalha.', example: '"Quando ~ entra no campo, compre uma carta."' },
+            { name: 'Dies', category: 'triggered', desc: 'Habilidade que dispara quando a criatura vai do campo para o cemiterio.', example: '"Quando ~ morre, crie um token 1/1."' },
+            { name: 'Landfall', category: 'triggered', desc: 'Habilidade que dispara sempre que um terreno entra no campo sob seu controle.', example: 'Muito comum em decks de ramp verde.' },
+            { name: 'Cascade', category: 'triggered', desc: 'Ao conjurar, exile cartas do topo ate revelar nao-terreno com custo menor, pode conjurar de graca.', example: 'Cascade e muito poderoso em Commander.' },
+            { name: 'Annihilator', category: 'triggered', desc: 'Quando esta criatura ataca, o jogador defensor sacrifica X permanentes.', example: 'Eldrazi Titans tem Annihilator.' },
+
+            // Mana Abilities
+            { name: 'Convoke', category: 'mana', desc: 'Suas criaturas podem ajudar a pagar esta magia. Cada criatura virada paga 1 ou uma cor de mana.', example: 'Virar 3 criaturas reduz o custo em 3.' },
+            { name: 'Delve', category: 'mana', desc: 'Cada carta exilada do seu cemiterio paga 1 mana generico do custo.', example: 'Treasure Cruise pode custar apenas U.' },
+            { name: 'Affinity', category: 'mana', desc: 'Esta magia custa 1 a menos para cada [tipo] que voce controla.', example: 'Affinity for artifacts e muito forte.' },
+            { name: 'Improvise', category: 'mana', desc: 'Seus artefatos podem ajudar a pagar esta magia virar artefato = 1 mana.', example: 'Similar a Convoke mas para artefatos.' },
+
+            // Static Abilities
+            { name: 'Changeling', category: 'static', desc: 'Esta carta e de todos os tipos de criatura.', example: 'Conta como Elfo, Goblin, Dragao, etc.' },
+            { name: 'Partner', category: 'static', desc: 'Voce pode ter dois comandantes se ambos tiverem Partner.', example: 'Comum em Commander para combos.' },
+            { name: 'Eminence', category: 'static', desc: 'Habilidade que funciona enquanto o comandante esta na zona de comando ou no campo.', example: 'Nao precisa lancar o comandante.' },
+            { name: 'Companion', category: 'static', desc: 'Se seu deck inicial atender a condicao, pode ter esta carta como companion.', example: 'Companion tem restricoes de deckbuilding.' },
+
+            // Protection & Evasion
+            { name: 'Protection', category: 'protection', desc: 'Nao pode ser bloqueado, alvo, encantado/equipado ou receber dano da qualidade especificada.', example: 'Protection from red = imune a tudo vermelho.' },
+            { name: 'Unblockable', category: 'evasion', desc: 'Esta criatura nao pode ser bloqueada.', example: 'Rogues frequentemente sao unblockaveis.' },
+            { name: 'Shadow', category: 'evasion', desc: 'So pode bloquear e ser bloqueada por criaturas com sombra.', example: 'Criaturas com sombra ignoram bloqueadores normais.' },
+            { name: 'Horsemanship', category: 'evasion', desc: 'So pode ser bloqueada por criaturas com horsemanship.', example: 'Versao antiga e rara de evasao.' },
+            { name: 'Fear', category: 'evasion', desc: 'So pode ser bloqueada por criaturas de artefato ou pretas.', example: 'Substituido por Intimidate e depois Menace.' },
+            { name: 'Intimidate', category: 'evasion', desc: 'So pode ser bloqueada por criaturas de artefato ou que compartilhem uma cor.', example: 'Criatura vermelha com intimidate so bloqueada por vermelhas ou artefatos.' },
+            { name: 'Skulk', category: 'evasion', desc: 'So pode ser bloqueada por criaturas com poder maior ou igual.', example: 'Bom em criaturas pequenas.' },
+
+            // Counters & Modifiers
+            { name: '+1/+1 Counter', category: 'counter', desc: 'Marcador que da +1 poder e +1 resistencia permanentemente.', example: 'Muitas cartas adicionam ou interagem com +1/+1.' },
+            { name: '-1/-1 Counter', category: 'counter', desc: 'Marcador que da -1 poder e -1 resistencia permanentemente.', example: 'Anula marcadores +1/+1 quando ambos existem.' },
+            { name: 'Poison Counter', category: 'counter', desc: 'Marcador dado a jogadores. 10 ou mais = derrota.', example: 'Criaturas com Infect dao veneno.' },
+            { name: 'Experience Counter', category: 'counter', desc: 'Marcador em jogador que nunca e removido.', example: 'Alguns comandantes usam experiencia.' },
+            { name: 'Energy Counter', category: 'counter', desc: 'Recurso alternativo que persiste entre turnos.', example: 'Introduzido em Kaladesh.' },
+            { name: 'Loyalty Counter', category: 'counter', desc: 'Marcadores em Planeswalkers. Determina vida e habilidades.', example: 'Planeswalkers entram com X lealdade.' },
+
+            // Combat Keywords
+            { name: 'Infect', category: 'combat', desc: 'Causa dano a criaturas como -1/-1 e a jogadores como veneno.', example: 'Muito forte pois conta separado da vida.' },
+            { name: 'Wither', category: 'combat', desc: 'Dano a criaturas e causado como marcadores -1/-1.', example: 'Versao mais fraca de Infect.' },
+            { name: 'Provoke', category: 'combat', desc: 'Quando ataca, pode forcar uma criatura a bloquear.', example: 'Util para remover criaturas problematicas.' },
+            { name: 'Rampage', category: 'combat', desc: 'Ganha +X/+X para cada criatura alem da primeira que a bloqueia.', example: 'Rampage 2 = +2/+2 por bloqueador extra.' },
+            { name: 'Flanking', category: 'combat', desc: 'Quando bloqueada por criatura sem flanquear, o bloqueador recebe -1/-1.', example: 'Cavaleiros de Mirage tem flanquear.' },
+            { name: 'Banding', category: 'combat', desc: 'Criaturas com bando podem atacar ou bloquear juntas. Voce divide o dano.', example: 'Mecanica antiga e complexa.' },
+            { name: 'Bushido', category: 'combat', desc: 'Quando bloqueia ou e bloqueada, ganha +X/+X ate fim do turno.', example: 'Samurais de Kamigawa tem Bushido.' },
+            { name: 'Ninjutsu', category: 'combat', desc: 'Pague custo e devolva atacante nao bloqueado para por esta carta atacando.', example: 'Ninjas entram ja causando dano.' },
+            { name: 'Exalted', category: 'combat', desc: 'Quando uma criatura que voce controla ataca sozinha, ela ganha +1/+1 para cada Exalted.', example: 'Multiplos Exalted acumulam.' },
+            { name: 'Battle Cry', category: 'combat', desc: 'Quando ataca, outras criaturas atacantes ganham +1/+0.', example: 'Bom com muitas criaturas.' },
+            { name: 'Myriad', category: 'combat', desc: 'Quando ataca, crie copias atacando cada outro oponente.', example: 'Excelente em multiplayer/Commander.' },
+            { name: 'Melee', category: 'combat', desc: 'Ganha +1/+1 para cada oponente que voce atacou este combate.', example: 'Melhor quanto mais oponentes.' },
+            { name: 'Goad', category: 'combat', desc: 'Criatura provocada deve atacar oponente diferente de voce se possivel.', example: 'Forca oponentes a se atacarem.' },
+
+            // Spell Keywords
+            { name: 'Kicker', category: 'mana', desc: 'Custo adicional opcional. Se pago, a magia tem efeito extra.', example: 'Kicker torna magias mais flexiveis.' },
+            { name: 'Flashback', category: 'triggered', desc: 'Pode ser conjurada do cemiterio pelo custo de flashback, depois e exilada.', example: 'Da uma segunda chance a magias.' },
+            { name: 'Overload', category: 'mana', desc: 'Custo alternativo que muda "alvo" para "cada".', example: 'Cyclonic Rift com overload devolve TUDO.' },
+            { name: 'Splice', category: 'mana', desc: 'Ao conjurar magia do tipo, pode revelar esta e pagar splice para adicionar efeito.', example: 'Splice onto Arcane e o mais comum.' },
+            { name: 'Storm', category: 'triggered', desc: 'Ao conjurar, copie para cada magia conjurada antes neste turno.', example: 'Storm e uma das mecanicas mais fortes.' },
+            { name: 'Replicate', category: 'mana', desc: 'Pague o custo quantas vezes quiser, copie a magia esse numero de vezes.', example: 'Permite escalar magias.' },
+            { name: 'Conspire', category: 'mana', desc: 'Vire duas criaturas da mesma cor para copiar a magia.', example: 'Bom com tokens.' },
+            { name: 'Retrace', category: 'triggered', desc: 'Pode conjurar do cemiterio descartando um terreno como custo adicional.', example: 'Terrenos viram combustivel.' },
+            { name: 'Rebound', category: 'triggered', desc: 'Se conjurada da mao, exile e conjure de graca no proximo turno.', example: 'Duas magias pelo preco de uma.' },
+            { name: 'Miracle', category: 'mana', desc: 'Se for a primeira carta comprada no turno, pode conjurar pelo custo de milagre.', example: 'Terminus por W limpa o campo.' },
+            { name: 'Madness', category: 'mana', desc: 'Se descartada, pode conjurar pelo custo de loucura em vez de ir pro cemiterio.', example: 'Transforma descarte em vantagem.' },
+            { name: 'Escape', category: 'mana', desc: 'Pode conjurar do cemiterio pelo custo de escape, exilando outras cartas.', example: 'Cemiterio vira recurso.' },
+            { name: 'Foretell', category: 'mana', desc: 'Pague 2 para exilar virada. Depois pode conjurar pelo custo de presagio.', example: 'Permite planejar turnos futuros.' },
+
+            // Other Abilities
+            { name: 'Equip', category: 'static', desc: 'Pague o custo para anexar este equipamento a criatura que controla.', example: 'Equipamentos passam de criatura para criatura.' },
+            { name: 'Enchant', category: 'static', desc: 'Esta aura so pode ser anexada ao tipo especificado.', example: 'Enchant creature = so em criaturas.' },
+            { name: 'Regenerate', category: 'evergreen', desc: 'Pague custo: da proxima vez que seria destruida, vira, remove de combate, remove dano.', example: 'Mecanica antiga, substituida por outros efeitos.' },
+            { name: 'Phasing', category: 'static', desc: 'No inicio do turno, permanentes com phasing alternam entre existir e nao existir.', example: 'Enquanto phased out, e como se nao existisse.' },
+            { name: 'Morph', category: 'evergreen', desc: 'Pode conjurar virada para baixo como 2/2 por 3. Vire para cima pagando custo de metamorfose.', example: 'Esconde a identidade da criatura.' },
+            { name: 'Manifest', category: 'static', desc: 'Coloque a carta do topo virada para baixo como 2/2. Se for criatura, pode virar pelo custo de mana.', example: 'Similar a Morph mas aleatorio.' },
+            { name: 'Mutate', category: 'mana', desc: 'Pague custo de mutacao para fundir com criatura nao-humana. Combinam poder/resistencia e habilidades.', example: 'Cria criaturas customizadas.' },
+            { name: 'Cycling', category: 'mana', desc: 'Descarte esta carta e pague custo para comprar uma carta.', example: 'Troca cartas desnecessarias.' },
+            { name: 'Transmute', category: 'mana', desc: 'Descarte e pague custo para buscar carta com mesmo custo de mana convertido.', example: 'Tutor para custo especifico.' },
+            { name: 'Scry', category: 'evergreen', desc: 'Olhe as X cartas do topo. Coloque quantas quiser no fundo em qualquer ordem.', example: 'Scry 2 = olhe 2, decida onde vao.' },
+            { name: 'Surveil', category: 'evergreen', desc: 'Olhe X cartas do topo. Coloque quantas quiser no cemiterio, resto no topo.', example: 'Como Scry mas para o cemiterio.' },
+            { name: 'Explore', category: 'triggered', desc: 'Revele o topo. Se terreno, coloque na mao. Se nao, +1/+1 e pode colocar no cemiterio.', example: 'Gera vantagem de cartas ou criaturas maiores.' },
+            { name: 'Populate', category: 'triggered', desc: 'Crie uma copia de um token de criatura que voce controla.', example: 'Duplica seus melhores tokens.' },
+            { name: 'Proliferate', category: 'triggered', desc: 'Escolha permanentes e jogadores com marcadores. De mais um de cada tipo que ja tem.', example: 'Aumenta +1/+1, veneno, lealdade, etc.' },
+            { name: 'Amass', category: 'triggered', desc: 'Coloque +1/+1 em Exercito que controla ou crie token Exercito Zumbi 0/0 primeiro.', example: 'Cria um exercito cada vez maior.' },
+            { name: 'Monstrosity', category: 'mana', desc: 'Se nao for monstruosa, coloque X +1/+1 e torna-se monstruosa.', example: 'So pode ser ativado uma vez.' },
+            { name: 'Adapt', category: 'mana', desc: 'Se nao tiver +1/+1, coloque X marcadores +1/+1.', example: 'Pode ser reativado se perder marcadores.' },
+            { name: 'Crew', category: 'mana', desc: 'Vire criaturas com poder total X ou mais para tornar este Veiculo criatura ate fim do turno.', example: 'Veiculos precisam ser tripulados.' },
+            { name: 'Fabricate', category: 'triggered', desc: 'Ao entrar, escolha: +1/+1 ou criar token Servo 1/1 artefato.', example: 'Flexibilidade entre tamanho ou quantidade.' },
+            { name: 'Embalm', category: 'mana', desc: 'Exile do cemiterio: crie token copia branca zumbi sem custo de mana.', example: 'Criaturas voltam como zumbis.' },
+            { name: 'Eternalize', category: 'mana', desc: 'Exile do cemiterio: crie token copia preta zumbi 4/4 sem custo de mana.', example: 'Versao mais forte de Embalm.' },
+            { name: 'Encore', category: 'mana', desc: 'Exile do cemiterio: crie copias igual ao numero de oponentes, atacam esse turno, sacrificam no fim.', example: 'Otimo em multiplayer.' },
+            { name: 'Unearth', category: 'mana', desc: 'Devolva do cemiterio ao campo com impeto. Exile no fim do turno ou se deixar o campo.', example: 'Um ultimo ataque do cemiterio.' },
+            { name: 'Persist', category: 'triggered', desc: 'Quando morre sem -1/-1, volta com um marcador -1/-1.', example: 'Criaturas voltam uma vez menores.' },
+            { name: 'Undying', category: 'triggered', desc: 'Quando morre sem +1/+1, volta com um marcador +1/+1.', example: 'Criaturas voltam uma vez maiores.' },
+            { name: 'Blitz', category: 'mana', desc: 'Custo alternativo: ganha impeto, compre ao morrer, sacrifica no fim do turno.', example: 'Ataque rapido com recompensa.' },
+            { name: 'Hideaway', category: 'triggered', desc: 'Entra virado. Ao entrar, olhe 4 cartas do topo, exile uma virada, resto vai pro fundo.', example: 'Terrenos hideaway guardam surpresas.' },
+            { name: 'Evoke', category: 'mana', desc: 'Custo alternativo. Se pago, sacrifique quando entrar no campo.', example: 'Pague menos por efeito temporario.' },
+            { name: 'Champion', category: 'triggered', desc: 'Ao entrar, exile criatura do tipo. Quando sair, ela volta.', example: 'Temporariamente substitui outra criatura.' },
+            { name: 'Soulbond', category: 'triggered', desc: 'Pode parear com outra criatura sem par. Ambas ganham habilidade enquanto pareadas.', example: 'Criaturas trabalham em dupla.' },
+            { name: 'Bestow', category: 'mana', desc: 'Pode conjurar como Aura pelo custo de concessao. Se criatura encantada sair, vira criatura.', example: 'Criatura que vira aura e vice-versa.' },
+            { name: 'Living Weapon', category: 'triggered', desc: 'Ao entrar, crie token Germe 0/0 preto e anexe este equipamento a ele.', example: 'Equipamento que vem com criatura.' },
+            { name: 'Reconfigure', category: 'mana', desc: 'Pode anexar/desanexar de criatura. Enquanto anexado, nao e criatura.', example: 'Criatura que vira equipamento.' },
+            { name: 'Suspend', category: 'mana', desc: 'Exile com X marcadores de tempo. A cada manutencao, remova um. Sem marcadores, conjure de graca.', example: 'Pague tempo em vez de mana.' },
+            { name: 'Vanishing', category: 'triggered', desc: 'Entra com X marcadores de tempo. Remova um cada manutencao. Sem marcadores, sacrifique.', example: 'Permanentes temporarias.' },
+            { name: 'Fading', category: 'triggered', desc: 'Entra com X marcadores. Remova um cada manutencao. Sem marcadores, sacrifique.', example: 'Versao antiga de Vanishing.' },
+            { name: 'Modular', category: 'triggered', desc: 'Entra com X +1/+1. Quando morre, pode mover os marcadores para criatura artefato.', example: 'Marcadores passam para frente.' },
+            { name: 'Sunburst', category: 'triggered', desc: 'Entra com +1/+1 ou marcador de carga para cada cor de mana gasta.', example: 'Recompensa decks multicoloridos.' },
+            { name: 'Devour', category: 'triggered', desc: 'Ao entrar, pode sacrificar criaturas. Ganha +1/+1 para cada devorada (ou mais).', example: 'Criaturas pequenas viram +1/+1.' },
+            { name: 'Graft', category: 'triggered', desc: 'Entra com X +1/+1. Quando outra criatura entra, pode mover um marcador para ela.', example: 'Compartilha marcadores com novatos.' },
+            { name: 'Entwine', category: 'mana', desc: 'Custo adicional para escolher todos os modos em vez de apenas um.', example: 'Pague mais para fazer tudo.' },
+            { name: 'Fuse', category: 'static', desc: 'Pode conjurar um ou ambos os lados de cartas split. Se conjurar ambos, pague os dois custos.', example: 'Cartas split com Fuse sao flexiveis.' },
+            { name: 'Aftermath', category: 'static', desc: 'Este lado so pode ser conjurado do cemiterio, depois e exilado.', example: 'Segunda metade da carta split.' },
+            { name: 'Adventure', category: 'static', desc: 'Pode conjurar como instantaneo/feitico primeiro. Do exilio, pode conjurar a criatura.', example: 'Duas magias em uma carta.' },
+            { name: 'Toxic', category: 'combat', desc: 'Quando causa dano de combate a jogador, esse jogador recebe X marcadores de veneno.', example: 'Versao mais controlada de Infect.' },
+            { name: 'Corrupted', category: 'static', desc: 'Habilidade ativa se oponente tem 3+ marcadores de veneno.', example: 'Bonus contra jogadores envenenados.' },
+            { name: 'For Mirrodin!', category: 'triggered', desc: 'Ao entrar, crie token Rebelde 2/2 vermelho e anexe este equipamento a ele.', example: 'Similar a Living Weapon.' },
+            { name: 'Compleated', category: 'mana', desc: 'Pode ser pago com 2 vida em vez de mana Phyrexiano. Se pago com vida, entra com menos lealdade.', example: 'Planeswalkers Phyrexianos.' },
+            { name: 'Prototype', category: 'mana', desc: 'Custo alternativo menor para versao menor da criatura (diferente P/T e cor).', example: 'Criaturas com duas versoes.' },
+            { name: 'Stun Counter', category: 'counter', desc: 'Se permanente com stun counter desvira, remova um marcador em vez de desvirar.', example: 'Mantem criaturas viradas mais tempo.' },
+            { name: 'Incubate', category: 'triggered', desc: 'Crie token Incubadora artefato com X +1/+1. Pague 2 para transforma-lo em criatura 0/0 Phyrexiana.', example: 'Criaturas que crescem de ovos.' },
+            { name: 'Role Token', category: 'triggered', desc: 'Auras token com varios efeitos (Cursed, Monster, Royal, etc). So uma por criatura.', example: 'Introducido em Wilds of Eldraine.' },
+            { name: 'Bargain', category: 'mana', desc: 'Pode sacrificar artefato, encantamento ou token como custo adicional para efeito bonus.', example: 'Sacrificio para poder extra.' },
+            { name: 'Celebration', category: 'triggered', desc: 'Ativa se duas ou mais permanentes nao-terreno entraram sob seu controle este turno.', example: 'Recompensa jogar multiplas cartas.' }
+        ];
+
+        let activeCategory = 'all';
+
+        function openKeywordsModal() {
+            renderKeywords();
+            document.getElementById('keywordsModal').classList.add('show');
+            document.getElementById('keywordSearch').value = '';
+            document.getElementById('keywordSearch').focus();
+        }
+
+        function closeKeywordsModal() {
+            document.getElementById('keywordsModal').classList.remove('show');
+        }
+
+        function renderKeywords() {
+            const grid = document.getElementById('keywordsGrid');
+            const searchTerm = document.getElementById('keywordSearch').value.toLowerCase();
+
+            const filtered = KEYWORDS_DATA.filter(kw => {
+                const matchesSearch = kw.name.toLowerCase().includes(searchTerm) ||
+                                      kw.desc.toLowerCase().includes(searchTerm);
+                const matchesCategory = activeCategory === 'all' || kw.category === activeCategory;
+                return matchesSearch && matchesCategory;
+            });
+
+            grid.innerHTML = filtered.map(kw => `
+                <div class="keyword-item">
+                    <div class="keyword-name">
+                        ${kw.name}
+                        <span class="keyword-category ${kw.category}">${kw.category}</span>
+                    </div>
+                    <div class="keyword-desc">${kw.desc}</div>
+                    ${kw.example ? `<div class="keyword-example">${kw.example}</div>` : ''}
+                </div>
+            `).join('');
+
+            document.getElementById('keywordsCount').textContent = `Mostrando ${filtered.length} de ${KEYWORDS_DATA.length} keywords`;
+        }
+
+        function filterKeywords() {
+            renderKeywords();
+        }
+
+        function filterByCategory(category) {
+            activeCategory = category;
+            document.querySelectorAll('.category-filter').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            renderKeywords();
+        }
+
+        document.getElementById('keywordsModal').addEventListener('click', function(e) {
+            if (e.target === this) closeKeywordsModal();
+        });
 
         connectWebSocket();
     </script>
