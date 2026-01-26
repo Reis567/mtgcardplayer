@@ -883,15 +883,22 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     return {'success': False, 'error': 'Object not found'}
 
                 old_zone = obj.zone
-                # Get minimum position (top of library)
-                min_pos = GameObject.objects.filter(
+                card_name = obj.card.name
+
+                # Shift all library cards down by 1 to make room at position 0
+                library_cards = GameObject.objects.filter(
                     game=game,
                     owner=obj.owner,
                     zone='library'
-                ).order_by('zone_position').values_list('zone_position', flat=True).first()
+                ).exclude(id=obj_id).order_by('zone_position')
 
+                for i, card in enumerate(library_cards):
+                    card.zone_position = i + 1
+                    card.save()
+
+                # Place the card at position 0 (top)
                 obj.zone = 'library'
-                obj.zone_position = (min_pos or 0) - 1
+                obj.zone_position = 0
                 obj.is_tapped = False
                 obj.save()
 
@@ -899,8 +906,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     game=game,
                     action_type='put_top',
                     player=game_player,
-                    data={'card': obj.card.name, 'from': old_zone},
-                    display_text=f"{game_player.player.nickname} colocou {obj.card.name} no topo da biblioteca",
+                    data={'card': card_name, 'from': old_zone},
+                    display_text=f"{game_player.player.nickname} colocou {card_name} no topo da biblioteca",
                     turn_number=game.turn_number,
                     phase=game.current_phase
                 )
@@ -1009,30 +1016,50 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 # Reorder cards after scrying - receives list of {id, position: 'top'|'bottom'}
                 order = data.get('order', [])
 
-                # First, get current min and max positions
-                library_positions = GameObject.objects.filter(
+                if not order:
+                    return {'success': True, 'private': True}
+
+                # Separate cards going to top vs bottom
+                top_cards = [item for item in order if item.get('position') != 'bottom']
+                bottom_cards = [item for item in order if item.get('position') == 'bottom']
+
+                # Get all library cards ordered by position
+                library_cards = list(GameObject.objects.filter(
                     game=game,
                     owner=game_player,
                     zone='library'
-                ).order_by('zone_position').values_list('zone_position', flat=True)
+                ).order_by('zone_position'))
 
-                positions_list = list(library_positions)
-                min_pos = positions_list[0] if positions_list else 0
-                max_pos = positions_list[-1] if positions_list else 0
+                # Get IDs of cards being reordered
+                reorder_ids = {item['id'] for item in order}
 
-                top_offset = 0
-                bottom_offset = 0
+                # Remove reordered cards from the middle of the library
+                remaining_cards = [c for c in library_cards if str(c.id) not in reorder_ids]
 
-                for item in order:
+                # Calculate new positions: top_cards first, then remaining, then bottom_cards
+                new_position = 0
+
+                # Place top cards first (in order they were added to top)
+                for item in top_cards:
                     obj = GameObject.objects.filter(id=item['id'], game=game).first()
-                    if obj and obj.zone == 'library':
-                        if item.get('position') == 'bottom':
-                            bottom_offset += 1
-                            obj.zone_position = max_pos + bottom_offset
-                        else:  # top (default)
-                            top_offset += 1
-                            obj.zone_position = min_pos - top_offset
+                    if obj:
+                        obj.zone_position = new_position
                         obj.save()
+                        new_position += 1
+
+                # Place remaining library cards
+                for card in remaining_cards:
+                    card.zone_position = new_position
+                    card.save()
+                    new_position += 1
+
+                # Place bottom cards last
+                for item in bottom_cards:
+                    obj = GameObject.objects.filter(id=item['id'], game=game).first()
+                    if obj:
+                        obj.zone_position = new_position
+                        obj.save()
+                        new_position += 1
 
                 return {'success': True, 'private': True}
 
