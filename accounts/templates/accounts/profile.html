@@ -1,0 +1,61 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Perfil - MTG Commander{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Criar Jogador</h1>
+    <p class="subtitle">Configure seu nick e avatar para esta partida</p>
+
+    {% if error %}
+    <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    <div class="avatar-preview" id="avatar-preview" style="background-color: #e94560">
+        ?
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="tab_id" value="{{ tab_id }}">
+
+        <div class="form-group">
+            <label for="nickname">Nickname</label>
+            <input type="text" id="nickname" name="nickname" value="" maxlength="30" required placeholder="Digite seu nome">
+        </div>
+
+        <div class="form-group">
+            <label>Cor do Avatar</label>
+            <div class="color-picker">
+                {% for color in colors %}
+                <div class="color-option {% if forloop.first %}selected{% endif %}"
+                     style="background-color: {{ color }}"
+                     data-color="{{ color }}"
+                     onclick="selectColor('{{ color }}')"></div>
+                {% endfor %}
+            </div>
+            <input type="hidden" name="avatar_color" id="avatar_color" value="#e94560">
+        </div>
+
+        <button type="submit">Entrar no Jogo</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectColor(color) {
+    document.querySelectorAll('.color-option').forEach(el => {
+        el.classList.remove('selected');
+    });
+    document.querySelector(`[data-color="${color}"]`).classList.add('selected');
+    document.getElementById('avatar_color').value = color;
+    document.getElementById('avatar-preview').style.backgroundColor = color;
+}
+
+document.getElementById('nickname').addEventListener('input', function() {
+    const preview = document.getElementById('avatar-preview');
+    preview.textContent = this.value.charAt(0).toUpperCase() || '?';
+});
+</script>
+{% endblock %}

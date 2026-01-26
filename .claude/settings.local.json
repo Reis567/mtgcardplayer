@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(django-admin startproject:*)",
+      "Bash(python manage.py startapp:*)",
+      "Bash(python manage.py makemigrations:*)",
+      "Bash(python manage.py migrate:*)",
+      "Bash(dir:*)",
+      "Bash(timeout 5 python:*)",
+      "Bash(python:*)",
+      "Bash(set DJANGO_SETTINGS_MODULE=mtg_cards.settings:*)"
+    ]
+  }
+}

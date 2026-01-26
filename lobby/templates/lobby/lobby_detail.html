@@ -1,0 +1,594 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ lobby.name }} - MTG Commander{% endblock %}
+
+{% block extra_css %}
+<style>
+    .container { max-width: 900px; }
+    .lobby-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .lobby-header h1 { margin-bottom: 10px; }
+    .lobby-header .status {
+        display: inline-block;
+        padding: 8px 20px;
+        border-radius: 20px;
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ecdc4;
+        font-size: 1rem;
+    }
+    .lobby-header .status.can-start {
+        background: rgba(39, 174, 96, 0.3);
+        color: #2ecc71;
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
+    .connection-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
+        padding: 5px 12px;
+        border-radius: 15px;
+        background: rgba(0,0,0,0.3);
+        font-size: 0.85rem;
+    }
+    .connection-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #e74c3c;
+    }
+    .connection-dot.connected { background: #2ecc71; }
+
+    .players-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    .player-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        border: 2px solid transparent;
+        transition: all 0.3s;
+    }
+    .player-card.ready {
+        border-color: #4ecdc4;
+        background: rgba(78, 205, 196, 0.1);
+    }
+    .player-card.is-me {
+        border-color: #e94560;
+    }
+    .player-card.empty {
+        opacity: 0.4;
+        border-style: dashed;
+        border-color: #333;
+    }
+    .player-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin: 0 auto 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: white;
+    }
+    .player-card h3 {
+        margin-bottom: 5px;
+        font-size: 1.1rem;
+    }
+    .player-card .deck-info {
+        color: #e94560;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+        min-height: 20px;
+    }
+    .player-card .deck-info.none {
+        color: #666;
+        font-style: italic;
+    }
+    .ready-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+    }
+    .ready-badge.ready {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ecdc4;
+    }
+    .ready-badge.waiting {
+        background: rgba(255, 255, 255, 0.1);
+        color: #888;
+    }
+
+    .controls-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    @media (max-width: 700px) {
+        .controls-grid { grid-template-columns: 1fr; }
+    }
+    .control-panel {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+    }
+    .control-panel h3 {
+        margin-bottom: 15px;
+        color: #aaa;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .control-panel select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.3);
+        color: #fff;
+        font-size: 1rem;
+        margin-bottom: 15px;
+    }
+    .control-panel select:disabled {
+        opacity: 0.5;
+    }
+    .btn-row {
+        display: flex;
+        gap: 10px;
+    }
+    .btn-row .btn { flex: 1; }
+
+    .btn-ready {
+        background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+    }
+    .btn-unready {
+        background: rgba(255, 193, 7, 0.3);
+        border: 1px solid #ffc107;
+        color: #ffc107;
+    }
+    .btn-leave {
+        background: rgba(233, 69, 96, 0.2);
+        border: 1px solid #e94560;
+    }
+    .btn-start {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        padding: 15px 40px;
+        font-size: 1.1rem;
+    }
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .chat-messages {
+        height: 120px;
+        overflow-y: auto;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .chat-message {
+        font-size: 0.85rem;
+        padding: 3px 0;
+    }
+    .chat-message .sender { color: #4ecdc4; font-weight: 500; }
+    .chat-input-row {
+        display: flex;
+        gap: 8px;
+    }
+    .chat-input-row input {
+        flex: 1;
+        padding: 10px 12px;
+        border: none;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    .chat-input-row button {
+        padding: 10px 15px;
+    }
+
+    .start-section {
+        text-align: center;
+        padding: 20px;
+    }
+    .start-section .waiting-msg {
+        color: #888;
+        font-size: 1rem;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #888;
+        text-decoration: none;
+    }
+    .back-link:hover { color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="/lobby/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="back-link">&larr; Voltar ao Lobby</a>
+
+<div class="lobby-header">
+    <h1>{{ lobby.name }}</h1>
+    <div class="status" id="statusBadge">
+        <span id="playerCount">{{ players|length }}</span>/{{ lobby.max_players }} jogadores
+    </div>
+    <div class="connection-badge">
+        <div class="connection-dot" id="wsStatus"></div>
+        <span id="wsText">Conectando...</span>
+    </div>
+</div>
+
+<div class="players-grid" id="playersGrid">
+    {% for lp in players %}
+    <div class="player-card {% if lp.is_ready %}ready{% endif %} {% if lp.player.id == player.id %}is-me{% endif %}"
+         data-player-id="{{ lp.player.id }}">
+        <div class="player-avatar" style="background-color: {{ lp.player.avatar_color|default:'#e94560' }}">
+            {{ lp.player.nickname|slice:":1"|upper }}
+        </div>
+        <h3>{{ lp.player.nickname }}</h3>
+        <div class="deck-info {% if not lp.deck %}none{% endif %}">
+            {% if lp.deck and lp.deck.commander %}
+                {{ lp.deck.commander.name }}
+            {% else %}
+                Sem deck
+            {% endif %}
+        </div>
+        <span class="ready-badge {% if lp.is_ready %}ready{% else %}waiting{% endif %}">
+            {% if lp.is_ready %}Pronto!{% else %}Aguardando{% endif %}
+        </span>
+    </div>
+    {% endfor %}
+
+    {% for i in "123456"|make_list %}
+        {% if forloop.counter > players|length and forloop.counter <= lobby.max_players %}
+        <div class="player-card empty">
+            <div class="player-avatar" style="background-color: #333;">?</div>
+            <h3>Aguardando...</h3>
+        </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<div class="controls-grid">
+    <div class="control-panel">
+        <h3>Seus Controles</h3>
+
+        <form method="post" id="deckForm">
+            {% csrf_token %}
+            {% if tab_id %}<input type="hidden" name="tab_id" value="{{ tab_id }}">{% endif %}
+            <input type="hidden" name="action" value="select_deck">
+            <select name="deck_id" id="deckSelect" onchange="selectDeck(this.value)">
+                <option value="">-- Selecione um deck --</option>
+                {% for deck in player_decks %}
+                <option value="{{ deck.id }}" {% if lobby_player.deck and deck.id == lobby_player.deck.id %}selected{% endif %}>
+                    {{ deck.name }} - {{ deck.commander.name }} ({{ deck.owner.nickname }})
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+
+        <div class="btn-row">
+            <form method="post" id="readyForm" style="flex:1;">
+                {% csrf_token %}
+                {% if tab_id %}<input type="hidden" name="tab_id" value="{{ tab_id }}">{% endif %}
+                <input type="hidden" name="action" value="toggle_ready">
+                <button type="submit" id="readyBtn" class="btn {% if lobby_player.is_ready %}btn-unready{% else %}btn-ready{% endif %}"
+                        {% if not lobby_player.deck %}disabled{% endif %}
+                        onclick="return toggleReady(event)">
+                    {% if lobby_player.is_ready %}Cancelar{% else %}Estou Pronto!{% endif %}
+                </button>
+            </form>
+
+            <form method="post" style="flex:1;">
+                {% csrf_token %}
+                {% if tab_id %}<input type="hidden" name="tab_id" value="{{ tab_id }}">{% endif %}
+                <input type="hidden" name="action" value="leave">
+                <button type="submit" class="btn btn-leave" onclick="return confirm('Sair da partida?')">Sair</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <h3>Chat</h3>
+        <div class="chat-messages" id="chatBox"></div>
+        <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Mensagem..."
+                   onkeypress="if(event.key==='Enter')sendChat()">
+            <button class="btn btn-ready" onclick="sendChat()">Enviar</button>
+        </div>
+    </div>
+</div>
+
+<div class="start-section" id="startSection">
+    {% if lobby.can_start %}
+    <form method="post" id="startForm">
+        {% csrf_token %}
+        {% if tab_id %}<input type="hidden" name="tab_id" value="{{ tab_id }}">{% endif %}
+        <input type="hidden" name="action" value="start_game">
+        <button type="submit" class="btn btn-start" onclick="return startGame(event)">
+            Iniciar Partida!
+        </button>
+    </form>
+    {% else %}
+    <p class="waiting-msg" id="waitingMsg">Aguardando todos ficarem prontos...</p>
+    {% endif %}
+</div>
+
+<script>
+const lobbyId = '{{ lobby.id }}';
+const myPlayerId = '{{ player.id }}';
+const myNickname = '{{ player.nickname }}';
+const maxPlayers = {{ lobby.max_players }};
+const minPlayers = {{ lobby.min_players }};
+const csrfToken = '{{ csrf_token }}';
+const tabId = '{{ tab_id|default:"" }}';
+
+let ws = null;
+let wsConnected = false;
+let currentState = null;
+
+// Estado inicial do servidor
+let isReady = {{ lobby_player.is_ready|yesno:"true,false" }};
+let hasDeck = {{ lobby_player.deck|yesno:"true,false" }};
+
+function connectWS() {
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    // Pass tab_id and player_id through query string for correct identification
+    const params = new URLSearchParams();
+    if (tabId) params.set('tab', tabId);
+    params.set('player_id', myPlayerId);
+    const queryStr = params.toString();
+    ws = new WebSocket(`${protocol}//${location.host}/ws/lobby/${lobbyId}/?${queryStr}`);
+
+    ws.onopen = () => {
+        wsConnected = true;
+        document.getElementById('wsStatus').classList.add('connected');
+        document.getElementById('wsText').textContent = 'Conectado';
+        ws.send(JSON.stringify({action: 'get_state'}));
+    };
+
+    ws.onclose = () => {
+        wsConnected = false;
+        document.getElementById('wsStatus').classList.remove('connected');
+        document.getElementById('wsText').textContent = 'Reconectando...';
+        setTimeout(connectWS, 3000);
+    };
+
+    ws.onerror = (e) => console.error('WS Error:', e);
+
+    ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        console.log('[WS Received]', data);
+        handleMessage(data);
+    };
+}
+
+function handleMessage(data) {
+    if (data.type === 'lobby_state' && data.data) {
+        currentState = data.data;
+        updateUI(data.data);
+    } else if (data.type === 'chat') {
+        addChatMsg(data.sender, data.message);
+    } else if (data.type === 'game_starting') {
+        window.location.href = '/game/' + data.game_id + '/' + (tabId ? '?tab=' + tabId : '');
+    } else if (data.type === 'error') {
+        alert(data.message);
+    }
+}
+
+function updateUI(state) {
+    console.log('[updateUI] Called with state:', state);
+    console.log('[updateUI] My player ID:', myPlayerId);
+
+    // Atualizar status badge (inclui contador de jogadores)
+    const badge = document.getElementById('statusBadge');
+    if (state.can_start) {
+        badge.classList.add('can-start');
+        badge.innerHTML = `<span id="playerCount">${state.players.length}</span>/${maxPlayers} - Pronto para iniciar!`;
+    } else {
+        badge.classList.remove('can-start');
+        badge.innerHTML = `<span id="playerCount">${state.players.length}</span>/${maxPlayers} jogadores`;
+    }
+
+    // Atualizar grid de jogadores
+    const grid = document.getElementById('playersGrid');
+    let html = '';
+
+    for (const p of state.players) {
+        const isMe = p.id === myPlayerId;
+        console.log(`[updateUI] Player ${p.nickname}: p.id="${p.id}" myPlayerId="${myPlayerId}" isMe=${isMe}`);
+        const readyClass = p.is_ready ? 'ready' : '';
+        const meClass = isMe ? 'is-me' : '';
+
+        if (isMe) {
+            console.log('[updateUI] Found myself! p.is_ready:', p.is_ready, 'p.commander_name:', p.commander_name);
+            isReady = p.is_ready;
+            hasDeck = !!p.commander_name;
+        }
+
+        html += `
+            <div class="player-card ${readyClass} ${meClass}" data-player-id="${p.id}">
+                <div class="player-avatar" style="background-color: ${p.avatar_color || '#e94560'}">
+                    ${p.nickname.charAt(0).toUpperCase()}
+                </div>
+                <h3>${p.nickname}</h3>
+                <div class="deck-info ${p.commander_name ? '' : 'none'}">
+                    ${p.commander_name || 'Sem deck'}
+                </div>
+                <span class="ready-badge ${p.is_ready ? 'ready' : 'waiting'}">
+                    ${p.is_ready ? 'Pronto!' : 'Aguardando'}
+                </span>
+            </div>
+        `;
+    }
+
+    // Slots vazios
+    for (let i = state.players.length; i < maxPlayers; i++) {
+        html += `
+            <div class="player-card empty">
+                <div class="player-avatar" style="background-color: #333;">?</div>
+                <h3>Aguardando...</h3>
+            </div>
+        `;
+    }
+
+    grid.innerHTML = html;
+
+    // Atualizar botão ready
+    updateReadyBtn();
+
+    // Atualizar seção de início
+    const startSection = document.getElementById('startSection');
+    if (state.can_start) {
+        startSection.innerHTML = `
+            <form method="post" id="startForm">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                ${tabId ? `<input type="hidden" name="tab_id" value="${tabId}">` : ''}
+                <input type="hidden" name="action" value="start_game">
+                <button type="submit" class="btn btn-start" onclick="return startGame(event)">
+                    Iniciar Partida!
+                </button>
+            </form>
+        `;
+    } else {
+        startSection.innerHTML = '<p class="waiting-msg">Aguardando todos ficarem prontos...</p>';
+    }
+}
+
+function updateReadyBtn() {
+    console.log('[updateReadyBtn] Called, isReady:', isReady, 'hasDeck:', hasDeck);
+    const btn = document.getElementById('readyBtn');
+    const select = document.getElementById('deckSelect');
+
+    if (isReady) {
+        btn.textContent = 'Cancelar';
+        btn.className = 'btn btn-unready';
+        btn.disabled = false;
+        select.disabled = true;
+        console.log('[updateReadyBtn] Set button to CANCEL state');
+    } else {
+        btn.textContent = 'Estou Pronto!';
+        btn.className = 'btn btn-ready';
+        btn.disabled = !select.value;
+        select.disabled = false;
+        console.log('[updateReadyBtn] Set button to READY state, disabled:', !select.value);
+    }
+}
+
+function selectDeck(deckId) {
+    console.log('[selectDeck] Called with deckId:', deckId);
+    if (!deckId) {
+        hasDeck = false;
+        updateReadyBtn();
+        return;
+    }
+
+    hasDeck = true;
+
+    if (wsConnected) {
+        const msg = {
+            action: 'select_deck',
+            player_id: myPlayerId,
+            deck_id: deckId
+        };
+        console.log('[selectDeck] Sending:', msg);
+        ws.send(JSON.stringify(msg));
+    } else {
+        // Fallback POST
+        console.log('[selectDeck] Falling back to form submit');
+        document.getElementById('deckForm').submit();
+    }
+
+    updateReadyBtn();
+}
+
+function toggleReady(event) {
+    console.log('[toggleReady] Called, wsConnected:', wsConnected, 'myPlayerId:', myPlayerId);
+    if (wsConnected) {
+        event.preventDefault();
+        const msg = {
+            action: 'toggle_ready',
+            player_id: myPlayerId
+        };
+        console.log('[toggleReady] Sending:', msg);
+        ws.send(JSON.stringify(msg));
+        return false;
+    }
+    console.log('[toggleReady] Falling back to form submit');
+    return true; // Allow form submit as fallback
+}
+
+function startGame(event) {
+    if (wsConnected) {
+        event.preventDefault();
+        ws.send(JSON.stringify({action: 'start_game'}));
+        return false;
+    }
+    return true;
+}
+
+function sendChat() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    if (wsConnected) {
+        console.log('[sendChat] Sending as:', myNickname);
+        ws.send(JSON.stringify({
+            action: 'chat',
+            message: msg,
+            sender: myNickname
+        }));
+    }
+    input.value = '';
+}
+
+function addChatMsg(sender, message) {
+    const box = document.getElementById('chatBox');
+    const div = document.createElement('div');
+    div.className = 'chat-message';
+    div.innerHTML = `<span class="sender">${sender}:</span> ${message}`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
+// Debug: Log initial values
+console.log('=== LOBBY INIT ===');
+console.log('myPlayerId:', myPlayerId);
+console.log('myNickname:', myNickname);
+console.log('tabId:', tabId);
+console.log('lobbyId:', lobbyId);
+console.log('isReady:', isReady);
+console.log('hasDeck:', hasDeck);
+console.log('URL:', window.location.href);
+console.log('==================');
+
+// ALERTA: Se tab_id está faltando, a identificação do jogador pode estar errada!
+if (!tabId) {
+    console.error('AVISO: tab_id está faltando na URL! A identificação do jogador pode estar incorreta.');
+    console.error('Você deveria ter acessado esta página com ?tab=XXX na URL.');
+}
+
+// Inicializar
+connectWS();
+updateReadyBtn();
+</script>
+{% endblock %}

@@ -1,0 +1,117 @@
+##############################
+# Python
+##############################
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+
+##############################
+# Virtual Environments
+##############################
+.env
+.env.*
+venv/
+ENV/
+env/
+.venv/
+pip-wheel-metadata/
+
+##############################
+# Django
+##############################
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+static/
+
+##############################
+# Django Channels / ASGI
+##############################
+daphne.sock
+*.pid
+
+##############################
+# Celery
+##############################
+celerybeat-schedule
+celerybeat.pid
+
+##############################
+# Redis
+##############################
+dump.rdb
+redis.conf
+
+##############################
+# Testing / Coverage
+##############################
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+pytest_cache/
+nosetests.xml
+coverage.xml
+
+##############################
+# Migrations (opcional)
+# Descomente se NÃO quiser versionar migrations
+##############################
+# */migrations/
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+##############################
+# IDEs e Editores
+##############################
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*.bak
+
+##############################
+# Jupyter / IPython
+##############################
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+##############################
+# Build / Distribuição
+##############################
+build/
+dist/
+*.egg-info/
+.eggs/
+MANIFEST
+
+##############################
+# Logs e arquivos temporários
+##############################
+logs/
+tmp/
+*.tmp
+*.temp
+
+##############################
+# OS
+##############################
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+##############################
+# Docker (se usar)
+##############################
+docker-compose.override.yml
+.env.docker

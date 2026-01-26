@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partida - MTG Commander</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a12;
+            color: #eee;
+            min-height: 100vh;
+        }
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            grid-template-rows: auto 1fr auto;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+        }
+        .game-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        .turn-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .turn-info .turn { color: #e94560; font-weight: bold; }
+        .turn-info .phase { color: #4ecdc4; }
+        .turn-info .active { color: #ffc107; }
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        .connection-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #c0392b;
+        }
+        .connection-dot.connected { background: #27ae60; }
+        .game-controls button {
+            padding: 8px 15px;
+            margin-left: 10px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .game-controls button:hover { background: rgba(255,255,255,0.2); }
+        .game-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .game-controls button.primary { background: #e94560; }
+        .battlefield-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            overflow-y: auto;
+        }
+        .player-area {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid transparent;
+            position: relative;
+            transition: border-color 0.3s;
+        }
+        .player-area.active { border-color: #ffc107; }
+        .player-area.is-me { border-color: #e94560; }
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .player-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .player-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .life-counter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .life-counter .life {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4ecdc4;
+            min-width: 40px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .life-counter .life.changed {
+            transform: scale(1.3);
+            color: #e94560;
+        }
+        .life-counter button {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .life-counter button:hover { background: rgba(255,255,255,0.2); }
+        .zone {
+            margin-top: 10px;
+            min-height: 60px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 8px;
+        }
+        .zone-label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        .zone-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .card {
+            width: 70px;
+            height: 98px;
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.2s;
+            border: 2px solid transparent;
+        }
+        .card:hover { transform: scale(1.05); z-index: 10; }
+        .card.tapped { transform: rotate(90deg); margin: 10px; }
+        .card.selected { border-color: #e94560; }
+        .card.commander { border-color: #ffc107; }
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card .counters {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background: rgba(0,0,0,0.8);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+        }
+        .card-placeholder {
+            width: 70px;
+            height: 98px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 0.75rem;
+        }
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-panel {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-panel h3 { margin-bottom: 10px; font-size: 0.9rem; color: #888; }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            max-height: 100px;
+        }
+        .chat-message {
+            font-size: 0.8rem;
+            padding: 3px 0;
+        }
+        .chat-message .sender { color: #4ecdc4; }
+        .chat-input-container {
+            display: flex;
+            gap: 5px;
+        }
+        .chat-input-container input {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .chat-input-container button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            background: #e94560;
+            color: white;
+            cursor: pointer;
+        }
+        .log-panel {
+            flex: 1;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .log-panel h3 { margin-bottom: 10px; font-size: 0.9rem; color: #888; }
+        .log-entry {
+            font-size: 0.8rem;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            animation: fadeIn 0.3s ease;
+        }
+        .log-entry .turn-num { color: #e94560; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .my-hand {
+            grid-column: 1;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .my-hand h3 { margin-bottom: 10px; font-size: 0.9rem; }
+        .hand-cards {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .hand-cards .card { width: 100px; height: 140px; }
+        .card-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .card-modal.show { display: flex; }
+        .card-modal img { max-height: 70vh; border-radius: 15px; }
+        .card-modal .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .card-modal button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .card-modal .close { background: #333; color: white; }
+        .card-modal .action-btn { background: #e94560; color: white; }
+        .command-zone {
+            border: 2px dashed #e94560;
+        }
+        .dead-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e94560;
+            font-weight: bold;
+            border-radius: 10px;
+            z-index: 5;
+        }
+        .winner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 2000;
+        }
+        .winner-overlay h1 { color: #ffc107; font-size: 3rem; margin-bottom: 20px; }
+        .winner-overlay a {
+            padding: 15px 30px;
+            background: #e94560;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1500;
+        }
+        .loading-overlay.hidden { display: none; }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="game-container" id="gameContainer" style="display: none;">
+        <div class="game-header">
+            <div class="turn-info">
+                <span class="turn" id="turnNumber">Turno 1</span>
+                <span class="phase" id="currentPhase">Fase Principal 1</span>
+                <span class="active" id="activePlayer">Vez de: -</span>
+            </div>
+            <div class="connection-status">
+                <div class="connection-dot" id="connectionDot"></div>
+                <span id="connectionText">Conectando...</span>
+            </div>
+            <div class="game-controls">
+                <button onclick="sendAction('draw_card')">Comprar</button>
+                <button onclick="sendAction('next_phase')">Proxima Fase</button>
+                <button onclick="sendAction('next_turn')" class="primary">Passar Turno</button>
+                <button onclick="sendAction('shuffle_library')">Embaralhar</button>
+                <button onclick="if(confirm('Conceder a partida?')) sendAction('concede')" style="background:#c0392b;">Conceder</button>
+            </div>
+        </div>
+
+        <div class="battlefield-area" id="battlefieldArea">
+            <!-- Players will be rendered here by JavaScript -->
+        </div>
+
+        <div class="sidebar">
+            <div class="chat-panel">
+                <h3>Chat</h3>
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" placeholder="Digite sua mensagem..." onkeypress="if(event.key==='Enter') sendChat()">
+                    <button onclick="sendChat()">Enviar</button>
+                </div>
+            </div>
+            <div class="log-panel">
+                <h3>Log de Acoes</h3>
+                <div id="actionLog"></div>
+            </div>
+        </div>
+
+        <div class="my-hand" id="myHandContainer">
+            <h3>Sua Mao (<span id="handCount">0</span>)</h3>
+            <div class="hand-cards" id="myHand"></div>
+        </div>
+    </div>
+
+    <div class="card-modal" id="cardModal">
+        <img id="modalImage" src="" alt="">
+        <div class="actions" id="modalActions"></div>
+    </div>
+
+    <div class="winner-overlay" id="winnerOverlay" style="display: none;">
+        <h1 id="winnerText">Vencedor!</h1>
+        <a id="lobbyLink" href="/lobby/">Voltar ao Lobby</a>
+    </div>
+
+    <script>
+        const gameId = '{{ game.id }}';
+        const myPlayerId = '{{ player.id }}';
+        const mySeat = {{ game_player.seat_position }};
+        const csrfToken = '{{ csrf_token }}';
+        const tabId = '{{ tab_id|default:"" }}';
+
+        let socket = null;
+        let gameState = null;
+        let selectedCard = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+
+        // WebSocket Connection
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            // Pass tab_id and player_id through query string for correct identification
+            const params = new URLSearchParams();
+            if (tabId) params.set('tab', tabId);
+            params.set('player_id', myPlayerId);
+            const queryStr = params.toString();
+            const wsUrl = `${protocol}//${window.location.host}/ws/game/${gameId}/?${queryStr}`;
+
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = function() {
+                console.log('WebSocket connected');
+                reconnectAttempts = 0;
+                updateConnectionStatus(true);
+                // Request initial state
+                socket.send(JSON.stringify({ action: 'get_state' }));
+            };
+
+            socket.onclose = function(e) {
+                console.log('WebSocket closed', e);
+                updateConnectionStatus(false);
+
+                // Try to reconnect
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    setTimeout(connectWebSocket, 2000 * reconnectAttempts);
+                }
+            };
+
+            socket.onerror = function(e) {
+                console.error('WebSocket error', e);
+                updateConnectionStatus(false);
+            };
+
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                handleMessage(data);
+            };
+        }
+
+        function updateConnectionStatus(connected) {
+            const dot = document.getElementById('connectionDot');
+            const text = document.getElementById('connectionText');
+            if (connected) {
+                dot.classList.add('connected');
+                text.textContent = 'Conectado';
+            } else {
+                dot.classList.remove('connected');
+                text.textContent = 'Desconectado';
+            }
+        }
+
+        function handleMessage(data) {
+            switch (data.type) {
+                case 'game_state':
+                    gameState = data.state;
+                    renderGame();
+                    break;
+                case 'chat':
+                    addChatMessage(data.sender, data.message);
+                    break;
+                case 'action_result':
+                    if (!data.result.success) {
+                        alert(data.result.error || 'Erro ao executar acao');
+                    }
+                    break;
+            }
+        }
+
+        function sendAction(action, data = {}) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ action, data }));
+            } else {
+                alert('Conexao perdida. Reconectando...');
+                connectWebSocket();
+            }
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (message && socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    action: 'chat',
+                    message: message,
+                    sender: '{{ player.nickname }}'
+                }));
+                input.value = '';
+            }
+        }
+
+        function addChatMessage(sender, message) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'chat-message';
+            div.innerHTML = `<span class="sender">${sender}:</span> ${message}`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Render Functions
+        function renderGame() {
+            if (!gameState) return;
+
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('gameContainer').style.display = 'grid';
+
+            // Update header
+            document.getElementById('turnNumber').textContent = `Turno ${gameState.turn_number}`;
+            document.getElementById('currentPhase').textContent = gameState.phase_display;
+            document.getElementById('activePlayer').textContent = `Vez de: ${gameState.active_player_name || '-'}`;
+
+            // Check for winner
+            if (gameState.status === 'finished' && gameState.winner_id) {
+                const winner = gameState.players.find(p => p.id === gameState.winner_id);
+                if (winner) {
+                    document.getElementById('winnerText').textContent = `${winner.nickname} venceu!`;
+                    document.getElementById('winnerOverlay').style.display = 'flex';
+                }
+            }
+
+            // Render players
+            renderPlayers();
+
+            // Render my hand
+            renderMyHand();
+
+            // Render action log
+            renderActionLog();
+        }
+
+        function renderPlayers() {
+            const container = document.getElementById('battlefieldArea');
+            container.innerHTML = '';
+
+            for (const player of gameState.players) {
+                const zones = gameState.zones_data[player.seat_position];
+                const isActive = player.seat_position === gameState.active_player_seat;
+                const isMe = player.seat_position === mySeat;
+
+                const playerDiv = document.createElement('div');
+                playerDiv.className = `player-area ${isActive ? 'active' : ''} ${isMe ? 'is-me' : ''}`;
+                playerDiv.dataset.seat = player.seat_position;
+
+                let html = '';
+
+                if (!player.is_alive) {
+                    html += '<div class="dead-overlay">ELIMINADO</div>';
+                }
+
+                html += `
+                    <div class="player-header">
+                        <div class="player-name">
+                            <div class="player-avatar" style="background-color: ${player.avatar_color}">${player.nickname.charAt(0).toUpperCase()}</div>
+                            <span>${player.nickname}</span>
+                        </div>
+                        <div class="life-counter">
+                            <button onclick="changeLife(${player.seat_position}, -1)">-</button>
+                            <span class="life" id="life-${player.seat_position}">${player.life}</span>
+                            <button onclick="changeLife(${player.seat_position}, 1)">+</button>
+                        </div>
+                    </div>
+                `;
+
+                // Command zone
+                html += `
+                    <div class="zone command-zone">
+                        <div class="zone-label">Zona de Comando</div>
+                        <div class="zone-cards">
+                            ${renderCards(zones.command, 'command')}
+                        </div>
+                    </div>
+                `;
+
+                // Battlefield
+                html += `
+                    <div class="zone">
+                        <div class="zone-label">Campo de Batalha (${zones.battlefield.length})</div>
+                        <div class="zone-cards">
+                            ${renderCards(zones.battlefield, 'battlefield')}
+                        </div>
+                    </div>
+                `;
+
+                // Graveyard, Exile, Library counts
+                html += `
+                    <div class="zone">
+                        <div class="zone-label">Cemiterio (${zones.graveyard.length}) | Exilio (${zones.exile.length}) | Biblioteca (${zones.library_count})</div>
+                        <div class="zone-cards">
+                            ${renderCards(zones.graveyard, 'graveyard', true)}
+                            ${renderCards(zones.exile, 'exile', true)}
+                        </div>
+                    </div>
+                `;
+
+                playerDiv.innerHTML = html;
+                container.appendChild(playerDiv);
+            }
+        }
+
+        function renderCards(cards, zone, small = false) {
+            if (!cards || cards.length === 0) {
+                return zone === 'command' ? '<div class="card-placeholder">Vazio</div>' : '';
+            }
+
+            return cards.map(card => {
+                const tappedClass = card.is_tapped ? 'tapped' : '';
+                const commanderClass = card.is_commander ? 'commander' : '';
+                const sizeStyle = small ? 'width:50px;height:70px;' : '';
+
+                let countersHtml = '';
+                if (card.counters && Object.keys(card.counters).length > 0) {
+                    const countersText = Object.entries(card.counters)
+                        .map(([k, v]) => `${k}:${v}`)
+                        .join(' ');
+                    countersHtml = `<div class="counters">${countersText}</div>`;
+                }
+
+                return `
+                    <div class="card ${tappedClass} ${commanderClass}"
+                         data-id="${card.id}"
+                         onclick="showCard('${card.id}', '${card.image_normal}', '${card.name}', '${zone}')"
+                         style="${sizeStyle}">
+                        <img src="${card.image_small}" alt="${card.name}">
+                        ${countersHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderMyHand() {
+            const zones = gameState.zones_data[mySeat];
+            const handCards = zones ? zones.hand : [];
+
+            document.getElementById('handCount').textContent = handCards.length;
+
+            const container = document.getElementById('myHand');
+            if (handCards.length === 0) {
+                container.innerHTML = '<div class="card-placeholder">Mao vazia</div>';
+                return;
+            }
+
+            container.innerHTML = handCards.map(card => `
+                <div class="card" data-id="${card.id}" onclick="showCard('${card.id}', '${card.image_normal}', '${card.name}', 'hand')">
+                    <img src="${card.image_normal}" alt="${card.name}">
+                </div>
+            `).join('');
+        }
+
+        function renderActionLog() {
+            const container = document.getElementById('actionLog');
+            if (!gameState.recent_actions) return;
+
+            container.innerHTML = gameState.recent_actions.map(action => `
+                <div class="log-entry">
+                    <span class="turn-num">[T${action.turn_number}]</span>
+                    ${action.display_text}
+                </div>
+            `).join('');
+        }
+
+        // Card Modal
+        function showCard(objId, imageUrl, cardName, zone) {
+            selectedCard = { id: objId, zone: zone, name: cardName };
+            document.getElementById('modalImage').src = imageUrl;
+
+            let actions = '<button class="close" onclick="closeModal()">Fechar</button>';
+
+            if (zone === 'hand') {
+                actions += `
+                    <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Jogar no Campo</button>
+                    <button class="action-btn" onclick="moveCard('${objId}', 'graveyard')">Descartar</button>
+                    <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
+                `;
+            } else if (zone === 'battlefield') {
+                actions += `
+                    <button class="action-btn" onclick="tapCard('${objId}')">Virar/Desvirar</button>
+                    <button class="action-btn" onclick="moveCard('${objId}', 'graveyard')">Cemiterio</button>
+                    <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
+                    <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Devolver Mao</button>
+                    <button class="action-btn" onclick="addCounter('${objId}')">+1/+1</button>
+                    <button class="action-btn" onclick="removeCounter('${objId}')">-1/-1</button>
+                `;
+            } else if (zone === 'command') {
+                actions += `
+                    <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Lancar Comandante</button>
+                `;
+            } else if (zone === 'graveyard') {
+                actions += `
+                    <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Devolver Mao</button>
+                    <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Reanimar</button>
+                    <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
+                `;
+            } else if (zone === 'exile') {
+                actions += `
+                    <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Devolver Mao</button>
+                    <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Campo</button>
+                `;
+            }
+
+            document.getElementById('modalActions').innerHTML = actions;
+            document.getElementById('cardModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('cardModal').classList.remove('show');
+            selectedCard = null;
+        }
+
+        // Game Actions
+        function moveCard(objId, zone) {
+            closeModal();
+            sendAction('move_card', { object_id: objId, zone: zone });
+        }
+
+        function tapCard(objId) {
+            closeModal();
+            sendAction('tap_card', { object_id: objId });
+        }
+
+        function changeLife(seat, delta) {
+            sendAction('change_life', { target_seat: seat, delta: delta });
+
+            // Visual feedback
+            const lifeEl = document.getElementById(`life-${seat}`);
+            if (lifeEl) {
+                lifeEl.classList.add('changed');
+                setTimeout(() => lifeEl.classList.remove('changed'), 300);
+            }
+        }
+
+        function addCounter(objId) {
+            closeModal();
+            sendAction('add_counter', { object_id: objId, counter_type: '+1/+1' });
+        }
+
+        function removeCounter(objId) {
+            closeModal();
+            sendAction('remove_counter', { object_id: objId, counter_type: '+1/+1' });
+        }
+
+        // Modal close on background click
+        document.getElementById('cardModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+            if (e.key === 'd' && !e.target.matches('input')) sendAction('draw_card');
+            if (e.key === 'n' && !e.target.matches('input')) sendAction('next_phase');
+            if (e.key === 'p' && !e.target.matches('input')) sendAction('next_turn');
+        });
+
+        // Update lobby link with tab_id
+        if (tabId) {
+            document.getElementById('lobbyLink').href = `/lobby/?tab=${tabId}`;
+        }
+
+        // Start WebSocket connection
+        connectWebSocket();
+    </script>
+</body>
+</html>

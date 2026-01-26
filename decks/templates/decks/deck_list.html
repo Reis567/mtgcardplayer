@@ -1,0 +1,141 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Meus Decks - MTG Commander{% endblock %}
+
+{% block extra_css %}
+<style>
+    .container { max-width: 900px; }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    .deck-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    .deck-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: transform 0.2s, border-color 0.2s;
+    }
+    .deck-card:hover {
+        transform: translateY(-3px);
+        border-color: #e94560;
+    }
+    .deck-card h3 {
+        margin-bottom: 10px;
+        color: #fff;
+    }
+    .deck-card .commander {
+        color: #e94560;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+    .deck-card .meta {
+        color: #888;
+        font-size: 0.85rem;
+    }
+    .deck-card .colors {
+        margin-top: 10px;
+        display: flex;
+        gap: 5px;
+    }
+    .mana-symbol {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+    .mana-W { background: #f9faf4; color: #333; }
+    .mana-U { background: #0e68ab; color: white; }
+    .mana-B { background: #150b00; color: #ccc; border: 1px solid #333; }
+    .mana-R { background: #d3202a; color: white; }
+    .mana-G { background: #00733e; color: white; }
+    .deck-card a {
+        color: inherit;
+        text-decoration: none;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #888;
+    }
+    .empty-state p {
+        margin-bottom: 20px;
+    }
+    .nav-links {
+        display: flex;
+        gap: 10px;
+    }
+    .nav-links a {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    .nav-links a:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    .nav-links a.primary {
+        background: linear-gradient(135deg, #e94560, #ff6b6b);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div>
+        <h1>Meus Decks</h1>
+        <p class="subtitle">{{ player.nickname }}</p>
+    </div>
+    <div class="nav-links">
+        <a href="{% url 'deck_import' %}" class="primary">+ Importar Deck</a>
+        <a href="{% url 'lobby_list' %}">Lobby</a>
+        <a href="{% url 'profile' %}">Perfil</a>
+    </div>
+</div>
+
+{% if decks %}
+<div class="deck-grid">
+    {% for deck in decks %}
+    <div class="deck-card">
+        <a href="{% url 'deck_detail' deck.id %}">
+            <h3>{{ deck.name }}</h3>
+            <div class="commander">{{ deck.commander.name }}</div>
+            {% if deck.partner_commander %}
+            <div class="commander">+ {{ deck.partner_commander.name }}</div>
+            {% endif %}
+            <div class="meta">{{ deck.card_count }} cartas</div>
+            {% if deck.color_identity %}
+            <div class="colors">
+                {% for c in deck.color_identity %}
+                <span class="mana-symbol mana-{{ c }}">{{ c }}</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="colors">
+                <span class="mana-symbol" style="background: #888;">C</span>
+            </div>
+            {% endif %}
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state card">
+    <p>Voce ainda nao tem nenhum deck.</p>
+    <a href="{% url 'deck_import' %}" class="btn">Importar Deck</a>
+</div>
+{% endif %}
+{% endblock %}

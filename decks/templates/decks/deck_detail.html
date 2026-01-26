@@ -1,0 +1,157 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ deck.name }} - MTG Commander{% endblock %}
+
+{% block extra_css %}
+<style>
+    .container { max-width: 900px; }
+    .deck-header {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+    .commander-image {
+        flex-shrink: 0;
+    }
+    .commander-image img {
+        width: 250px;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+    .deck-info h1 {
+        margin-bottom: 10px;
+    }
+    .deck-info .commander-name {
+        color: #e94560;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    .deck-info .meta {
+        color: #888;
+        margin-bottom: 15px;
+    }
+    .colors {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    .mana-symbol {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    .mana-W { background: #f9faf4; color: #333; }
+    .mana-U { background: #0e68ab; color: white; }
+    .mana-B { background: #150b00; color: #ccc; border: 1px solid #333; }
+    .mana-R { background: #d3202a; color: white; }
+    .mana-G { background: #00733e; color: white; }
+    .actions {
+        display: flex;
+        gap: 10px;
+    }
+    .actions .btn {
+        width: auto;
+        padding: 10px 20px;
+    }
+    .btn-danger {
+        background: rgba(233, 69, 96, 0.2);
+        border: 1px solid #e94560;
+    }
+    .card-list {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+    }
+    .card-list h2 {
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+    }
+    .card-list ul {
+        list-style: none;
+        padding: 0;
+        columns: 2;
+        column-gap: 30px;
+    }
+    .card-list li {
+        padding: 5px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        font-size: 0.9rem;
+    }
+    .card-list li .qty {
+        color: #e94560;
+        margin-right: 5px;
+    }
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #888;
+        text-decoration: none;
+    }
+    .back-link:hover {
+        color: #fff;
+    }
+    @media (max-width: 768px) {
+        .deck-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .card-list ul {
+            columns: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'deck_list' %}" class="back-link">&larr; Voltar para Meus Decks</a>
+
+<div class="deck-header">
+    <div class="commander-image">
+        {% if deck.commander.image_normal %}
+        <img src="{{ deck.commander.image_normal }}" alt="{{ deck.commander.name }}">
+        {% endif %}
+    </div>
+    <div class="deck-info">
+        <h1>{{ deck.name }}</h1>
+        <div class="commander-name">{{ deck.commander.name }}</div>
+        {% if deck.partner_commander %}
+        <div class="commander-name">+ {{ deck.partner_commander.name }}</div>
+        {% endif %}
+        <div class="meta">{{ card_count }} cartas</div>
+
+        {% if deck.color_identity %}
+        <div class="colors">
+            {% for c in deck.color_identity %}
+            <span class="mana-symbol mana-{{ c }}">{{ c }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="actions">
+            <a href="{% url 'lobby_list' %}" class="btn">Ir para Lobby</a>
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este deck?')">Excluir Deck</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card-list">
+    <h2>Cartas ({{ deck_cards.count }})</h2>
+    <ul>
+        {% for dc in deck_cards %}
+        <li>
+            <span class="qty">{{ dc.quantity }}x</span>
+            {{ dc.card.name }}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Lobby - MTG Commander{% endblock %}
+
+{% block extra_css %}
+<style>
+    .container { max-width: 900px; }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    .nav-links {
+        display: flex;
+        gap: 10px;
+    }
+    .nav-links a {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    .nav-links a:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    .create-lobby {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .create-lobby h2 {
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+    }
+    .create-lobby form {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    .create-lobby .form-group {
+        flex: 1;
+        min-width: 200px;
+        margin-bottom: 0;
+    }
+    .create-lobby button {
+        width: auto;
+        padding: 12px 30px;
+    }
+    .lobbies-list {
+        display: grid;
+        gap: 15px;
+    }
+    .lobby-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: border-color 0.2s;
+    }
+    .lobby-card:hover {
+        border-color: #e94560;
+    }
+    .lobby-info h3 {
+        margin-bottom: 5px;
+    }
+    .lobby-info .meta {
+        color: #888;
+        font-size: 0.9rem;
+    }
+    .lobby-info .players {
+        margin-top: 10px;
+        display: flex;
+        gap: 5px;
+    }
+    .player-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: white;
+    }
+    .join-btn {
+        padding: 10px 25px;
+        background: linear-gradient(135deg, #e94560, #ff6b6b);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .join-btn:hover {
+        transform: translateY(-2px);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #888;
+    }
+    select {
+        padding: 12px 15px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.3);
+        color: #fff;
+        font-size: 1rem;
+    }
+    .warning {
+        background: rgba(255, 193, 7, 0.1);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div>
+        <h1>Lobby</h1>
+        <p class="subtitle">{{ player.nickname }}</p>
+    </div>
+    <div class="nav-links">
+        <a href="/decks/{% if tab_id %}?tab={{ tab_id }}{% endif %}">Meus Decks</a>
+        <a href="/logout/{% if tab_id %}?tab={{ tab_id }}{% endif %}">Sair</a>
+    </div>
+</div>
+
+{% if not player_decks %}
+<div class="warning">
+    Voce precisa importar um deck antes de criar ou entrar em uma partida.
+    <a href="/decks/import/{% if tab_id %}?tab={{ tab_id }}{% endif %}" style="color: #fff; margin-left: 10px;">Importar Deck</a>
+</div>
+{% endif %}
+
+<div class="create-lobby">
+    <h2>Criar Nova Partida</h2>
+    <form method="post" action="{% url 'lobby_create' %}">
+        {% csrf_token %}
+        {% if tab_id %}<input type="hidden" name="tab_id" value="{{ tab_id }}">{% endif %}
+        <div class="form-group">
+            <label for="name">Nome da Partida</label>
+            <input type="text" id="name" name="name" placeholder="Ex: Partida casual">
+        </div>
+        <div class="form-group">
+            <label for="max_players">Max Jogadores</label>
+            <select id="max_players" name="max_players">
+                <option value="2">2 jogadores</option>
+                <option value="3">3 jogadores</option>
+                <option value="4" selected>4 jogadores</option>
+                <option value="5">5 jogadores</option>
+                <option value="6">6 jogadores</option>
+            </select>
+        </div>
+        <button type="submit" {% if not player_decks %}disabled{% endif %}>Criar Partida</button>
+    </form>
+</div>
+
+<h2 style="margin-bottom: 15px;">Partidas Abertas</h2>
+
+{% if lobbies %}
+<div class="lobbies-list">
+    {% for lobby in lobbies %}
+    <div class="lobby-card">
+        <div class="lobby-info">
+            <h3>{{ lobby.name }}</h3>
+            <div class="meta">{{ lobby.player_count }}/{{ lobby.max_players }} jogadores</div>
+            <div class="players">
+                {% for lp in lobby.players.all %}
+                <div class="player-avatar" style="background-color: {{ lp.player.avatar_color|default:'#e94560' }}" title="{{ lp.player.nickname }}">
+                    {{ lp.player.nickname|slice:":1"|upper }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if player_decks and lobby.player_count < lobby.max_players %}
+        <a href="/lobby/{{ lobby.id }}/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="join-btn">Entrar</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state card">
+    <p>Nenhuma partida aberta no momento.</p>
+    <p>Crie uma nova partida para comecar!</p>
+</div>
+{% endif %}
+{% endblock %}

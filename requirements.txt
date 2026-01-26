@@ -1,0 +1,4 @@
+Django>=4.2
+requests
+channels>=4.0
+daphne>=4.0

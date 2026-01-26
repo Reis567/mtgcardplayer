@@ -1,0 +1,101 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}MTG Cards - Pesquisa{% endblock %}
+
+{% block content %}
+<div class="search-form">
+    <form method="get">
+        <div class="form-group" style="flex: 2;">
+            <label for="search">Pesquisar</label>
+            <input type="text" id="search" name="search" value="{{ search }}" placeholder="Nome, texto ou tipo...">
+        </div>
+        <div class="form-group">
+            <label for="color">Cor</label>
+            <select id="color" name="color">
+                <option value="">Todas</option>
+                <option value="W" {% if color == 'W' %}selected{% endif %}>Branco</option>
+                <option value="U" {% if color == 'U' %}selected{% endif %}>Azul</option>
+                <option value="B" {% if color == 'B' %}selected{% endif %}>Preto</option>
+                <option value="R" {% if color == 'R' %}selected{% endif %}>Vermelho</option>
+                <option value="G" {% if color == 'G' %}selected{% endif %}>Verde</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="rarity">Raridade</label>
+            <select id="rarity" name="rarity">
+                <option value="">Todas</option>
+                <option value="common" {% if rarity == 'common' %}selected{% endif %}>Common</option>
+                <option value="uncommon" {% if rarity == 'uncommon' %}selected{% endif %}>Uncommon</option>
+                <option value="rare" {% if rarity == 'rare' %}selected{% endif %}>Rare</option>
+                <option value="mythic" {% if rarity == 'mythic' %}selected{% endif %}>Mythic</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="set">Set Code</label>
+            <input type="text" id="set" name="set" value="{{ set }}" placeholder="ex: neo, one">
+        </div>
+        <button type="submit">Pesquisar</button>
+        <a href="{% url 'card_list' %}"><button type="button" class="btn-secondary">Limpar</button></a>
+    </form>
+</div>
+
+<div class="stats">
+    {% if search or color or rarity or set %}
+        Encontradas {{ page_obj.paginator.count }} cartas
+    {% else %}
+        Total de {{ total_cards }} cartas no banco de dados
+    {% endif %}
+</div>
+
+{% if cards %}
+<div class="cards-grid">
+    {% for card in cards %}
+    <div class="card-item">
+        {% if card.image_normal %}
+        <img src="{{ card.image_normal }}" alt="{{ card.name }}" loading="lazy">
+        {% else %}
+        <div class="no-image">Sem imagem</div>
+        {% endif %}
+        <div class="card-info">
+            <h3 title="{{ card.name }}">{{ card.name }}</h3>
+            <div class="meta">
+                <span class="rarity-{{ card.rarity }}">{{ card.rarity|title }}</span>
+                - {{ card.set_code|upper }}
+            </div>
+            {% if card.mana_cost %}
+            <div class="mana">{{ card.mana_cost }}</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?{% if search %}search={{ search }}&{% endif %}{% if color %}color={{ color }}&{% endif %}{% if rarity %}rarity={{ rarity }}&{% endif %}{% if set %}set={{ set }}&{% endif %}page=1">&laquo; Primeira</a>
+        <a href="?{% if search %}search={{ search }}&{% endif %}{% if color %}color={{ color }}&{% endif %}{% if rarity %}rarity={{ rarity }}&{% endif %}{% if set %}set={{ set }}&{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>
+    {% endif %}
+
+    <span class="current">
+        Pagina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+        <a href="?{% if search %}search={{ search }}&{% endif %}{% if color %}color={{ color }}&{% endif %}{% if rarity %}rarity={{ rarity }}&{% endif %}{% if set %}set={{ set }}&{% endif %}page={{ page_obj.next_page_number }}">Proxima</a>
+        <a href="?{% if search %}search={{ search }}&{% endif %}{% if color %}color={{ color }}&{% endif %}{% if rarity %}rarity={{ rarity }}&{% endif %}{% if set %}set={{ set }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Ultima &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="stats" style="margin-top: 50px;">
+    {% if total_cards == 0 %}
+        <p>Nenhuma carta no banco de dados.</p>
+        <p style="margin-top: 10px;">Execute: <code>python manage.py import_cards</code></p>
+    {% else %}
+        <p>Nenhuma carta encontrada com os filtros selecionados.</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

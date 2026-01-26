@@ -1,0 +1,860 @@
+import json
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from channels.db import database_sync_to_async
+import random
+
+
+class LobbyConsumer(AsyncJsonWebsocketConsumer):
+    """Consumer para sala de espera com sincronização em tempo real"""
+
+    async def connect(self):
+        self.lobby_id = self.scope['url_route']['kwargs']['lobby_id']
+        self.group_name = f'lobby_{self.lobby_id}'
+        self.player_id = None
+        self.player_nickname = None
+        self.tab_id = None
+
+        # Pegar player_id da query string (mais confiável) ou da sessão
+        query_string = self.scope.get('query_string', b'').decode('utf-8')
+        query_params = dict(param.split('=') for param in query_string.split('&') if '=' in param)
+
+        # Tentar pegar player_id diretamente da query string
+        if 'player_id' in query_params:
+            self.player_id = query_params['player_id']
+            print(f"[WS Lobby] Got player_id from query: {self.player_id}")
+
+        # Tentar pegar tab_id
+        if 'tab' in query_params:
+            self.tab_id = query_params['tab']
+            print(f"[WS Lobby] Got tab_id from query: {self.tab_id}")
+
+        # Fallback: pegar da sessão usando tab_id
+        session = self.scope.get('session')
+        if session and not self.player_id:
+            if self.tab_id:
+                # Usar o player específico do tab
+                self.player_id = session.get(f'player_{self.tab_id}')
+                print(f"[WS Lobby] Got player_id from session with tab: {self.player_id}")
+            else:
+                # Fallback: tentar pegar de qualquer player_* na sessão
+                for key in list(session.keys()):
+                    if key.startswith('player_'):
+                        self.player_id = session.get(key)
+                        print(f"[WS Lobby] Got player_id from session fallback: {self.player_id}")
+                        break
+
+        # Buscar nickname
+        if self.player_id:
+            self.player_nickname = await self.get_player_nickname()
+
+        print(f"[WS Lobby connect] Adding {self.channel_name} to group {self.group_name}")
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
+        print(f"[WS Lobby connect] Connection accepted for player {self.player_nickname} (id={self.player_id})")
+
+        # Enviar estado inicial para quem conectou
+        await self.send_lobby_state()
+
+        # Notificar TODOS que alguém conectou (broadcast)
+        print(f"[WS Lobby connect] Broadcasting lobby state to all in group")
+        await self.broadcast_lobby_state()
+
+    async def disconnect(self, close_code):
+        # Remover jogador do lobby quando desconectar
+        if self.player_id:
+            await self.remove_player_from_lobby()
+
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        # Notificar que alguém saiu
+        await self.broadcast_lobby_state()
+
+    @database_sync_to_async
+    def remove_player_from_lobby(self):
+        from lobby.models import Lobby, LobbyPlayer
+        from accounts.models import PlayerProfile
+        try:
+            player = PlayerProfile.objects.get(id=self.player_id)
+            lp = LobbyPlayer.objects.filter(lobby_id=self.lobby_id, player=player).first()
+            if lp:
+                lp.delete()
+                print(f"[WS Lobby] Removed {player.nickname} from lobby {self.lobby_id}")
+
+                # Verificar se lobby ficou vazio e deletar
+                lobby = Lobby.objects.filter(id=self.lobby_id).first()
+                if lobby and lobby.player_count() == 0:
+                    print(f"[WS Lobby] Lobby {self.lobby_id} is empty, deleting...")
+                    lobby.delete()
+        except Exception as e:
+            print(f"[WS Lobby] Error removing player: {e}")
+
+    @database_sync_to_async
+    def get_player_nickname(self):
+        from accounts.models import PlayerProfile
+        try:
+            player = PlayerProfile.objects.get(id=self.player_id)
+            return player.nickname
+        except:
+            return None
+
+    @database_sync_to_async
+    def get_lobby_state(self):
+        from lobby.models import Lobby, LobbyPlayer
+        try:
+            lobby = Lobby.objects.get(id=self.lobby_id)
+            players = []
+            for lp in lobby.players.select_related('player', 'deck__commander').all():
+                players.append({
+                    'id': str(lp.player.id),
+                    'nickname': lp.player.nickname,
+                    'avatar_color': lp.player.avatar_color or '#e94560',
+                    'is_ready': lp.is_ready,
+                    'deck_name': lp.deck.name if lp.deck else None,
+                    'commander_name': lp.deck.commander.name if lp.deck and lp.deck.commander else None,
+                    'seat_position': lp.seat_position
+                })
+
+            return {
+                'id': str(lobby.id),
+                'name': lobby.name,
+                'status': lobby.status,
+                'player_count': len(players),
+                'min_players': lobby.min_players,
+                'max_players': lobby.max_players,
+                'players': players,
+                'can_start': lobby.can_start(),
+                'game_id': str(lobby.game.id) if lobby.game else None
+            }
+        except Lobby.DoesNotExist:
+            return None
+
+    @database_sync_to_async
+    def do_select_deck(self, player_id, deck_id):
+        from lobby.models import LobbyPlayer
+        from decks.models import Deck
+        from accounts.models import PlayerProfile
+        try:
+            print(f"[WS select_deck] player_id={player_id}, deck_id={deck_id}")
+            player = PlayerProfile.objects.get(id=player_id)
+            print(f"[WS select_deck] Found player: {player.nickname}")
+            # Permitir selecionar qualquer deck válido (compartilhado)
+            deck = Deck.objects.get(id=deck_id, is_valid=True)
+            print(f"[WS select_deck] Found deck: {deck.name}")
+            lp = LobbyPlayer.objects.get(lobby_id=self.lobby_id, player=player)
+            lp.deck = deck
+            lp.is_ready = False  # Reset ready when changing deck
+            lp.save()
+            print(f"[WS select_deck] Deck selected successfully")
+            return {'success': True, 'deck_name': deck.name}
+        except Exception as e:
+            print(f"[WS select_deck] Error: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @database_sync_to_async
+    def do_toggle_ready(self, player_id):
+        from lobby.models import LobbyPlayer
+        from accounts.models import PlayerProfile
+        try:
+            print(f"[WS toggle_ready] Looking for player_id={player_id}")
+            player = PlayerProfile.objects.get(id=player_id)
+            print(f"[WS toggle_ready] Found player: {player.nickname}")
+            lp = LobbyPlayer.objects.get(lobby_id=self.lobby_id, player=player)
+            print(f"[WS toggle_ready] Found LobbyPlayer, current is_ready={lp.is_ready}, deck={lp.deck}")
+            if lp.deck:  # Só pode ficar pronto se tiver deck
+                lp.is_ready = not lp.is_ready
+                lp.save()
+                print(f"[WS toggle_ready] Toggled is_ready to {lp.is_ready}")
+                return {'success': True, 'is_ready': lp.is_ready}
+            return {'success': False, 'error': 'Selecione um deck primeiro'}
+        except Exception as e:
+            print(f"[WS toggle_ready] Error: {e}")
+            return {'success': False, 'error': str(e)}
+
+    @database_sync_to_async
+    def do_start_game(self):
+        from lobby.models import Lobby
+        from django.utils import timezone
+        import random as rand
+
+        # Importar modelos do jogo
+        from game.models import Game as GameModel
+        from game.models import GamePlayer as GamePlayerModel
+        from game.models import GameObject as GameObjectModel
+        from game.models import GameAction as GameActionModel
+
+        try:
+            lobby = Lobby.objects.get(id=self.lobby_id)
+
+            if not lobby.can_start():
+                return {'success': False, 'error': 'Nem todos os jogadores estão prontos'}
+
+            if lobby.game:
+                return {'success': True, 'game_id': str(lobby.game.id)}
+
+            # Criar jogo
+            game_instance = GameModel.objects.create(status='setup')
+
+            # Criar jogadores do jogo
+            game_players = []
+            for i, lp in enumerate(lobby.players.select_related('player', 'deck').all()):
+                lp.seat_position = i
+                lp.save()
+                gp = GamePlayerModel.objects.create(
+                    game=game_instance,
+                    player=lp.player,
+                    deck=lp.deck,
+                    seat_position=i,
+                    life=40
+                )
+                game_players.append(gp)
+
+            # Atualizar lobby
+            lobby.game = game_instance
+            lobby.status = 'in_game'
+            lobby.started_at = timezone.now()
+            lobby.save()
+
+            # ========== SETUP GAME (inline) ==========
+            for gp in game_players:
+                player_deck = gp.deck
+
+                # Comandante vai para zona de comando
+                GameObjectModel.objects.create(
+                    game=game_instance,
+                    card=player_deck.commander,
+                    owner=gp,
+                    controller=gp,
+                    zone='command',
+                    is_commander=True
+                )
+
+                if player_deck.partner_commander:
+                    GameObjectModel.objects.create(
+                        game=game_instance,
+                        card=player_deck.partner_commander,
+                        owner=gp,
+                        controller=gp,
+                        zone='command',
+                        is_commander=True
+                    )
+
+                # Cartas do deck vao para biblioteca (embaralhadas)
+                deck_cards = list(player_deck.cards.select_related('card').all())
+                rand.shuffle(deck_cards)
+
+                for idx, deck_card in enumerate(deck_cards):
+                    for _ in range(deck_card.quantity):
+                        GameObjectModel.objects.create(
+                            game=game_instance,
+                            card=deck_card.card,
+                            owner=gp,
+                            controller=gp,
+                            zone='library',
+                            zone_position=idx
+                        )
+
+                # Comprar 7 cartas iniciais
+                library_cards = GameObjectModel.objects.filter(
+                    game=game_instance,
+                    owner=gp,
+                    zone='library'
+                ).order_by('zone_position')[:7]
+
+                for card_obj in library_cards:
+                    card_obj.zone = 'hand'
+                    card_obj.save()
+
+            # Definir jogador ativo (aleatorio)
+            player_count = len(game_players)
+            game_instance.active_player_seat = rand.randint(0, player_count - 1)
+            game_instance.turn_number = 1
+            game_instance.current_phase = 'main1'
+            game_instance.status = 'active'
+            game_instance.save()
+
+            # Log de inicio
+            GameActionModel.objects.create(
+                game=game_instance,
+                action_type='game_start',
+                display_text='Partida iniciada!',
+                turn_number=1,
+                phase='main1'
+            )
+            # ========== FIM SETUP GAME ==========
+
+            return {'success': True, 'game_id': str(game_instance.id)}
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return {'success': False, 'error': str(e)}
+
+    async def receive_json(self, content):
+        action = content.get('action')
+        # Priorizar player_id do conteúdo, depois da sessão
+        player_id = content.get('player_id') or self.player_id
+
+        # Debug
+        print(f"[WS Lobby] Action: {action}, Player ID: {player_id}, Self Player ID: {self.player_id}")
+
+        if action == 'chat':
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'chat_message',
+                    'message': content.get('message', ''),
+                    'sender': content.get('sender', 'Anonymous')
+                }
+            )
+
+        elif action == 'select_deck':
+            deck_id = content.get('deck_id')
+            if player_id and deck_id:
+                result = await self.do_select_deck(player_id, deck_id)
+                if result['success']:
+                    await self.broadcast_lobby_state()
+                else:
+                    await self.send_json({'type': 'error', 'message': result.get('error')})
+
+        elif action == 'toggle_ready':
+            if player_id:
+                result = await self.do_toggle_ready(player_id)
+                if result['success']:
+                    await self.broadcast_lobby_state()
+                else:
+                    await self.send_json({'type': 'error', 'message': result.get('error')})
+
+        elif action == 'start_game':
+            result = await self.do_start_game()
+            if result['success']:
+                await self.channel_layer.group_send(
+                    self.group_name,
+                    {
+                        'type': 'game_starting',
+                        'game_id': result['game_id']
+                    }
+                )
+            else:
+                await self.send_json({'type': 'error', 'message': result.get('error')})
+
+        elif action == 'get_state':
+            await self.send_lobby_state()
+
+    async def send_lobby_state(self):
+        state = await self.get_lobby_state()
+        if state:
+            await self.send_json({
+                'type': 'lobby_state',
+                'data': state
+            })
+
+    async def broadcast_lobby_state(self):
+        state = await self.get_lobby_state()
+        if state:
+            print(f"[WS broadcast] Broadcasting to group {self.group_name}")
+            print(f"[WS broadcast] Players: {[(p['nickname'], p['is_ready']) for p in state['players']]}")
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'lobby_update',
+                    'data': state
+                }
+            )
+
+    async def chat_message(self, event):
+        await self.send_json({
+            'type': 'chat',
+            'message': event['message'],
+            'sender': event['sender']
+        })
+
+    async def lobby_update(self, event):
+        print(f"[WS lobby_update] Sending update to player {self.player_nickname} (id={self.player_id})")
+        await self.send_json({
+            'type': 'lobby_state',
+            'data': event['data']
+        })
+
+    async def game_starting(self, event):
+        await self.send_json({
+            'type': 'game_starting',
+            'game_id': event['game_id']
+        })
+
+
+class GameConsumer(AsyncJsonWebsocketConsumer):
+    """Consumer principal do jogo com sincronização em tempo real"""
+
+    async def connect(self):
+        self.game_id = self.scope['url_route']['kwargs']['game_id']
+        self.group_name = f'game_{self.game_id}'
+        self.player_id = None
+        self.tab_id = None
+
+        # Pegar player_id da query string (mais confiável)
+        query_string = self.scope.get('query_string', b'').decode('utf-8')
+        query_params = dict(param.split('=') for param in query_string.split('&') if '=' in param)
+
+        if 'player_id' in query_params:
+            self.player_id = query_params['player_id']
+            print(f"[WS Game] Got player_id from query: {self.player_id}")
+
+        if 'tab' in query_params:
+            self.tab_id = query_params['tab']
+            print(f"[WS Game] Got tab_id from query: {self.tab_id}")
+
+        # Fallback: pegar da sessão
+        session = self.scope.get('session', {})
+        if session and not self.player_id:
+            if self.tab_id:
+                self.player_id = session.get(f'player_{self.tab_id}')
+            else:
+                self.player_id = session.get('player_id')
+            print(f"[WS Game] Got player_id from session: {self.player_id}")
+
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
+
+        # Enviar estado inicial
+        await self.send_game_state()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
+    @database_sync_to_async
+    def get_game_state(self):
+        from game.models import Game, GamePlayer, GameObject, GameAction, CommanderDamage
+        try:
+            game = Game.objects.get(id=self.game_id)
+            players = []
+            zones_data = {}
+
+            for gp in game.players.select_related('player', 'deck__commander').all():
+                players.append({
+                    'id': str(gp.id),
+                    'player_id': str(gp.player.id),
+                    'nickname': gp.player.nickname,
+                    'avatar_color': gp.player.avatar_color or '#e94560',
+                    'seat_position': gp.seat_position,
+                    'life': gp.life,
+                    'poison_counters': gp.poison_counters,
+                    'is_alive': gp.is_alive,
+                    'has_won': gp.has_won,
+                    'commander_name': gp.deck.commander.name if gp.deck and gp.deck.commander else None
+                })
+                zones_data[gp.seat_position] = {
+                    'hand': [],
+                    'battlefield': [],
+                    'graveyard': [],
+                    'exile': [],
+                    'command': [],
+                    'library_count': 0
+                }
+
+            # Organizar objetos por zona
+            for obj in GameObject.objects.filter(game=game).select_related('card', 'owner', 'controller'):
+                seat = obj.controller.seat_position
+                if obj.zone == 'library':
+                    zones_data[seat]['library_count'] += 1
+                elif obj.zone in zones_data[seat]:
+                    obj_data = {
+                        'id': str(obj.id),
+                        'card_id': str(obj.card.id),
+                        'name': obj.card.name,
+                        'image_small': obj.card.image_small or '',
+                        'image_normal': obj.card.image_normal or '',
+                        'is_tapped': obj.is_tapped,
+                        'counters': obj.counters or {},
+                        'is_commander': obj.is_commander,
+                        'zone': obj.zone,
+                        'owner_seat': obj.owner.seat_position,
+                        'controller_seat': obj.controller.seat_position
+                    }
+                    zones_data[seat][obj.zone].append(obj_data)
+
+            # Ações recentes
+            recent_actions = []
+            for action in GameAction.objects.filter(game=game).order_by('-timestamp')[:50]:
+                recent_actions.append({
+                    'id': str(action.id),
+                    'action_type': action.action_type,
+                    'display_text': action.display_text,
+                    'turn_number': action.turn_number,
+                    'phase': action.phase,
+                    'timestamp': action.timestamp.isoformat()
+                })
+
+            # Commander damage
+            cmd_damage = {}
+            for cd in CommanderDamage.objects.filter(game=game):
+                key = f"{cd.target_player.seat_position}_{cd.source_player.seat_position}"
+                cmd_damage[key] = cd.damage
+
+            # Encontrar jogador ativo
+            active_player = None
+            for p in players:
+                if p['seat_position'] == game.active_player_seat:
+                    active_player = p['nickname']
+                    break
+
+            return {
+                'game_id': str(game.id),
+                'status': game.status,
+                'turn_number': game.turn_number,
+                'current_phase': game.current_phase,
+                'phase_display': game.get_current_phase_display(),
+                'active_player_seat': game.active_player_seat,
+                'active_player_name': active_player,
+                'players': players,
+                'zones_data': zones_data,
+                'recent_actions': recent_actions,
+                'cmd_damage': cmd_damage,
+                'winner_id': str(game.winner.id) if game.winner else None
+            }
+        except Game.DoesNotExist:
+            return None
+
+    @database_sync_to_async
+    def get_game_player(self):
+        from game.models import GamePlayer
+        from accounts.models import PlayerProfile
+        if not self.player_id:
+            return None
+        try:
+            player = PlayerProfile.objects.get(id=self.player_id)
+            return GamePlayer.objects.get(game_id=self.game_id, player=player)
+        except:
+            return None
+
+    @database_sync_to_async
+    def execute_game_action(self, action, data):
+        from game.models import Game, GamePlayer, GameObject, GameAction, CommanderDamage
+        from accounts.models import PlayerProfile
+        import random
+
+        if not self.player_id:
+            return {'success': False, 'error': 'Not authenticated'}
+
+        try:
+            game = Game.objects.get(id=self.game_id)
+            player = PlayerProfile.objects.get(id=self.player_id)
+            game_player = GamePlayer.objects.get(game=game, player=player)
+        except Exception as e:
+            return {'success': False, 'error': f'Game or player not found: {e}'}
+
+        try:
+            if action == 'move_card':
+                obj_id = data.get('object_id')
+                new_zone = data.get('zone')
+                obj = GameObject.objects.filter(id=obj_id, game=game).first()
+                if not obj:
+                    return {'success': False, 'error': 'Object not found'}
+
+                old_zone = obj.zone
+                obj.zone = new_zone
+                obj.is_tapped = False
+                obj.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='zone_change',
+                    player=game_player,
+                    data={'card': obj.card.name, 'from': old_zone, 'to': new_zone},
+                    display_text=f"{game_player.player.nickname} moveu {obj.card.name} de {old_zone} para {new_zone}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True}
+
+            elif action == 'tap_card':
+                obj_id = data.get('object_id')
+                obj = GameObject.objects.filter(id=obj_id, game=game, zone='battlefield').first()
+                if not obj:
+                    return {'success': False, 'error': 'Object not found'}
+
+                obj.is_tapped = not obj.is_tapped
+                obj.save()
+
+                action_text = 'virou' if obj.is_tapped else 'desvirou'
+                GameAction.objects.create(
+                    game=game,
+                    action_type='tap' if obj.is_tapped else 'untap',
+                    player=game_player,
+                    data={'card': obj.card.name},
+                    display_text=f"{game_player.player.nickname} {action_text} {obj.card.name}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True, 'is_tapped': obj.is_tapped}
+
+            elif action == 'change_life':
+                target_seat = data.get('target_seat')
+                delta = data.get('delta', 0)
+                target = GamePlayer.objects.filter(game=game, seat_position=target_seat).first()
+                if not target:
+                    return {'success': False, 'error': 'Player not found'}
+
+                old_life = target.life
+                target.life += delta
+                target.save()
+
+                if target.life <= 0:
+                    target.is_alive = False
+                    target.has_lost = True
+                    target.save()
+                    self._check_winner(game)
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='life_change',
+                    player=game_player,
+                    data={'target': target.player.nickname, 'old': old_life, 'new': target.life},
+                    display_text=f"{target.player.nickname}: {old_life} -> {target.life}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True, 'new_life': target.life}
+
+            elif action == 'add_counter':
+                obj_id = data.get('object_id')
+                counter_type = data.get('counter_type', '+1/+1')
+                obj = GameObject.objects.filter(id=obj_id, game=game).first()
+                if not obj:
+                    return {'success': False, 'error': 'Object not found'}
+
+                counters = obj.counters or {}
+                counters[counter_type] = counters.get(counter_type, 0) + 1
+                obj.counters = counters
+                obj.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='counter_change',
+                    player=game_player,
+                    data={'card': obj.card.name, 'counter': counter_type, 'add': True},
+                    display_text=f"{game_player.player.nickname} adicionou {counter_type} em {obj.card.name}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True, 'counters': counters}
+
+            elif action == 'remove_counter':
+                obj_id = data.get('object_id')
+                counter_type = data.get('counter_type', '+1/+1')
+                obj = GameObject.objects.filter(id=obj_id, game=game).first()
+                if not obj:
+                    return {'success': False, 'error': 'Object not found'}
+
+                counters = obj.counters or {}
+                counters[counter_type] = max(0, counters.get(counter_type, 0) - 1)
+                obj.counters = counters
+                obj.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='counter_change',
+                    player=game_player,
+                    data={'card': obj.card.name, 'counter': counter_type, 'add': False},
+                    display_text=f"{game_player.player.nickname} removeu {counter_type} de {obj.card.name}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True, 'counters': counters}
+
+            elif action == 'next_phase':
+                phases = ['untap', 'upkeep', 'draw', 'main1', 'combat_begin', 'combat_attackers',
+                          'combat_blockers', 'combat_damage', 'combat_end', 'main2', 'end', 'cleanup']
+                current_idx = phases.index(game.current_phase)
+                next_idx = (current_idx + 1) % len(phases)
+                game.current_phase = phases[next_idx]
+                game.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='phase_change',
+                    player=game_player,
+                    display_text=f"Fase: {game.get_current_phase_display()}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True, 'phase': game.current_phase}
+
+            elif action == 'next_turn':
+                alive_players = list(game.players.filter(is_alive=True).order_by('seat_position'))
+                if not alive_players:
+                    return {'success': False, 'error': 'No alive players'}
+
+                current_idx = next(
+                    (i for i, p in enumerate(alive_players) if p.seat_position == game.active_player_seat),
+                    0
+                )
+                next_idx = (current_idx + 1) % len(alive_players)
+
+                game.active_player_seat = alive_players[next_idx].seat_position
+                game.turn_number += 1
+                game.current_phase = 'untap'
+                game.save()
+
+                # Reset lands played
+                for gp in game.players.all():
+                    gp.lands_played_this_turn = 0
+                    gp.save()
+
+                # Desvirar permanentes do jogador ativo
+                active = alive_players[next_idx]
+                GameObject.objects.filter(
+                    game=game,
+                    controller=active,
+                    zone='battlefield',
+                    is_tapped=True
+                ).update(is_tapped=False)
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='turn_change',
+                    player=game_player,
+                    display_text=f"Turno {game.turn_number} - {active.player.nickname}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True, 'turn': game.turn_number, 'active_seat': game.active_player_seat}
+
+            elif action == 'draw_card':
+                library = GameObject.objects.filter(
+                    game=game,
+                    owner=game_player,
+                    zone='library'
+                ).order_by('zone_position').first()
+
+                if not library:
+                    game_player.is_alive = False
+                    game_player.has_lost = True
+                    game_player.save()
+                    self._check_winner(game)
+                    return {'success': False, 'error': 'No cards in library', 'lost': True}
+
+                library.zone = 'hand'
+                library.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='draw',
+                    player=game_player,
+                    data={'card': library.card.name},
+                    display_text=f"{game_player.player.nickname} comprou uma carta",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True, 'card_id': str(library.id)}
+
+            elif action == 'shuffle_library':
+                library_cards = list(GameObject.objects.filter(
+                    game=game,
+                    owner=game_player,
+                    zone='library'
+                ))
+                random.shuffle(library_cards)
+                for i, card in enumerate(library_cards):
+                    card.zone_position = i
+                    card.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='manual',
+                    player=game_player,
+                    display_text=f"{game_player.player.nickname} embaralhou a biblioteca",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True}
+
+            elif action == 'concede':
+                game_player.is_alive = False
+                game_player.has_lost = True
+                game_player.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='concede',
+                    player=game_player,
+                    display_text=f"{game_player.player.nickname} concedeu",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+
+                self._check_winner(game)
+                return {'success': True}
+
+            return {'success': False, 'error': 'Unknown action'}
+
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
+    def _check_winner(self, game):
+        alive = game.players.filter(is_alive=True)
+        if alive.count() == 1:
+            winner = alive.first()
+            winner.has_won = True
+            winner.save()
+            game.winner = winner
+            game.status = 'finished'
+            game.save()
+
+    async def receive_json(self, content):
+        action = content.get('action')
+
+        if action == 'chat':
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'chat_message',
+                    'message': content.get('message', ''),
+                    'sender': content.get('sender', 'Anonymous')
+                }
+            )
+
+        elif action == 'get_state':
+            await self.send_game_state()
+
+        elif action in ['move_card', 'tap_card', 'change_life', 'add_counter', 'remove_counter',
+                        'next_phase', 'next_turn', 'draw_card', 'shuffle_library', 'concede']:
+            result = await self.execute_game_action(action, content.get('data', {}))
+
+            await self.send_json({
+                'type': 'action_result',
+                'action': action,
+                'result': result
+            })
+
+            if result.get('success'):
+                await self.broadcast_game_state()
+
+    async def send_game_state(self):
+        state = await self.get_game_state()
+        if state:
+            await self.send_json({
+                'type': 'game_state',
+                'state': state
+            })
+
+    async def broadcast_game_state(self):
+        state = await self.get_game_state()
+        if state:
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'game_state_update',
+                    'state': state
+                }
+            )
+
+    async def chat_message(self, event):
+        await self.send_json({
+            'type': 'chat',
+            'message': event['message'],
+            'sender': event['sender']
+        })
+
+    async def game_state_update(self, event):
+        await self.send_json({
+            'type': 'game_state',
+            'state': event['state']
+        })

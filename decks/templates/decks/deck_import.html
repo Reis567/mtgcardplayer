@@ -1,0 +1,149 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Importar Deck - MTG Commander{% endblock %}
+
+{% block extra_css %}
+<style>
+    .container { max-width: 700px; }
+    textarea {
+        width: 100%;
+        min-height: 300px;
+        padding: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.3);
+        color: #fff;
+        font-family: monospace;
+        font-size: 0.9rem;
+        resize: vertical;
+    }
+    textarea:focus {
+        outline: none;
+        border-color: #e94560;
+    }
+    .help-text {
+        color: #888;
+        font-size: 0.85rem;
+        margin-top: 5px;
+    }
+    .errors-list {
+        background: rgba(233, 69, 96, 0.1);
+        border: 1px solid rgba(233, 69, 96, 0.3);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .errors-list h4 {
+        color: #e94560;
+        margin-bottom: 10px;
+    }
+    .errors-list ul {
+        list-style: none;
+        padding: 0;
+    }
+    .errors-list li {
+        padding: 5px 0;
+        color: #ff6b6b;
+        font-size: 0.9rem;
+    }
+    .warnings-list {
+        background: rgba(255, 193, 7, 0.1);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .warnings-list h4 {
+        color: #ffc107;
+        margin-bottom: 10px;
+    }
+    .warnings-list ul {
+        list-style: none;
+        padding: 0;
+    }
+    .warnings-list li {
+        padding: 5px 0;
+        color: #ffc107;
+        font-size: 0.9rem;
+    }
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #888;
+        text-decoration: none;
+    }
+    .back-link:hover {
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'deck_list' %}" class="back-link">&larr; Voltar para Meus Decks</a>
+
+<div class="card">
+    <h1>Importar Deck</h1>
+    <p class="subtitle">Cole sua lista de cartas no formato Commander</p>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if errors %}
+    <div class="errors-list">
+        <h4>Erros de Validacao</h4>
+        <ul>
+            {% for err in errors %}
+            <li>
+                {% if err.card_name %}<strong>{{ err.card_name }}:</strong> {% endif %}
+                {{ err.message }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if warnings %}
+    <div class="warnings-list">
+        <h4>Avisos</h4>
+        <ul>
+            {% for warn in warnings %}
+            <li>{{ warn }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="name">Nome do Deck</label>
+            <input type="text" id="name" name="name" value="{{ form_data.name|default:'' }}" placeholder="Ex: Mono Red Krenko" required>
+        </div>
+
+        <div class="form-group">
+            <label for="commander">Comandante</label>
+            <input type="text" id="commander" name="commander" value="{{ form_data.commander|default:'' }}" placeholder="Ex: Krenko, Mob Boss" required>
+            <p class="help-text">Nome exato da carta comandante</p>
+        </div>
+
+        <div class="form-group">
+            <label for="partner">Partner (opcional)</label>
+            <input type="text" id="partner" name="partner" value="{{ form_data.partner|default:'' }}" placeholder="Ex: Tymna the Weaver">
+            <p class="help-text">Apenas se seu comandante tiver Partner</p>
+        </div>
+
+        <div class="form-group">
+            <label for="decklist">Lista de Cartas (99 cartas, sem o comandante)</label>
+            <textarea id="decklist" name="decklist" placeholder="1 Sol Ring
+1 Lightning Bolt
+1 Mountain
+...">{{ form_data.decklist|default:'' }}</textarea>
+            <p class="help-text">Formato: "quantidade nome_da_carta" (ex: 1 Lightning Bolt)</p>
+        </div>
+
+        <button type="submit">Validar e Importar</button>
+    </form>
+</div>
+{% endblock %}
