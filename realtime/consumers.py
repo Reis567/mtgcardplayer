@@ -1126,6 +1126,58 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
                 return {'success': True, 'cards': cards_data, 'private': True}
 
+            elif action == 'roll_dice':
+                # Roll dice - broadcast to all players
+                sides = data.get('sides', 20)
+                result = data.get('result', 1)
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='dice_roll',
+                    player=game_player,
+                    data={'sides': sides, 'result': result},
+                    display_text=f"{game_player.player.nickname} rolou d{sides}: {result}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+
+                return {
+                    'success': True,
+                    'broadcast_dice': True,
+                    'player': game_player.player.nickname,
+                    'sides': sides,
+                    'result': result
+                }
+
+            elif action == 'set_starting_player':
+                # Set the starting player
+                seat = data.get('seat', 0)
+                roll = data.get('roll', 0)
+
+                game.active_player_seat = seat
+                game.save()
+
+                starting_player = GamePlayer.objects.filter(game=game, seat_position=seat).first()
+                player_name = starting_player.player.nickname if starting_player else 'Desconhecido'
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='starting_player',
+                    player=game_player,
+                    data={'seat': seat, 'roll': roll, 'player': player_name},
+                    display_text=f"{player_name} foi escolhido para comecar (rolou {roll})",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+
+                return {
+                    'success': True,
+                    'broadcast_starting': True,
+                    'player': player_name,
+                    'seat': seat,
+                    'roll': roll
+                }
+
             return {'success': False, 'error': 'Unknown action'}
 
         except Exception as e:
@@ -1161,7 +1213,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         'next_phase', 'next_turn', 'draw_card', 'shuffle_library', 'concede',
                         'scry', 'look_top', 'put_top', 'put_bottom', 'reveal_card',
                         'shuffle_into', 'reorder_scry', 'set_battlefield_row',
-                        'go_to_phase', 'view_library']:
+                        'go_to_phase', 'view_library', 'roll_dice', 'set_starting_player']:
             result = await self.execute_game_action(action, content.get('data', {}))
 
             # Send action result to the sender
@@ -1187,6 +1239,29 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         {
                             'type': 'card_revealed',
                             'card': result['revealed_card']
+                        }
+                    )
+                    await self.broadcast_game_state()
+                # Check if we need to broadcast a dice roll
+                elif result.get('broadcast_dice'):
+                    await self.channel_layer.group_send(
+                        self.group_name,
+                        {
+                            'type': 'dice_rolled',
+                            'player': result['player'],
+                            'sides': result['sides'],
+                            'result': result['result']
+                        }
+                    )
+                # Check if we need to broadcast starting player
+                elif result.get('broadcast_starting'):
+                    await self.channel_layer.group_send(
+                        self.group_name,
+                        {
+                            'type': 'starting_player_selected',
+                            'player': result['player'],
+                            'seat': result['seat'],
+                            'roll': result['roll']
                         }
                     )
                     await self.broadcast_game_state()
@@ -1231,4 +1306,22 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             'type': 'reveal',
             'card': event['card']
+        })
+
+    async def dice_rolled(self, event):
+        """Broadcast when a player rolls dice"""
+        await self.send_json({
+            'type': 'dice_roll',
+            'player': event['player'],
+            'sides': event['sides'],
+            'result': event['result']
+        })
+
+    async def starting_player_selected(self, event):
+        """Broadcast when starting player is determined"""
+        await self.send_json({
+            'type': 'starting_player_set',
+            'player': event['player'],
+            'seat': event['seat'],
+            'roll': event['roll']
         })

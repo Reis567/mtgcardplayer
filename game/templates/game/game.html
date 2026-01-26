@@ -1035,6 +1035,197 @@
         .help-btn:hover { transform: scale(1.1); }
         .help-btn.guide { background: #e94560; color: white; }
         .help-btn.keywords { background: #4ecdc4; color: #000; font-weight: bold; font-size: 0.8rem; }
+        .help-btn.dice { background: #9b59b6; color: white; }
+
+        /* ===== DICE ROLLER ===== */
+        .dice-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 3500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .dice-modal.show { display: flex; }
+        .dice-container {
+            background: #16213e;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            min-width: 350px;
+        }
+        .dice-container h2 { color: #e94560; margin-bottom: 20px; }
+        .dice-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .dice-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .dice-btn:hover { transform: scale(1.1); }
+        .dice-btn.d4 { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+        .dice-btn.d6 { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+        .dice-btn.d8 { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+        .dice-btn.d10 { background: linear-gradient(135deg, #f39c12, #d68910); color: white; }
+        .dice-btn.d12 { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; }
+        .dice-btn.d20 { background: linear-gradient(135deg, #e94560, #c0392b); color: white; }
+        .dice-btn.d100 { background: linear-gradient(135deg, #1abc9c, #16a085); color: white; }
+        .dice-icon { font-size: 1.4rem; margin-bottom: 2px; }
+        .dice-result-area {
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .dice-rolling {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #ffc107;
+            animation: diceShake 0.1s infinite;
+        }
+        .dice-result {
+            font-size: 5rem;
+            font-weight: bold;
+            color: #4ecdc4;
+            text-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+            animation: diceReveal 0.3s ease-out;
+        }
+        .dice-result-label {
+            font-size: 1rem;
+            color: #888;
+            margin-top: 5px;
+        }
+        @keyframes diceShake {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+        @keyframes diceReveal {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .dice-history {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .dice-history-item {
+            font-size: 0.8rem;
+            color: #888;
+            padding: 3px 0;
+        }
+        .dice-history-item .player { color: #4ecdc4; }
+        .dice-history-item .result { color: #ffc107; font-weight: bold; }
+
+        /* ===== STARTING PLAYER SELECTION ===== */
+        .start-selection-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 4000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .start-selection-modal.show { display: flex; }
+        .start-selection-container {
+            text-align: center;
+            padding: 30px;
+        }
+        .start-selection-title {
+            font-size: 1.5rem;
+            color: #e94560;
+            margin-bottom: 30px;
+        }
+        .start-selection-wheel {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 30px;
+        }
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: #16213e;
+            border-radius: 50%;
+            border: 3px solid #e94560;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            font-size: 2rem;
+        }
+        .wheel-player {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+        .wheel-player.rolling {
+            animation: playerPulse 0.2s infinite;
+        }
+        .wheel-player.winner {
+            border-color: #ffc107;
+            box-shadow: 0 0 30px rgba(255, 193, 7, 0.8);
+            transform: scale(1.2);
+        }
+        .wheel-player .roll-value {
+            font-size: 1.2rem;
+            margin-top: 3px;
+        }
+        @keyframes playerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .start-btn {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #e94560, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .start-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(233, 69, 96, 0.5); }
+        .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .start-result {
+            margin-top: 20px;
+            font-size: 1.3rem;
+            color: #ffc107;
+            animation: fadeIn 0.5s;
+        }
     </style>
 </head>
 <body>
@@ -1082,6 +1273,8 @@
             <div class="game-controls">
                 <button onclick="sendAction('draw_card')" title="D">Comprar</button>
                 <button onclick="sendAction('next_turn')" class="primary" title="P">Passar Turno</button>
+                <button onclick="showStartSelection()" title="Sortear inicio">🎯</button>
+                <button onclick="openDiceModal()" title="Dados (R)">🎲</button>
                 <button onclick="if(confirm('Conceder?')) sendAction('concede')" style="background:#c0392b;">Conceder</button>
             </div>
         </div>
@@ -1262,6 +1455,62 @@
     <div class="help-buttons">
         <button class="help-btn guide" onclick="openGuideModal()" title="Guia (H)">?</button>
         <button class="help-btn keywords" onclick="openKeywordsModal()" title="Keywords (K)">K</button>
+        <button class="help-btn dice" onclick="openDiceModal()" title="Dados (R)">🎲</button>
+    </div>
+
+    <!-- Dice Roller Modal -->
+    <div class="dice-modal" id="diceModal">
+        <div class="dice-container">
+            <h2>🎲 Rolar Dados</h2>
+            <div class="dice-buttons">
+                <button class="dice-btn d4" onclick="rollDice(4)">
+                    <span class="dice-icon">▲</span>
+                    <span>d4</span>
+                </button>
+                <button class="dice-btn d6" onclick="rollDice(6)">
+                    <span class="dice-icon">⬛</span>
+                    <span>d6</span>
+                </button>
+                <button class="dice-btn d8" onclick="rollDice(8)">
+                    <span class="dice-icon">◆</span>
+                    <span>d8</span>
+                </button>
+                <button class="dice-btn d10" onclick="rollDice(10)">
+                    <span class="dice-icon">⬟</span>
+                    <span>d10</span>
+                </button>
+                <button class="dice-btn d12" onclick="rollDice(12)">
+                    <span class="dice-icon">⬡</span>
+                    <span>d12</span>
+                </button>
+                <button class="dice-btn d20" onclick="rollDice(20)">
+                    <span class="dice-icon">⬢</span>
+                    <span>d20</span>
+                </button>
+                <button class="dice-btn d100" onclick="rollDice(100)">
+                    <span class="dice-icon">%</span>
+                    <span>d100</span>
+                </button>
+            </div>
+            <div class="dice-result-area" id="diceResultArea">
+                <div style="color:#666;">Clique em um dado para rolar</div>
+            </div>
+            <div class="dice-history" id="diceHistory"></div>
+            <button onclick="closeDiceModal()" style="margin-top:15px;padding:8px 20px;background:#333;border:none;color:white;border-radius:5px;cursor:pointer;">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Starting Player Selection Modal -->
+    <div class="start-selection-modal" id="startSelectionModal">
+        <div class="start-selection-container">
+            <h2 class="start-selection-title">🎯 Quem Comeca?</h2>
+            <p style="color:#888;margin-bottom:20px;">Cada jogador rola um d20. O maior resultado comeca!</p>
+            <div class="start-selection-wheel" id="startSelectionWheel"></div>
+            <button class="start-btn" id="startRollBtn" onclick="startRollForFirst()">
+                🎲 Rolar para Decidir
+            </button>
+            <div class="start-result" id="startResult" style="display:none;"></div>
+        </div>
     </div>
 
     <!-- User Guide Modal -->
@@ -1513,6 +1762,19 @@
                     break;
                 case 'reveal':
                     showRevealAnimation(data.card);
+                    break;
+                case 'dice_roll':
+                    // Another player rolled dice
+                    if (data.player !== myNickname) {
+                        addDiceToHistory(data.player, data.sides, data.result);
+                        showDiceNotification(data.player, data.sides, data.result);
+                    }
+                    break;
+                case 'starting_player_set':
+                    // Starting player was determined
+                    if (data.player) {
+                        addChatMessage('Sistema', `🎯 ${data.player} foi escolhido para comecar! (rolou ${data.roll})`);
+                    }
                     break;
             }
         }
@@ -2513,6 +2775,8 @@
                     closeCounterModal();
                     closeGuideModal();
                     closeKeywordsModal();
+                    closeDiceModal();
+                    closeStartSelection();
                     hideContextMenu();
                     cancelArrowMode();
                     selectedCards.clear();
@@ -2529,6 +2793,7 @@
                 case 'x': clearAllArrows(); break;
                 case 'h': openGuideModal(); break;
                 case 'k': openKeywordsModal(); break;
+                case 'r': openDiceModal(); break;
             }
         });
 
@@ -2538,6 +2803,242 @@
         if (tabId) {
             document.getElementById('lobbyLink').href = `/lobby/?tab=${tabId}`;
         }
+
+        // ===== DICE ROLLER =====
+        let diceHistory = [];
+
+        function openDiceModal() {
+            document.getElementById('diceModal').classList.add('show');
+        }
+
+        function closeDiceModal() {
+            document.getElementById('diceModal').classList.remove('show');
+        }
+
+        function rollDice(sides) {
+            const resultArea = document.getElementById('diceResultArea');
+
+            // Show rolling animation
+            resultArea.innerHTML = `<div class="dice-rolling">?</div><div class="dice-result-label">Rolando d${sides}...</div>`;
+
+            let rollCount = 0;
+            const maxRolls = 10;
+            const rollInterval = setInterval(() => {
+                const tempResult = Math.floor(Math.random() * sides) + 1;
+                resultArea.querySelector('.dice-rolling').textContent = tempResult;
+                rollCount++;
+
+                if (rollCount >= maxRolls) {
+                    clearInterval(rollInterval);
+                    // Final result
+                    const finalResult = Math.floor(Math.random() * sides) + 1;
+                    resultArea.innerHTML = `
+                        <div class="dice-result">${finalResult}</div>
+                        <div class="dice-result-label">d${sides}</div>
+                    `;
+
+                    // Add to history and broadcast
+                    addDiceToHistory(myNickname, sides, finalResult);
+                    sendAction('roll_dice', { sides, result: finalResult });
+                }
+            }, 80);
+        }
+
+        function addDiceToHistory(player, sides, result) {
+            diceHistory.unshift({ player, sides, result, time: new Date() });
+            if (diceHistory.length > 10) diceHistory.pop();
+            renderDiceHistory();
+        }
+
+        function renderDiceHistory() {
+            const container = document.getElementById('diceHistory');
+            container.innerHTML = diceHistory.map(h =>
+                `<div class="dice-history-item">
+                    <span class="player">${h.player}</span> rolou d${h.sides}: <span class="result">${h.result}</span>
+                </div>`
+            ).join('');
+        }
+
+        function showDiceNotification(player, sides, result) {
+            // Create floating notification
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(22, 33, 62, 0.95);
+                padding: 20px 40px;
+                border-radius: 15px;
+                border: 2px solid #9b59b6;
+                z-index: 5000;
+                text-align: center;
+                animation: fadeIn 0.3s ease-out;
+            `;
+            notif.innerHTML = `
+                <div style="color:#4ecdc4;font-size:0.9rem;margin-bottom:5px;">${player} rolou d${sides}</div>
+                <div style="color:#ffc107;font-size:3rem;font-weight:bold;">${result}</div>
+            `;
+            document.body.appendChild(notif);
+
+            setTimeout(() => {
+                notif.style.animation = 'fadeIn 0.3s ease-out reverse';
+                setTimeout(() => notif.remove(), 300);
+            }, 2000);
+        }
+
+        document.getElementById('diceModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDiceModal();
+        });
+
+        // ===== STARTING PLAYER SELECTION =====
+        let startSelectionActive = false;
+        let playerRolls = {};
+
+        function showStartSelection() {
+            if (!gameState || !gameState.players) return;
+
+            const modal = document.getElementById('startSelectionModal');
+            const wheel = document.getElementById('startSelectionWheel');
+            const players = gameState.players;
+            const count = players.length;
+
+            // Position players in a circle
+            wheel.innerHTML = `<div class="wheel-center">🎲</div>`;
+
+            players.forEach((player, i) => {
+                const angle = (i * (360 / count)) - 90; // Start from top
+                const radian = angle * (Math.PI / 180);
+                const radius = 110;
+                const x = 150 + radius * Math.cos(radian) - 35;
+                const y = 150 + radius * Math.sin(radian) - 35;
+
+                wheel.innerHTML += `
+                    <div class="wheel-player" id="wheelPlayer-${player.seat_position}"
+                         style="left:${x}px; top:${y}px; background:${player.avatar_color};">
+                        <span>${player.nickname.substring(0, 8)}</span>
+                        <span class="roll-value" id="rollValue-${player.seat_position}">-</span>
+                    </div>
+                `;
+            });
+
+            playerRolls = {};
+            startSelectionActive = true;
+            document.getElementById('startRollBtn').disabled = false;
+            document.getElementById('startRollBtn').textContent = '🎲 Rolar para Decidir';
+            document.getElementById('startResult').style.display = 'none';
+
+            modal.classList.add('show');
+        }
+
+        function closeStartSelection() {
+            document.getElementById('startSelectionModal').classList.remove('show');
+            startSelectionActive = false;
+        }
+
+        function startRollForFirst() {
+            if (!gameState || !gameState.players) return;
+
+            const btn = document.getElementById('startRollBtn');
+            btn.disabled = true;
+            btn.textContent = 'Rolando...';
+
+            const players = gameState.players;
+            playerRolls = {};
+
+            // Add rolling animation to all players
+            players.forEach(p => {
+                const el = document.getElementById(`wheelPlayer-${p.seat_position}`);
+                if (el) el.classList.add('rolling');
+            });
+
+            // Animate rolling for each player with staggered timing
+            let completedRolls = 0;
+
+            players.forEach((player, index) => {
+                setTimeout(() => {
+                    animatePlayerRoll(player.seat_position, () => {
+                        completedRolls++;
+                        if (completedRolls === players.length) {
+                            determineWinner();
+                        }
+                    });
+                }, index * 500);
+            });
+        }
+
+        function animatePlayerRoll(seat, callback) {
+            const valueEl = document.getElementById(`rollValue-${seat}`);
+            const playerEl = document.getElementById(`wheelPlayer-${seat}`);
+
+            let rollCount = 0;
+            const maxRolls = 15;
+
+            const rollInterval = setInterval(() => {
+                const tempResult = Math.floor(Math.random() * 20) + 1;
+                valueEl.textContent = tempResult;
+                rollCount++;
+
+                if (rollCount >= maxRolls) {
+                    clearInterval(rollInterval);
+                    const finalResult = Math.floor(Math.random() * 20) + 1;
+                    valueEl.textContent = finalResult;
+                    playerRolls[seat] = finalResult;
+                    playerEl.classList.remove('rolling');
+                    callback();
+                }
+            }, 60);
+        }
+
+        function determineWinner() {
+            const players = gameState.players;
+
+            // Find highest roll
+            let maxRoll = 0;
+            let winners = [];
+
+            for (const [seat, roll] of Object.entries(playerRolls)) {
+                if (roll > maxRoll) {
+                    maxRoll = roll;
+                    winners = [parseInt(seat)];
+                } else if (roll === maxRoll) {
+                    winners.push(parseInt(seat));
+                }
+            }
+
+            // Handle ties
+            if (winners.length > 1) {
+                document.getElementById('startResult').innerHTML =
+                    `<span style="color:#e94560;">Empate! Role novamente.</span>`;
+                document.getElementById('startResult').style.display = 'block';
+                document.getElementById('startRollBtn').disabled = false;
+                document.getElementById('startRollBtn').textContent = '🎲 Rolar Novamente';
+                return;
+            }
+
+            const winnerSeat = winners[0];
+            const winner = players.find(p => p.seat_position === winnerSeat);
+
+            // Highlight winner
+            document.getElementById(`wheelPlayer-${winnerSeat}`).classList.add('winner');
+
+            // Show result
+            document.getElementById('startResult').innerHTML =
+                `🎉 <strong>${winner.nickname}</strong> comeca! (rolou ${maxRoll})`;
+            document.getElementById('startResult').style.display = 'block';
+
+            // Broadcast the result
+            sendAction('set_starting_player', { seat: winnerSeat, roll: maxRoll });
+
+            // Close after delay
+            setTimeout(() => {
+                closeStartSelection();
+            }, 3000);
+        }
+
+        document.getElementById('startSelectionModal').addEventListener('click', function(e) {
+            if (e.target === this && !startSelectionActive) closeStartSelection();
+        });
 
         // ===== GUIDE MODAL =====
         function openGuideModal() {
