@@ -59,6 +59,7 @@
             padding: 4px 8px;
             overflow-x: auto;
             gap: 2px;
+            position: relative;
         }
         .phase-group {
             display: flex;
@@ -113,6 +114,30 @@
             margin-left: 8px;
         }
         .phase-next-btn:hover { background: #3dbdb5; }
+        .phase-next-btn:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+        .phase-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .phase-btn:disabled:hover {
+            transform: none;
+        }
+        .phase-tracker.not-my-turn {
+            opacity: 0.7;
+        }
+        .phase-tracker.not-my-turn::after {
+            content: '(Aguardando sua vez)';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.65rem;
+            color: #e94560;
+        }
 
         /* ===== PLAYERS GRID ===== */
         .players-grid {
@@ -1271,8 +1296,8 @@
                 <span id="connectionText">Conectando...</span>
             </div>
             <div class="game-controls">
-                <button onclick="sendAction('draw_card')" title="D">Comprar</button>
-                <button onclick="sendAction('next_turn')" class="primary" title="P">Passar Turno</button>
+                <button onclick="drawCard()" title="D">Comprar</button>
+                <button onclick="nextTurn()" class="primary" title="P">Passar Turno</button>
                 <button onclick="showStartSelection()" title="Sortear inicio">🎯</button>
                 <button onclick="openDiceModal()" title="Dados (R)">🎲</button>
                 <button onclick="if(confirm('Conceder?')) sendAction('concede')" style="background:#c0392b;">Conceder</button>
@@ -1312,7 +1337,7 @@
                 <button class="phase-btn" data-phase="end" onclick="goToPhase('end')">Etapa Final</button>
                 <button class="phase-btn" data-phase="cleanup" onclick="goToPhase('cleanup')">Limpeza</button>
             </div>
-            <button class="phase-next-btn" onclick="sendAction('next_phase')" title="N">Proxima Fase &rarr;</button>
+            <button class="phase-next-btn" onclick="nextPhase()" title="N">Proxima Fase &rarr;</button>
         </div>
 
         <!-- Dynamic Players Grid -->
@@ -1819,25 +1844,97 @@
         }
 
         // ===== PHASE SYSTEM =====
+        function isMyTurn() {
+            return gameState && gameState.active_player_seat === mySeat;
+        }
+
+        function showNotMyTurnMessage() {
+            const msg = document.createElement('div');
+            msg.style.cssText = `
+                position: fixed;
+                top: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(231, 76, 60, 0.95);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 8px;
+                z-index: 5000;
+                font-size: 0.9rem;
+                animation: fadeIn 0.2s ease-out;
+            `;
+            msg.textContent = 'Nao e sua vez!';
+            document.body.appendChild(msg);
+            setTimeout(() => {
+                msg.style.animation = 'fadeIn 0.2s ease-out reverse';
+                setTimeout(() => msg.remove(), 200);
+            }, 1500);
+        }
+
         function goToPhase(phase) {
+            if (!isMyTurn()) {
+                showNotMyTurnMessage();
+                return;
+            }
             sendAction('go_to_phase', { phase });
+        }
+
+        function nextPhase() {
+            if (!isMyTurn()) {
+                showNotMyTurnMessage();
+                return;
+            }
+            sendAction('next_phase');
+        }
+
+        function nextTurn() {
+            if (!isMyTurn()) {
+                showNotMyTurnMessage();
+                return;
+            }
+            sendAction('next_turn');
+        }
+
+        function drawCard() {
+            if (!isMyTurn()) {
+                showNotMyTurnMessage();
+                return;
+            }
+            sendAction('draw_card');
+        }
+
+        function shuffleLibrary() {
+            sendAction('shuffle_library');
+            animateShuffle();
         }
 
         function updatePhaseTracker() {
             if (!gameState) return;
             const currentPhase = gameState.current_phase;
             const currentIdx = PHASES.indexOf(currentPhase);
+            const myTurn = isMyTurn();
+
+            // Update phase tracker styling based on whose turn it is
+            const tracker = document.getElementById('phaseTracker');
+            tracker.classList.toggle('not-my-turn', !myTurn);
 
             document.querySelectorAll('.phase-btn').forEach(btn => {
                 const phase = btn.dataset.phase;
                 const phaseIdx = PHASES.indexOf(phase);
                 btn.classList.remove('active', 'passed');
+                btn.disabled = !myTurn;
                 if (phase === currentPhase) {
                     btn.classList.add('active');
                 } else if (phaseIdx < currentIdx) {
                     btn.classList.add('passed');
                 }
             });
+
+            // Update next phase button
+            const nextBtn = document.querySelector('.phase-next-btn');
+            if (nextBtn) {
+                nextBtn.disabled = !myTurn;
+            }
         }
 
         // ===== RENDER =====
@@ -2782,10 +2879,10 @@
                     selectedCards.clear();
                     renderGame();
                     break;
-                case 'd': sendAction('draw_card'); break;
-                case 'n': sendAction('next_phase'); break;
-                case 'p': sendAction('next_turn'); break;
-                case 's': sendAction('shuffle_library'); animateShuffle(); break;
+                case 'd': drawCard(); break;
+                case 'n': nextPhase(); break;
+                case 'p': nextTurn(); break;
+                case 's': shuffleLibrary(); break;
                 case 'g': showZoneViewer('graveyard'); break;
                 case 'e': showZoneViewer('exile'); break;
                 case 'l': showLibraryMenu(); break;
