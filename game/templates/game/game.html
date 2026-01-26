@@ -15,10 +15,10 @@
         }
         .game-container {
             display: grid;
-            grid-template-rows: auto 1fr auto auto;
+            grid-template-rows: auto auto 1fr auto auto;
             height: 100vh;
-            gap: 6px;
-            padding: 6px;
+            gap: 4px;
+            padding: 4px;
         }
 
         /* ===== HEADER ===== */
@@ -27,38 +27,100 @@
             justify-content: space-between;
             align-items: center;
             background: rgba(255,255,255,0.05);
-            padding: 6px 12px;
-            border-radius: 6px;
+            padding: 5px 10px;
+            border-radius: 5px;
         }
-        .turn-info { display: flex; gap: 12px; align-items: center; font-size: 0.9rem; }
+        .turn-info { display: flex; gap: 10px; align-items: center; font-size: 0.85rem; }
         .turn-info .turn { color: #e94560; font-weight: bold; }
-        .turn-info .phase { color: #4ecdc4; }
         .turn-info .active { color: #ffc107; }
-        .connection-status { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; }
-        .connection-dot { width: 8px; height: 8px; border-radius: 50%; background: #c0392b; }
+        .connection-status { display: flex; align-items: center; gap: 5px; font-size: 0.7rem; }
+        .connection-dot { width: 7px; height: 7px; border-radius: 50%; background: #c0392b; }
         .connection-dot.connected { background: #27ae60; }
         .game-controls button {
-            padding: 5px 10px;
-            margin-left: 6px;
+            padding: 4px 8px;
+            margin-left: 5px;
             background: rgba(255,255,255,0.1);
             border: none;
             border-radius: 4px;
             color: white;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             transition: all 0.2s;
         }
         .game-controls button:hover { background: rgba(255,255,255,0.2); }
         .game-controls button.primary { background: #e94560; }
 
+        /* ===== PHASE TRACKER ===== */
+        .phase-tracker {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            border-radius: 5px;
+            padding: 4px 8px;
+            overflow-x: auto;
+            gap: 2px;
+        }
+        .phase-group {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .phase-group-label {
+            font-size: 0.55rem;
+            color: #666;
+            text-transform: uppercase;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            padding: 2px;
+        }
+        .phase-btn {
+            padding: 4px 6px;
+            border: none;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.05);
+            color: #888;
+            cursor: pointer;
+            font-size: 0.65rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .phase-btn:hover { background: rgba(255,255,255,0.1); color: #ccc; }
+        .phase-btn.active {
+            background: #e94560;
+            color: white;
+            font-weight: bold;
+        }
+        .phase-btn.passed {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+        }
+        .phase-separator {
+            width: 1px;
+            height: 20px;
+            background: #333;
+            margin: 0 4px;
+        }
+        .phase-next-btn {
+            padding: 4px 10px;
+            background: #4ecdc4;
+            border: none;
+            border-radius: 3px;
+            color: #000;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .phase-next-btn:hover { background: #3dbdb5; }
+
         /* ===== PLAYERS GRID ===== */
         .players-grid {
             display: grid;
-            gap: 6px;
+            gap: 4px;
             overflow: hidden;
             min-height: 0;
         }
-        /* Dynamic grids based on player count */
         .players-grid[data-players="2"] { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
         .players-grid[data-players="3"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
         .players-grid[data-players="4"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
@@ -70,8 +132,8 @@
         /* ===== PLAYER AREA ===== */
         .player-area {
             background: rgba(255,255,255,0.02);
-            border-radius: 8px;
-            padding: 6px;
+            border-radius: 6px;
+            padding: 5px;
             display: flex;
             flex-direction: column;
             min-height: 0;
@@ -87,63 +149,102 @@
             border-color: #4ecdc4 !important;
             background: rgba(78, 205, 196, 0.08);
         }
+        .player-area.arrow-target {
+            outline: 3px dashed #e94560;
+            outline-offset: -3px;
+        }
 
         .player-header {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding-bottom: 4px;
+            gap: 6px;
+            padding-bottom: 3px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             flex-shrink: 0;
         }
         .player-avatar {
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            position: relative;
         }
+        .player-avatar:hover { opacity: 0.8; }
         .player-info { flex: 1; min-width: 0; }
-        .player-info .name { font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .player-info .stats { display: flex; gap: 8px; font-size: 0.7rem; color: #888; }
+        .player-info .name { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-info .stats { display: flex; gap: 6px; font-size: 0.65rem; color: #888; }
+
+        /* Life and Counters */
+        .player-life-counters {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
         .player-life {
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: 2px;
         }
         .player-life .life {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
             color: #4ecdc4;
-            min-width: 30px;
+            min-width: 28px;
             text-align: center;
         }
         .player-life button {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             border: none;
             background: rgba(255,255,255,0.1);
             color: white;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             line-height: 1;
         }
         .player-life button:hover { background: rgba(255,255,255,0.2); }
 
+        /* Generic Counters */
+        .generic-counters {
+            display: flex;
+            gap: 3px;
+        }
+        .generic-counter {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.1s;
+        }
+        .generic-counter:hover { transform: scale(1.1); }
+        .generic-counter.red { background: #e94560; color: white; }
+        .generic-counter.blue { background: #3498db; color: white; }
+        .generic-counter.green { background: #27ae60; color: white; }
+        .generic-counter.yellow { background: #f1c40f; color: #333; }
+        .generic-counter.purple { background: #9b59b6; color: white; }
+
         .player-zones-mini {
             display: flex;
-            gap: 4px;
-            font-size: 0.65rem;
+            gap: 3px;
+            font-size: 0.6rem;
             margin-left: auto;
         }
         .mini-zone {
             background: rgba(0,0,0,0.3);
-            padding: 2px 5px;
+            padding: 2px 4px;
             border-radius: 3px;
             cursor: pointer;
         }
@@ -154,14 +255,14 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
             min-height: 0;
             overflow-y: auto;
         }
         .battlefield-row {
-            min-height: 45px;
+            min-height: 40px;
             border-radius: 4px;
-            padding: 3px 6px;
+            padding: 2px 5px;
             position: relative;
             transition: all 0.2s;
             flex-shrink: 0;
@@ -175,9 +276,9 @@
         .lands-row { background: rgba(255, 193, 7, 0.06); }
         .row-label {
             position: absolute;
-            top: 2px;
-            left: 6px;
-            font-size: 0.55rem;
+            top: 1px;
+            left: 5px;
+            font-size: 0.5rem;
             color: #555;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -185,21 +286,21 @@
         .cards-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 4px;
-            padding-top: 12px;
-            min-height: 30px;
+            gap: 3px;
+            padding-top: 10px;
+            min-height: 28px;
             align-content: flex-start;
         }
 
         /* ===== BOTTOM ZONES + COMMAND ===== */
         .my-zones-row {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             justify-content: center;
             align-items: flex-end;
-            padding: 6px;
+            padding: 5px;
             background: rgba(255,255,255,0.02);
-            border-radius: 6px;
+            border-radius: 5px;
             flex-shrink: 0;
         }
         .zone-stack {
@@ -213,13 +314,13 @@
         .zone-stack:hover { transform: translateY(-2px); }
         .stack-visual {
             position: relative;
-            width: 45px;
-            height: 63px;
+            width: 42px;
+            height: 59px;
         }
         .card-back {
             position: absolute;
-            width: 45px;
-            height: 63px;
+            width: 42px;
+            height: 59px;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border: 2px solid #333;
             border-radius: 3px;
@@ -231,20 +332,20 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: bold;
             color: #fff;
             text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
         .zone-label {
-            margin-top: 3px;
-            font-size: 0.6rem;
+            margin-top: 2px;
+            font-size: 0.55rem;
             color: #777;
         }
         .graveyard-zone .top-card,
         .exile-zone .top-card {
-            width: 45px;
-            height: 63px;
+            width: 42px;
+            height: 59px;
             border-radius: 3px;
             overflow: hidden;
         }
@@ -256,45 +357,45 @@
         }
         .command-zone-stack {
             border: 2px dashed #e94560;
-            padding: 4px;
-            border-radius: 5px;
-            min-width: 55px;
-            min-height: 70px;
+            padding: 3px;
+            border-radius: 4px;
+            min-width: 50px;
+            min-height: 65px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         .command-zone-stack .commanders-container {
             display: flex;
-            gap: 3px;
+            gap: 2px;
             flex-wrap: wrap;
             justify-content: center;
         }
-        .command-zone-stack .card { width: 45px; height: 63px; }
+        .command-zone-stack .card { width: 42px; height: 59px; }
 
         /* ===== MY HAND ===== */
         .my-hand-container {
             background: rgba(255,255,255,0.05);
-            border-radius: 6px 6px 0 0;
-            padding: 8px;
+            border-radius: 5px 5px 0 0;
+            padding: 6px;
             border-top: 2px solid #e94560;
             flex-shrink: 0;
         }
-        .my-hand-container h3 { margin-bottom: 6px; font-size: 0.8rem; }
+        .my-hand-container h3 { margin-bottom: 4px; font-size: 0.75rem; }
         .hand-cards {
             display: flex;
-            gap: 3px;
+            gap: 2px;
             flex-wrap: wrap;
             justify-content: center;
         }
         .hand-cards .card {
-            width: 80px;
-            height: 112px;
+            width: 75px;
+            height: 105px;
             cursor: grab;
             transition: transform 0.2s, margin 0.2s;
         }
         .hand-cards .card:hover {
-            transform: translateY(-12px) scale(1.06);
+            transform: translateY(-10px) scale(1.05);
             z-index: 100;
         }
         .hand-cards .card.dragging { opacity: 0.5; cursor: grabbing; }
@@ -302,22 +403,22 @@
         /* ===== SIDEBAR (Chat/Log) ===== */
         .sidebar-toggle {
             position: fixed;
-            top: 50px;
-            right: 10px;
+            top: 45px;
+            right: 8px;
             z-index: 100;
             background: rgba(255,255,255,0.1);
             border: none;
             border-radius: 4px;
             color: white;
-            padding: 6px 10px;
+            padding: 5px 8px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
         }
         .sidebar {
             position: fixed;
             top: 0;
             right: 0;
-            width: 260px;
+            width: 240px;
             height: 100vh;
             background: rgba(10, 10, 18, 0.98);
             border-left: 1px solid #333;
@@ -326,7 +427,7 @@
             transform: translateX(100%);
             transition: transform 0.3s;
             z-index: 200;
-            padding: 8px;
+            padding: 6px;
         }
         .sidebar.open { transform: translateX(0); }
         .sidebar-close {
@@ -335,64 +436,46 @@
             border: none;
             color: #888;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
-        .chat-panel {
+        .chat-panel, .log-panel {
             background: rgba(255,255,255,0.03);
-            border-radius: 6px;
-            padding: 8px;
-            max-height: 160px;
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 8px;
-        }
-        .chat-panel h3 { margin-bottom: 6px; font-size: 0.75rem; color: #888; }
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
+            border-radius: 5px;
+            padding: 6px;
             margin-bottom: 6px;
-            max-height: 70px;
         }
-        .chat-message { font-size: 0.7rem; padding: 2px 0; }
+        .chat-panel { max-height: 140px; display: flex; flex-direction: column; }
+        .log-panel { flex: 1; overflow-y: auto; }
+        .chat-panel h3, .log-panel h3 { margin-bottom: 4px; font-size: 0.7rem; color: #888; }
+        .chat-messages { flex: 1; overflow-y: auto; margin-bottom: 4px; max-height: 60px; }
+        .chat-message, .log-entry { font-size: 0.65rem; padding: 2px 0; }
         .chat-message .sender { color: #4ecdc4; }
-        .chat-input-container { display: flex; gap: 4px; }
+        .log-entry { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .log-entry .turn-num { color: #e94560; }
+        .chat-input-container { display: flex; gap: 3px; }
         .chat-input-container input {
             flex: 1;
-            padding: 5px;
+            padding: 4px;
             border: none;
             border-radius: 3px;
             background: rgba(255,255,255,0.1);
             color: white;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
         .chat-input-container button {
-            padding: 5px 8px;
+            padding: 4px 6px;
             border: none;
             border-radius: 3px;
             background: #e94560;
             color: white;
             cursor: pointer;
-            font-size: 0.75rem;
-        }
-        .log-panel {
-            flex: 1;
-            background: rgba(255,255,255,0.03);
-            border-radius: 6px;
-            padding: 8px;
-            overflow-y: auto;
-        }
-        .log-panel h3 { margin-bottom: 6px; font-size: 0.75rem; color: #888; }
-        .log-entry {
             font-size: 0.7rem;
-            padding: 2px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        .log-entry .turn-num { color: #e94560; }
 
         /* ===== CARDS ===== */
         .card {
-            width: 50px;
-            height: 70px;
+            width: 46px;
+            height: 64px;
             border-radius: 3px;
             overflow: hidden;
             cursor: pointer;
@@ -401,20 +484,56 @@
             border: 2px solid transparent;
         }
         .card:hover { transform: scale(1.08); z-index: 10; }
-        .card.tapped { transform: rotate(90deg); margin: 6px 10px; }
+        .card.tapped { transform: rotate(90deg); margin: 5px 9px; }
         .card.tapped:hover { transform: rotate(90deg) scale(1.08); }
-        .card.selected { border-color: #e94560; box-shadow: 0 0 8px rgba(233, 69, 96, 0.5); }
+        .card.selected { border-color: #e94560; box-shadow: 0 0 6px rgba(233, 69, 96, 0.5); }
         .card.commander { border-color: #ffc107; }
         .card.dragging { opacity: 0.4; }
+        .card.arrow-source { box-shadow: 0 0 10px #e94560; }
+        .card.has-arrow { box-shadow: 0 0 8px 2px #ffc107; }
+        .card.arrow-target-card {
+            outline: 2px dashed #4ecdc4;
+            outline-offset: 2px;
+        }
+        .card.arrow-target-card:hover {
+            outline-color: #e94560;
+            cursor: crosshair;
+        }
         .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         .card .counters {
             position: absolute;
             bottom: 1px;
             right: 1px;
             background: rgba(0,0,0,0.85);
-            padding: 1px 3px;
+            padding: 1px 2px;
             border-radius: 2px;
-            font-size: 0.5rem;
+            font-size: 0.45rem;
+        }
+
+        /* ===== ARROWS ===== */
+        .arrows-svg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 500;
+            overflow: visible;
+        }
+        .arrow-line {
+            stroke: #e94560;
+            stroke-width: 4;
+            fill: none;
+            marker-end: url(#arrowhead);
+            pointer-events: visibleStroke;
+            cursor: pointer;
+            filter: drop-shadow(0 0 4px rgba(233, 69, 96, 0.9));
+            transition: stroke-width 0.15s;
+        }
+        .arrow-line:hover {
+            stroke: #ff6b8a;
+            stroke-width: 6;
+            filter: drop-shadow(0 0 6px rgba(255, 107, 138, 1));
         }
 
         /* ===== SELECTION BOX ===== */
@@ -432,29 +551,29 @@
             position: fixed;
             background: #1a1a2e;
             border: 1px solid #333;
-            border-radius: 6px;
+            border-radius: 5px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             z-index: 2000;
-            min-width: 150px;
+            min-width: 140px;
             overflow: hidden;
             display: none;
         }
         .context-menu.show { display: block; }
         .context-menu-item {
-            padding: 7px 10px;
+            padding: 6px 8px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             transition: background 0.2s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
         .context-menu-item:hover { background: rgba(233, 69, 96, 0.2); }
         .context-menu-item.disabled { opacity: 0.5; cursor: not-allowed; }
-        .context-menu-divider { height: 1px; background: #333; margin: 3px 0; }
+        .context-menu-divider { height: 1px; background: #333; margin: 2px 0; }
 
-        /* ===== ZONE VIEWER MODAL ===== */
-        .zone-viewer-modal {
+        /* ===== MODALS ===== */
+        .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.9);
@@ -463,38 +582,87 @@
             align-items: center;
             justify-content: center;
         }
-        .zone-viewer-modal.show { display: flex; }
-        .zone-viewer-content {
+        .modal-overlay.show { display: flex; }
+        .modal-content {
             background: #16213e;
-            border-radius: 10px;
+            border-radius: 8px;
             padding: 15px;
             max-width: 90vw;
             max-height: 80vh;
             overflow: auto;
         }
-        .zone-viewer-header {
+        .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
-        .zone-viewer-header button {
+        .modal-header h3 { font-size: 0.9rem; }
+        .modal-header button {
             background: #333;
             border: none;
             color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 4px 8px;
+            border-radius: 3px;
             cursor: pointer;
+            font-size: 0.75rem;
         }
-        .zone-viewer-cards {
+        .modal-cards {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             justify-content: center;
         }
-        .zone-viewer-cards .card { width: 90px; height: 126px; }
+        .modal-cards .card { width: 85px; height: 119px; }
 
-        /* ===== SCRY MODAL ===== */
+        /* Library Viewer */
+        .library-viewer-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .library-viewer-cards .card {
+            width: 70px;
+            height: 98px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .library-viewer-cards .card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.8);
+            z-index: 10;
+        }
+
+        /* Card Modal */
+        .card-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .card-modal.show { display: flex; }
+        .card-modal img { max-height: 55vh; border-radius: 8px; }
+        .card-modal .actions { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+        .card-modal button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .card-modal .close { background: #333; color: white; }
+        .card-modal .action-btn { background: #e94560; color: white; }
+
+        /* Scry Modal */
         .scry-modal {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -507,49 +675,49 @@
         .scry-modal.show { display: flex; }
         .scry-content {
             background: #16213e;
-            border-radius: 10px;
-            padding: 20px;
+            border-radius: 8px;
+            padding: 15px;
             text-align: center;
             max-width: 90vw;
         }
-        .scry-content h3 { margin-bottom: 12px; }
+        .scry-content h3 { margin-bottom: 10px; font-size: 0.9rem; }
         .scry-cards {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
-            margin: 12px 0;
+            margin: 10px 0;
             flex-wrap: wrap;
         }
-        .scry-cards .card { width: 100px; height: 140px; cursor: grab; }
+        .scry-cards .card { width: 90px; height: 126px; cursor: grab; }
         .scry-zones {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             justify-content: center;
-            margin: 12px 0;
+            margin: 10px 0;
         }
         .scry-zone {
-            min-width: 120px;
-            min-height: 70px;
+            min-width: 100px;
+            min-height: 60px;
             border: 2px dashed #444;
-            border-radius: 6px;
-            padding: 8px;
+            border-radius: 5px;
+            padding: 6px;
             transition: all 0.2s;
         }
         .scry-zone.drag-over { border-color: #4ecdc4; background: rgba(78, 205, 196, 0.1); }
-        .scry-zone span { font-size: 0.75rem; color: #888; display: block; margin-bottom: 6px; }
-        .scry-zone .scry-cards-list { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
-        .scry-zone .card { width: 50px; height: 70px; }
+        .scry-zone span { font-size: 0.7rem; color: #888; display: block; margin-bottom: 4px; }
+        .scry-zone .scry-cards-list { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+        .scry-zone .card { width: 45px; height: 63px; }
         .scry-content .btn {
-            padding: 8px 20px;
+            padding: 6px 15px;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.85rem;
-            margin-top: 8px;
+            font-size: 0.8rem;
+            margin-top: 6px;
         }
         .scry-content .btn.primary { background: #e94560; color: white; }
 
-        /* ===== REVEAL OVERLAY ===== */
+        /* Reveal Overlay */
         .reveal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -561,37 +729,8 @@
             flex-direction: column;
         }
         .reveal-overlay.show { display: flex; animation: fadeIn 0.3s; }
-        .reveal-overlay img {
-            max-height: 50vh;
-            border-radius: 10px;
-            box-shadow: 0 0 40px rgba(233, 69, 96, 0.5);
-        }
-        .reveal-overlay p { margin-top: 12px; font-size: 1rem; color: #fff; }
-
-        /* ===== CARD MODAL ===== */
-        .card-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .card-modal.show { display: flex; }
-        .card-modal img { max-height: 60vh; border-radius: 10px; }
-        .card-modal .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-        .card-modal button {
-            padding: 7px 14px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-        .card-modal .close { background: #333; color: white; }
-        .card-modal .action-btn { background: #e94560; color: white; }
+        .reveal-overlay img { max-height: 45vh; border-radius: 8px; box-shadow: 0 0 30px rgba(233, 69, 96, 0.5); }
+        .reveal-overlay p { margin-top: 10px; font-size: 0.9rem; color: #fff; }
 
         /* ===== OVERLAYS ===== */
         .dead-overlay {
@@ -603,8 +742,8 @@
             justify-content: center;
             color: #e94560;
             font-weight: bold;
-            font-size: 0.9rem;
-            border-radius: 6px;
+            font-size: 0.85rem;
+            border-radius: 5px;
             z-index: 5;
         }
         .winner-overlay {
@@ -618,13 +757,13 @@
             z-index: 2000;
         }
         .winner-overlay.show { display: flex; }
-        .winner-overlay h1 { color: #ffc107; font-size: 2rem; margin-bottom: 12px; }
+        .winner-overlay h1 { color: #ffc107; font-size: 1.8rem; margin-bottom: 10px; }
         .winner-overlay a {
-            padding: 10px 20px;
+            padding: 8px 16px;
             background: #e94560;
             color: white;
             text-decoration: none;
-            border-radius: 6px;
+            border-radius: 5px;
         }
         .loading-overlay {
             position: fixed;
@@ -637,20 +776,17 @@
         }
         .loading-overlay.hidden { display: none; }
         .spinner {
-            width: 35px;
-            height: 35px;
+            width: 30px;
+            height: 30px;
             border: 3px solid rgba(255,255,255,0.1);
             border-top-color: #e94560;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes cardDraw {
-            from { transform: translateY(-40px); opacity: 0; }
+            from { transform: translateY(-30px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
         @keyframes shuffle {
@@ -658,7 +794,7 @@
             25% { transform: translateX(-2px) rotate(-1deg); }
             75% { transform: translateX(2px) rotate(1deg); }
         }
-        .card.drawing { animation: cardDraw 0.3s ease-out; }
+        .card.drawing { animation: cardDraw 0.25s ease-out; }
         .zone-stack.shuffling .card-back { animation: shuffle 0.1s ease-in-out 5; }
     </style>
 </head>
@@ -685,11 +821,19 @@
         </div>
     </div>
 
+    <!-- SVG for Arrows -->
+    <svg class="arrows-svg" id="arrowsSvg" style="pointer-events: none;">
+        <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#e94560" />
+            </marker>
+        </defs>
+    </svg>
+
     <div class="game-container" id="gameContainer" style="display: none;">
         <div class="game-header">
             <div class="turn-info">
                 <span class="turn" id="turnNumber">Turno 1</span>
-                <span class="phase" id="currentPhase">Fase Principal 1</span>
                 <span class="active" id="activePlayer">Vez de: -</span>
             </div>
             <div class="connection-status">
@@ -698,16 +842,51 @@
             </div>
             <div class="game-controls">
                 <button onclick="sendAction('draw_card')" title="D">Comprar</button>
-                <button onclick="sendAction('next_phase')" title="N">Fase</button>
-                <button onclick="sendAction('next_turn')" class="primary" title="P">Passar</button>
+                <button onclick="sendAction('next_turn')" class="primary" title="P">Passar Turno</button>
                 <button onclick="if(confirm('Conceder?')) sendAction('concede')" style="background:#c0392b;">Conceder</button>
             </div>
+        </div>
+
+        <!-- Phase Tracker -->
+        <div class="phase-tracker" id="phaseTracker">
+            <div class="phase-group">
+                <span class="phase-group-label">Inicio</span>
+                <button class="phase-btn" data-phase="untap" onclick="goToPhase('untap')">Desvirar</button>
+                <button class="phase-btn" data-phase="upkeep" onclick="goToPhase('upkeep')">Manutencao</button>
+                <button class="phase-btn" data-phase="draw" onclick="goToPhase('draw')">Compra</button>
+            </div>
+            <div class="phase-separator"></div>
+            <div class="phase-group">
+                <span class="phase-group-label">Main1</span>
+                <button class="phase-btn" data-phase="main1" onclick="goToPhase('main1')">Principal 1</button>
+            </div>
+            <div class="phase-separator"></div>
+            <div class="phase-group">
+                <span class="phase-group-label">Combate</span>
+                <button class="phase-btn" data-phase="combat_begin" onclick="goToPhase('combat_begin')">Inicio</button>
+                <button class="phase-btn" data-phase="combat_attackers" onclick="goToPhase('combat_attackers')">Atacantes</button>
+                <button class="phase-btn" data-phase="combat_blockers" onclick="goToPhase('combat_blockers')">Bloqueadores</button>
+                <button class="phase-btn" data-phase="combat_damage" onclick="goToPhase('combat_damage')">Dano</button>
+                <button class="phase-btn" data-phase="combat_end" onclick="goToPhase('combat_end')">Fim</button>
+            </div>
+            <div class="phase-separator"></div>
+            <div class="phase-group">
+                <span class="phase-group-label">Main2</span>
+                <button class="phase-btn" data-phase="main2" onclick="goToPhase('main2')">Principal 2</button>
+            </div>
+            <div class="phase-separator"></div>
+            <div class="phase-group">
+                <span class="phase-group-label">Final</span>
+                <button class="phase-btn" data-phase="end" onclick="goToPhase('end')">Etapa Final</button>
+                <button class="phase-btn" data-phase="cleanup" onclick="goToPhase('cleanup')">Limpeza</button>
+            </div>
+            <button class="phase-next-btn" onclick="sendAction('next_phase')" title="N">Proxima Fase &rarr;</button>
         </div>
 
         <!-- Dynamic Players Grid -->
         <div class="players-grid" id="playersGrid"></div>
 
-        <!-- Bottom Zones Row (Library, Graveyard, Exile, Command) -->
+        <!-- Bottom Zones Row -->
         <div class="my-zones-row">
             <div class="zone-stack library-zone" id="myLibrary"
                  onclick="showLibraryMenu()" oncontextmenu="showLibraryContextMenu(event); return false;">
@@ -750,7 +929,7 @@
         </div>
     </div>
 
-    <!-- Selection Box for multi-select -->
+    <!-- Selection Box -->
     <div class="selection-box" id="selectionBox"></div>
 
     <!-- Context Menu -->
@@ -759,13 +938,25 @@
     </div>
 
     <!-- Zone Viewer Modal -->
-    <div class="zone-viewer-modal" id="zoneViewerModal">
-        <div class="zone-viewer-content">
-            <div class="zone-viewer-header">
+    <div class="modal-overlay" id="zoneViewerModal">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h3 id="zoneViewerTitle">Zona</h3>
                 <button onclick="closeZoneViewer()">Fechar</button>
             </div>
-            <div class="zone-viewer-cards" id="zoneViewerCards"></div>
+            <div class="modal-cards" id="zoneViewerCards"></div>
+        </div>
+    </div>
+
+    <!-- Library Viewer Modal -->
+    <div class="modal-overlay" id="libraryViewerModal">
+        <div class="modal-content" style="max-width: 85vw;">
+            <div class="modal-header">
+                <h3 id="libraryViewerTitle">Sua Biblioteca</h3>
+                <span style="font-size:0.7rem;color:#888;">(Clique em uma carta para mover | Sera embaralhada ao fechar)</span>
+                <button onclick="closeLibraryViewer()">Fechar e Embaralhar</button>
+            </div>
+            <div class="library-viewer-cards" id="libraryViewerCards"></div>
         </div>
     </div>
 
@@ -778,18 +969,18 @@
                 <div class="scry-zone" id="scryTop"
                      ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
                      ondrop="handleScryDrop(event, 'top')">
-                    <span>Topo da Biblioteca</span>
+                    <span>Topo</span>
                     <div class="scry-cards-list" id="scryTopCards"></div>
                 </div>
                 <div class="scry-zone" id="scryBottom"
                      ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
                      ondrop="handleScryDrop(event, 'bottom')">
-                    <span>Fundo da Biblioteca</span>
+                    <span>Fundo</span>
                     <div class="scry-cards-list" id="scryBottomCards"></div>
                 </div>
             </div>
             <button class="btn primary" onclick="confirmScry()">Confirmar</button>
-            <button class="btn" style="background:#333;color:white;margin-left:8px;" onclick="closeScryModal()">Cancelar</button>
+            <button class="btn" style="background:#333;color:white;margin-left:6px;" onclick="closeScryModal()">Cancelar</button>
         </div>
     </div>
 
@@ -811,6 +1002,21 @@
         <a id="lobbyLink" href="/lobby/">Voltar ao Lobby</a>
     </div>
 
+    <!-- Counter Adjustment Modal -->
+    <div class="modal-overlay" id="counterModal">
+        <div class="modal-content" style="text-align:center;min-width:200px;">
+            <div class="modal-header">
+                <h3 id="counterModalTitle">Marcador</h3>
+                <button onclick="closeCounterModal()">Fechar</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:15px;margin:15px 0;">
+                <button onclick="adjustCounter(-1)" style="width:40px;height:40px;font-size:1.5rem;border:none;background:#e94560;color:white;border-radius:50%;cursor:pointer;">-</button>
+                <span id="counterValue" style="font-size:2rem;font-weight:bold;min-width:50px;">0</span>
+                <button onclick="adjustCounter(1)" style="width:40px;height:40px;font-size:1.5rem;border:none;background:#4ecdc4;color:white;border-radius:50%;cursor:pointer;">+</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===== CONSTANTS =====
         const gameId = '{{ game.id }}';
@@ -820,20 +1026,32 @@
         const csrfToken = '{{ csrf_token }}';
         const tabId = '{{ tab_id|default:"" }}';
 
+        const PHASES = ['untap', 'upkeep', 'draw', 'main1', 'combat_begin', 'combat_attackers',
+                        'combat_blockers', 'combat_damage', 'combat_end', 'main2', 'end', 'cleanup'];
+
         // ===== STATE =====
         let socket = null;
         let gameState = null;
         let selectedCard = null;
-        let selectedCards = new Set(); // For multi-select
+        let selectedCards = new Set();
         let reconnectAttempts = 0;
         const maxReconnectAttempts = 5;
         let draggedCard = null;
         let draggedCardData = null;
         let scryCardsData = [];
-
-        // Selection box state
         let isSelecting = false;
         let selectionStart = { x: 0, y: 0 };
+
+        // Arrow state
+        let arrowMode = false;
+        let arrowSourceCard = null;
+        let arrows = []; // {sourceCardId, targetType: 'player'|'card', targetId: seatNumber|cardId}
+
+        // Counter modal state
+        let counterModalData = { seat: null, color: null };
+
+        // Player counters (local state for generic counters)
+        let playerCounters = {}; // seat -> {red: 0, blue: 0, green: 0, yellow: 0, purple: 0}
 
         // ===== WEBSOCKET =====
         function connectWebSocket() {
@@ -895,6 +1113,8 @@
         function handlePrivateAction(data) {
             if (data.action === 'scry' || data.action === 'look_top') {
                 showScryModal(data.data.cards, data.action === 'scry');
+            } else if (data.action === 'view_library') {
+                showLibraryViewerModal(data.data.cards);
             }
         }
 
@@ -929,6 +1149,28 @@
             document.getElementById('sidebar').classList.toggle('open');
         }
 
+        // ===== PHASE SYSTEM =====
+        function goToPhase(phase) {
+            sendAction('go_to_phase', { phase });
+        }
+
+        function updatePhaseTracker() {
+            if (!gameState) return;
+            const currentPhase = gameState.current_phase;
+            const currentIdx = PHASES.indexOf(currentPhase);
+
+            document.querySelectorAll('.phase-btn').forEach(btn => {
+                const phase = btn.dataset.phase;
+                const phaseIdx = PHASES.indexOf(phase);
+                btn.classList.remove('active', 'passed');
+                if (phase === currentPhase) {
+                    btn.classList.add('active');
+                } else if (phaseIdx < currentIdx) {
+                    btn.classList.add('passed');
+                }
+            });
+        }
+
         // ===== RENDER =====
         function renderGame() {
             if (!gameState) return;
@@ -936,8 +1178,9 @@
             document.getElementById('gameContainer').style.display = 'grid';
 
             document.getElementById('turnNumber').textContent = `Turno ${gameState.turn_number}`;
-            document.getElementById('currentPhase').textContent = gameState.phase_display;
             document.getElementById('activePlayer').textContent = `Vez de: ${gameState.active_player_name || '-'}`;
+
+            updatePhaseTracker();
 
             if (gameState.status === 'finished' && gameState.winner_id) {
                 const winner = gameState.players.find(p => p.id === gameState.winner_id);
@@ -947,10 +1190,18 @@
                 }
             }
 
+            // Initialize player counters if not exists
+            gameState.players.forEach(p => {
+                if (!playerCounters[p.seat_position]) {
+                    playerCounters[p.seat_position] = { red: 0, blue: 0, green: 0, yellow: 0, purple: 0 };
+                }
+            });
+
             renderPlayersGrid();
             renderMyZones();
             renderMyHand();
             renderActionLog();
+            renderArrows();
         }
 
         function renderPlayersGrid() {
@@ -958,9 +1209,8 @@
             const playerCount = gameState.players.length;
             container.setAttribute('data-players', playerCount);
 
-            // Sort players: me first (at bottom visually), then others by seat
             const sortedPlayers = [...gameState.players].sort((a, b) => {
-                if (a.seat_position === mySeat) return 1; // Me goes last (renders at bottom)
+                if (a.seat_position === mySeat) return 1;
                 if (b.seat_position === mySeat) return -1;
                 return a.seat_position - b.seat_position;
             });
@@ -969,7 +1219,6 @@
                 const isMe = player.seat_position === mySeat;
                 const zones = gameState.zones_data[player.seat_position];
                 const isActive = player.seat_position === gameState.active_player_seat;
-
                 return renderPlayerArea(player, zones, isMe, isActive);
             }).join('');
         }
@@ -988,30 +1237,41 @@
                 else enchantments.push(card);
             });
 
+            const counters = playerCounters[player.seat_position] || { red: 0, blue: 0, green: 0, yellow: 0, purple: 0 };
+
             return `
-                <div class="${classes.join(' ')}" data-seat="${player.seat_position}"
+                <div class="${classes.join(' ')}" data-seat="${player.seat_position}" id="playerArea-${player.seat_position}"
                      ondragover="handlePlayerDragOver(event, ${player.seat_position})"
                      ondragleave="handlePlayerDragLeave(event)"
-                     ondrop="handlePlayerDrop(event, ${player.seat_position})">
+                     ondrop="handlePlayerDrop(event, ${player.seat_position})"
+                     onclick="handlePlayerAreaClick(event, ${player.seat_position})">
                     ${!player.is_alive ? '<div class="dead-overlay">ELIMINADO</div>' : ''}
                     <div class="player-header">
-                        <div class="player-avatar" style="background-color: ${player.avatar_color || '#e94560'}">${player.nickname.charAt(0).toUpperCase()}</div>
+                        <div class="player-avatar" style="background-color: ${player.avatar_color || '#e94560'}"
+                             onclick="event.stopPropagation(); startArrowToPlayer(${player.seat_position})"
+                             title="Clique para apontar seta">${player.nickname.charAt(0).toUpperCase()}</div>
                         <div class="player-info">
                             <div class="name">${player.nickname}${isMe ? ' (Voce)' : ''}</div>
-                            <div class="stats">
-                                <span title="Veneno">${player.poison_counters > 0 ? player.poison_counters + ' veneno' : ''}</span>
+                        </div>
+                        <div class="player-life-counters">
+                            <div class="player-life">
+                                <button onclick="event.stopPropagation(); changeLife(${player.seat_position}, -1)">-</button>
+                                <span class="life">${player.life}</span>
+                                <button onclick="event.stopPropagation(); changeLife(${player.seat_position}, 1)">+</button>
+                            </div>
+                            <div class="generic-counters">
+                                <div class="generic-counter red" onclick="event.stopPropagation(); openCounterModal(${player.seat_position}, 'red')">${counters.red || ''}</div>
+                                <div class="generic-counter blue" onclick="event.stopPropagation(); openCounterModal(${player.seat_position}, 'blue')">${counters.blue || ''}</div>
+                                <div class="generic-counter green" onclick="event.stopPropagation(); openCounterModal(${player.seat_position}, 'green')">${counters.green || ''}</div>
+                                <div class="generic-counter yellow" onclick="event.stopPropagation(); openCounterModal(${player.seat_position}, 'yellow')">${counters.yellow || ''}</div>
+                                <div class="generic-counter purple" onclick="event.stopPropagation(); openCounterModal(${player.seat_position}, 'purple')">${counters.purple || ''}</div>
                             </div>
                         </div>
-                        <div class="player-life">
-                            <button onclick="changeLife(${player.seat_position}, -1)">-</button>
-                            <span class="life">${player.life}</span>
-                            <button onclick="changeLife(${player.seat_position}, 1)">+</button>
-                        </div>
                         <div class="player-zones-mini">
-                            <span class="mini-zone" title="Biblioteca" onclick="event.stopPropagation();">${zones.library_count}</span>
+                            <span class="mini-zone" title="Biblioteca">${zones.library_count}</span>
                             <span class="mini-zone" title="Mao">${zones.hand.length}</span>
-                            <span class="mini-zone" title="Cemiterio" onclick="showOpponentZone(${player.seat_position}, 'graveyard')">${zones.graveyard.length}</span>
-                            <span class="mini-zone" title="Exilio" onclick="showOpponentZone(${player.seat_position}, 'exile')">${zones.exile.length}</span>
+                            <span class="mini-zone" title="Cemiterio" onclick="event.stopPropagation(); showOpponentZone(${player.seat_position}, 'graveyard')">${zones.graveyard.length}</span>
+                            <span class="mini-zone" title="Exilio" onclick="event.stopPropagation(); showOpponentZone(${player.seat_position}, 'exile')">${zones.exile.length}</span>
                         </div>
                     </div>
                     <div class="player-battlefield">
@@ -1033,27 +1293,7 @@
                             <span class="row-label">Terrenos</span>
                             <div class="cards-container">${renderBattlefieldCards(lands, isMe)}</div>
                         </div>
-                        ${zones.command.length > 0 ? `
-                        <div class="command-mini" style="display:flex;gap:3px;padding:3px;border-top:1px dashed #e94560;">
-                            ${zones.command.map(c => renderCommanderCard(c, isMe)).join('')}
-                        </div>
-                        ` : ''}
                     </div>
-                </div>
-            `;
-        }
-
-        function renderCommanderCard(card, isMe) {
-            const draggable = isMe ? 'draggable="true"' : '';
-            const dragStart = isMe ? `ondragstart="handleDragStart(event, '${card.id}', 'command')"` : '';
-            const contextMenu = isMe ? `oncontextmenu="showCommandContextMenu(event, '${card.id}'); return false;"` : '';
-            return `
-                <div class="card commander" data-id="${card.id}" ${draggable}
-                     ${dragStart}
-                     ondblclick="${isMe ? `moveCard('${card.id}', 'battlefield')` : ''}"
-                     onclick="showCard('${card.id}', '${card.image_normal}', '${card.name}', 'command', ${isMe})"
-                     ${contextMenu}>
-                    <img src="${card.image_small}" alt="${card.name}">
                 </div>
             `;
         }
@@ -1075,17 +1315,21 @@
                     if (text) countersHtml = `<div class="counters">${text}</div>`;
                 }
                 const isSelected = selectedCards.has(card.id);
+                const isArrowSource = arrowSourceCard === card.id;
+                const hasArrowFrom = arrows.some(a => a.sourceCardId === card.id);
+                const hasArrowTo = arrows.some(a => a.targetType === 'card' && a.targetId === card.id);
+                const hasArrow = hasArrowFrom || hasArrowTo;
                 const draggable = isMe ? 'draggable="true"' : '';
                 const dragStart = isMe ? `ondragstart="handleDragStart(event, '${card.id}', 'battlefield')"` : '';
-                const dblClick = isMe ? `ondblclick="toggleTap('${card.id}')"` : '';
-                const contextMenu = isMe ? `oncontextmenu="showBattlefieldContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}); return false;"` : '';
+                // Context menu for all battlefield cards (own cards have more options)
+                const contextMenu = `oncontextmenu="showBattlefieldContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}, ${isMe}); return false;"`;
 
                 return `
-                    <div class="card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''}"
+                    <div class="card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''}"
                          data-id="${card.id}" ${draggable}
                          ${dragStart}
-                         ${dblClick}
-                         onclick="handleCardClick(event, '${card.id}', '${card.image_normal}', '${card.name}', 'battlefield', ${isMe})"
+                         onclick="handleBattlefieldCardClick(event, '${card.id}', ${isMe})"
+                         ondblclick="${isMe ? `event.stopPropagation(); toggleTap('${card.id}')` : ''}"
                          ${contextMenu}>
                         <img src="${card.image_small}" alt="${card.name}">
                         ${countersHtml}
@@ -1114,12 +1358,11 @@
                 exileTop.innerHTML = `<img src="${top.image_small}" alt="${top.name}">`;
             } else exileTop.innerHTML = '';
 
-            // Commanders in the bottom zone (if not on battlefield)
             document.getElementById('commanderCards').innerHTML = zones.command.map(c => `
                 <div class="card commander" data-id="${c.id}" draggable="true"
                      ondragstart="handleDragStart(event, '${c.id}', 'command')"
-                     ondblclick="moveCard('${c.id}', 'battlefield')"
                      onclick="showCard('${c.id}', '${c.image_normal}', '${c.name}', 'command', true)"
+                     ondblclick="event.stopPropagation(); moveCard('${c.id}', 'battlefield')"
                      oncontextmenu="showCommandContextMenu(event, '${c.id}'); return false;">
                     <img src="${c.image_small}" alt="${c.name}">
                 </div>
@@ -1133,7 +1376,7 @@
 
             const container = document.getElementById('myHand');
             if (!handCards.length) {
-                container.innerHTML = '<div style="color:#555;font-size:0.8rem;">Mao vazia</div>';
+                container.innerHTML = '<div style="color:#555;font-size:0.75rem;">Mao vazia</div>';
                 return;
             }
 
@@ -1153,6 +1396,138 @@
             container.innerHTML = gameState.recent_actions.map(action => `
                 <div class="log-entry"><span class="turn-num">[T${action.turn_number}]</span> ${action.display_text}</div>
             `).join('');
+        }
+
+        // ===== ARROWS =====
+        function startArrowFromCard(cardId) {
+            arrowMode = true;
+            arrowSourceCard = cardId;
+            // Highlight all potential targets
+            document.querySelectorAll('.player-area').forEach(el => el.classList.add('arrow-target'));
+            document.querySelectorAll('.card').forEach(el => {
+                if (el.dataset.id !== cardId) el.classList.add('arrow-target-card');
+            });
+            renderGame();
+        }
+
+        function startArrowToPlayer(targetSeat) {
+            if (arrowMode && arrowSourceCard) {
+                // Complete the arrow to player
+                arrows.push({ sourceCardId: arrowSourceCard, targetType: 'player', targetId: targetSeat });
+                cancelArrowMode();
+                renderArrows();
+            }
+        }
+
+        function startArrowToCard(targetCardId) {
+            if (arrowMode && arrowSourceCard && targetCardId !== arrowSourceCard) {
+                // Complete the arrow to card
+                arrows.push({ sourceCardId: arrowSourceCard, targetType: 'card', targetId: targetCardId });
+                cancelArrowMode();
+                renderArrows();
+            }
+        }
+
+        function cancelArrowMode() {
+            arrowMode = false;
+            arrowSourceCard = null;
+            document.querySelectorAll('.player-area').forEach(el => el.classList.remove('arrow-target'));
+            document.querySelectorAll('.card').forEach(el => el.classList.remove('arrow-target-card'));
+            renderGame();
+        }
+
+        function handlePlayerAreaClick(event, seat) {
+            if (arrowMode && arrowSourceCard) {
+                arrows.push({ sourceCardId: arrowSourceCard, targetType: 'player', targetId: seat });
+                cancelArrowMode();
+                renderArrows();
+            }
+        }
+
+        function renderArrows() {
+            // Use requestAnimationFrame to ensure DOM is updated
+            requestAnimationFrame(() => {
+                const svg = document.getElementById('arrowsSvg');
+                // Clear existing arrows (except defs)
+                const defs = svg.querySelector('defs');
+                svg.innerHTML = '';
+                svg.appendChild(defs);
+
+                arrows.forEach((arrow, idx) => {
+                    const sourceEl = document.querySelector(`[data-id="${arrow.sourceCardId}"]`);
+                    let targetEl;
+
+                    if (arrow.targetType === 'player') {
+                        targetEl = document.getElementById(`playerArea-${arrow.targetId}`);
+                    } else if (arrow.targetType === 'card') {
+                        targetEl = document.querySelector(`[data-id="${arrow.targetId}"]`);
+                    } else {
+                        // Legacy support for old format
+                        targetEl = document.getElementById(`playerArea-${arrow.targetSeat}`);
+                    }
+
+                    if (!sourceEl || !targetEl) return;
+
+                    const sourceRect = sourceEl.getBoundingClientRect();
+                    const targetRect = targetEl.getBoundingClientRect();
+
+                    const x1 = sourceRect.left + sourceRect.width / 2;
+                    const y1 = sourceRect.top + sourceRect.height / 2;
+                    const x2 = targetRect.left + targetRect.width / 2;
+                    const y2 = arrow.targetType === 'card'
+                        ? targetRect.top + targetRect.height / 2
+                        : targetRect.top + 30;
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('class', 'arrow-line');
+                    line.setAttribute('data-arrow-idx', idx);
+                    line.onclick = (e) => {
+                        e.stopPropagation();
+                        removeArrow(idx);
+                    };
+                    svg.appendChild(line);
+                });
+            });
+        }
+
+        function removeArrow(idx) {
+            arrows.splice(idx, 1);
+            renderGame();
+        }
+
+        function removeArrowsFromCard(cardId) {
+            arrows = arrows.filter(a => a.sourceCardId !== cardId);
+            renderGame();
+        }
+
+        function clearAllArrows() {
+            arrows = [];
+            renderGame();
+        }
+
+        // ===== GENERIC COUNTERS =====
+        function openCounterModal(seat, color) {
+            counterModalData = { seat, color };
+            const value = playerCounters[seat]?.[color] || 0;
+            document.getElementById('counterValue').textContent = value;
+            document.getElementById('counterModalTitle').textContent = `Marcador ${color.charAt(0).toUpperCase() + color.slice(1)}`;
+            document.getElementById('counterModal').classList.add('show');
+        }
+
+        function closeCounterModal() {
+            document.getElementById('counterModal').classList.remove('show');
+        }
+
+        function adjustCounter(delta) {
+            const { seat, color } = counterModalData;
+            if (!playerCounters[seat]) playerCounters[seat] = { red: 0, blue: 0, green: 0, yellow: 0, purple: 0 };
+            playerCounters[seat][color] = Math.max(0, (playerCounters[seat][color] || 0) + delta);
+            document.getElementById('counterValue').textContent = playerCounters[seat][color];
+            renderGame();
         }
 
         // ===== DRAG AND DROP =====
@@ -1185,19 +1560,10 @@
         function handlePlayerDrop(e, targetSeat) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over-player');
-            // Don't handle here if dropped on a row
             if (e.target.closest('.battlefield-row')) return;
-
             document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
             if (!draggedCard) return;
-
-            // Move card to another player's battlefield
-            sendAction('move_card', {
-                object_id: draggedCard,
-                zone: 'battlefield',
-                target_seat: targetSeat
-            });
-
+            sendAction('move_card', { object_id: draggedCard, zone: 'battlefield', target_seat: targetSeat });
             draggedCard = null;
             draggedCardData = null;
         }
@@ -1218,17 +1584,8 @@
             e.currentTarget.classList.remove('drag-over');
             document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
             document.querySelectorAll('.drag-over-player').forEach(el => el.classList.remove('drag-over-player'));
-
             if (!draggedCard) return;
-
-            // Move card to specific row on target player's battlefield
-            sendAction('move_card', {
-                object_id: draggedCard,
-                zone: 'battlefield',
-                target_seat: targetSeat,
-                row: row
-            });
-
+            sendAction('move_card', { object_id: draggedCard, zone: 'battlefield', target_seat: targetSeat, row: row });
             draggedCard = null;
             draggedCardData = null;
         }
@@ -1237,7 +1594,6 @@
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
             document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
-
             if (!draggedCard) return;
             sendAction('move_card', { object_id: draggedCard, zone });
             draggedCard = null;
@@ -1246,9 +1602,13 @@
 
         // ===== CARD INTERACTIONS =====
         function handleCardClick(e, cardId, imageUrl, cardName, zone, isMe) {
-            // If shift is held, toggle selection
+            e.stopPropagation();
+            if (arrowMode) {
+                // Cancel arrow mode on card click
+                cancelArrowMode();
+                return;
+            }
             if (e.shiftKey && isMe) {
-                e.stopPropagation();
                 if (selectedCards.has(cardId)) {
                     selectedCards.delete(cardId);
                 } else {
@@ -1257,28 +1617,58 @@
                 renderGame();
                 return;
             }
-            // Normal click shows card modal
             showCard(cardId, imageUrl, cardName, zone, isMe);
         }
 
+        // Battlefield cards: single click only for selection, not opening modal
+        function handleBattlefieldCardClick(e, cardId, isMe) {
+            e.stopPropagation();
+            // If in arrow mode, target this card with the arrow
+            if (arrowMode && arrowSourceCard && cardId !== arrowSourceCard) {
+                startArrowToCard(cardId);
+                return;
+            }
+            if (arrowMode) {
+                cancelArrowMode();
+                return;
+            }
+            // Shift+click for multi-select
+            if (e.shiftKey && isMe) {
+                if (selectedCards.has(cardId)) {
+                    selectedCards.delete(cardId);
+                } else {
+                    selectedCards.add(cardId);
+                }
+                renderGame();
+                return;
+            }
+            // Regular click: toggle selection (don't open modal)
+            if (isMe) {
+                if (selectedCards.has(cardId)) {
+                    selectedCards.delete(cardId);
+                } else {
+                    // Clear other selections unless shift is held
+                    selectedCards.clear();
+                    selectedCards.add(cardId);
+                }
+                renderGame();
+            }
+            // For opponent cards, single click does nothing (use right-click to view)
+        }
+
         function toggleTap(cardId) {
-            // If we have multiple selected cards and this is one of them, tap/untap all
             if (selectedCards.size > 0 && selectedCards.has(cardId)) {
-                selectedCards.forEach(id => {
-                    sendAction('tap_card', { object_id: id });
-                });
+                selectedCards.forEach(id => sendAction('tap_card', { object_id: id }));
                 selectedCards.clear();
             } else {
                 sendAction('tap_card', { object_id: cardId });
             }
         }
 
-        // ===== MULTI-SELECT WITH DRAG =====
+        // ===== MULTI-SELECT =====
         document.addEventListener('mousedown', function(e) {
-            // Only start selection if clicking on empty battlefield area
             if (e.button !== 0) return;
-            if (e.target.closest('.card, .context-menu, .card-modal, button, input, .sidebar')) return;
-
+            if (e.target.closest('.card, .context-menu, .card-modal, .modal-overlay, button, input, .sidebar, .phase-tracker')) return;
             const playerArea = e.target.closest('.player-area.is-me');
             if (!playerArea) return;
 
@@ -1294,13 +1684,11 @@
 
         document.addEventListener('mousemove', function(e) {
             if (!isSelecting) return;
-
             const box = document.getElementById('selectionBox');
             const x = Math.min(e.clientX, selectionStart.x);
             const y = Math.min(e.clientY, selectionStart.y);
             const w = Math.abs(e.clientX - selectionStart.x);
             const h = Math.abs(e.clientY - selectionStart.y);
-
             box.style.left = x + 'px';
             box.style.top = y + 'px';
             box.style.width = w + 'px';
@@ -1310,36 +1698,25 @@
         document.addEventListener('mouseup', function(e) {
             if (!isSelecting) return;
             isSelecting = false;
-
             const box = document.getElementById('selectionBox');
             const boxRect = box.getBoundingClientRect();
             box.style.display = 'none';
-
-            // Only select if box is big enough
             if (boxRect.width < 10 || boxRect.height < 10) return;
-
-            // Find all my cards in the selection box
             const myArea = document.querySelector('.player-area.is-me');
             if (!myArea) return;
-
             const cards = myArea.querySelectorAll('.card[data-id]');
             selectedCards.clear();
-
             cards.forEach(card => {
                 const cardRect = card.getBoundingClientRect();
                 if (rectsIntersect(boxRect, cardRect)) {
                     selectedCards.add(card.dataset.id);
                 }
             });
-
             renderGame();
         });
 
         function rectsIntersect(r1, r2) {
-            return !(r2.left > r1.right ||
-                     r2.right < r1.left ||
-                     r2.top > r1.bottom ||
-                     r2.bottom < r1.top);
+            return !(r2.left > r1.right || r2.right < r1.left || r2.top > r1.bottom || r2.bottom < r1.top);
         }
 
         // ===== CONTEXT MENUS =====
@@ -1352,7 +1729,7 @@
                 if (item.divider) return '<div class="context-menu-divider"></div>';
                 return `<div class="context-menu-item" onclick="${item.action}">${item.label}</div>`;
             }).join('');
-            menu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
+            menu.style.left = Math.min(e.clientX, window.innerWidth - 160) + 'px';
             menu.style.top = Math.min(e.clientY, window.innerHeight - menu.offsetHeight - 20) + 'px';
             menu.classList.add('show');
         }
@@ -1373,6 +1750,7 @@
                 { label: 'Ver topo (3)', action: "sendAction('look_top', {count: 3}); hideContextMenu();" },
                 { label: 'Videncia (Scry)...', action: "promptScry(); hideContextMenu();" },
                 { divider: true },
+                { label: 'Ver toda biblioteca', action: "sendAction('view_library'); hideContextMenu();" },
                 { label: 'Embaralhar', action: "sendAction('shuffle_library'); animateShuffle(); hideContextMenu();" },
             ]);
         }
@@ -1392,35 +1770,43 @@
                 { divider: true },
                 { label: 'Devolver ao topo', action: `sendAction('put_top', {object_id: '${card.id}'}); hideContextMenu();` },
                 { label: 'Devolver ao fundo', action: `sendAction('put_bottom', {object_id: '${card.id}'}); hideContextMenu();` },
-                { label: 'Embaralhar na biblioteca', action: `sendAction('shuffle_into', {object_id: '${card.id}'}); hideContextMenu();` },
             ]);
         }
 
-        function showBattlefieldContextMenu(e, card) {
-            const tapLabel = card.is_tapped ? 'Desvirar' : 'Virar';
-            const items = [
-                { label: tapLabel, action: `toggleTap('${card.id}'); hideContextMenu();` },
-            ];
+        function showBattlefieldContextMenu(e, card, isMe = false) {
+            const items = [];
 
-            // If multiple cards selected, add group tap/untap
-            if (selectedCards.size > 1) {
-                items.push({ label: `${tapLabel} Selecionadas (${selectedCards.size})`, action: `tapSelected(); hideContextMenu();` });
+            // Ver carta option (for all cards)
+            items.push({ label: 'Ver carta', action: `showCard('${card.id}', '${card.image_normal}', '${card.name}', 'battlefield', ${isMe}); hideContextMenu();` });
+
+            if (isMe) {
+                items.push({ divider: true });
+                const tapLabel = card.is_tapped ? 'Desvirar' : 'Virar';
+                items.push({ label: tapLabel, action: `toggleTap('${card.id}'); hideContextMenu();` });
+                if (selectedCards.size > 1) {
+                    items.push({ label: `${tapLabel} Selecionadas (${selectedCards.size})`, action: `tapSelected(); hideContextMenu();` });
+                }
+                items.push({ divider: true });
+                items.push({ label: 'Criar seta (jogador/carta)', action: `startArrowFromCard('${card.id}'); hideContextMenu();` });
+                // Check if card has arrows (can have multiple)
+                const cardArrows = arrows.filter(a => a.sourceCardId === card.id);
+                if (cardArrows.length === 1) {
+                    const idx = arrows.findIndex(a => a.sourceCardId === card.id);
+                    items.push({ label: 'Remover seta', action: `removeArrow(${idx}); hideContextMenu();` });
+                } else if (cardArrows.length > 1) {
+                    items.push({ label: `Remover todas setas (${cardArrows.length})`, action: `removeArrowsFromCard('${card.id}'); hideContextMenu();` });
+                }
+                items.push({ divider: true });
+                items.push({ label: 'Enviar para Cemiterio', action: `moveCard('${card.id}', 'graveyard'); hideContextMenu();` });
+                items.push({ label: 'Exilar', action: `moveCard('${card.id}', 'exile'); hideContextMenu();` });
+                items.push({ label: 'Devolver a Mao', action: `moveCard('${card.id}', 'hand'); hideContextMenu();` });
+                if (card.is_commander) {
+                    items.push({ label: 'Devolver a Zona de Comando', action: `moveCard('${card.id}', 'command'); hideContextMenu();` });
+                }
+                items.push({ divider: true });
+                items.push({ label: 'Adicionar +1/+1', action: `addCounter('${card.id}'); hideContextMenu();` });
+                items.push({ label: 'Remover +1/+1', action: `removeCounter('${card.id}'); hideContextMenu();` });
             }
-
-            items.push({ divider: true });
-            items.push({ label: 'Enviar para Cemiterio', action: `moveCard('${card.id}', 'graveyard'); hideContextMenu();` });
-            items.push({ label: 'Exilar', action: `moveCard('${card.id}', 'exile'); hideContextMenu();` });
-            items.push({ label: 'Devolver a Mao', action: `moveCard('${card.id}', 'hand'); hideContextMenu();` });
-
-            // If it's a commander, add return to command zone option
-            if (card.is_commander) {
-                items.push({ label: 'Devolver a Zona de Comando', action: `moveCard('${card.id}', 'command'); hideContextMenu();` });
-            }
-
-            items.push({ divider: true });
-            items.push({ label: 'Adicionar +1/+1', action: `addCounter('${card.id}'); hideContextMenu();` });
-            items.push({ label: 'Remover +1/+1', action: `removeCounter('${card.id}'); hideContextMenu();` });
-
             showContextMenu(e, items);
         }
 
@@ -1432,9 +1818,7 @@
         }
 
         function tapSelected() {
-            selectedCards.forEach(id => {
-                sendAction('tap_card', { object_id: id });
-            });
+            selectedCards.forEach(id => sendAction('tap_card', { object_id: id }));
             selectedCards.clear();
         }
 
@@ -1446,14 +1830,13 @@
             }
         }
 
-        // ===== SCRY MODAL =====
+        // ===== MODALS =====
         function showScryModal(cards, isScry = true) {
             scryCardsData = cards;
             document.getElementById('scryTitle').textContent = isScry ? 'Videncia - Escolha a ordem' : 'Cartas do topo';
             const container = document.getElementById('scryCards');
             container.innerHTML = cards.map(c => `
-                <div class="card" data-id="${c.id}" draggable="true"
-                     ondragstart="handleScryDragStart(event, '${c.id}')">
+                <div class="card" data-id="${c.id}" draggable="true" ondragstart="handleScryDragStart(event, '${c.id}')">
                     <img src="${c.image_normal || c.image_small}" alt="${c.name}">
                 </div>
             `).join('');
@@ -1472,9 +1855,7 @@
             const cardId = e.dataTransfer.getData('text/plain');
             const card = scryCardsData.find(c => c.id === cardId);
             if (!card) return;
-
             document.querySelectorAll(`[data-id="${cardId}"]`).forEach(el => el.remove());
-
             const targetContainer = position === 'top' ? document.getElementById('scryTopCards') : document.getElementById('scryBottomCards');
             const div = document.createElement('div');
             div.className = 'card';
@@ -1499,7 +1880,6 @@
             scryCardsData = [];
         }
 
-        // ===== ZONE VIEWER =====
         function showZoneViewer(zoneName, seat = mySeat) {
             const zones = gameState.zones_data[seat];
             if (!zones) return;
@@ -1509,8 +1889,7 @@
             const playerName = player ? player.nickname : '';
             document.getElementById('zoneViewerTitle').textContent = `${titles[zoneName] || zoneName} - ${playerName} (${cards.length})`;
             document.getElementById('zoneViewerCards').innerHTML = cards.map(c => `
-                <div class="card" data-id="${c.id}"
-                     onclick="showCard('${c.id}', '${c.image_normal}', '${c.name}', '${zoneName}', ${seat === mySeat})">
+                <div class="card" data-id="${c.id}" onclick="showCard('${c.id}', '${c.image_normal}', '${c.name}', '${zoneName}', ${seat === mySeat})">
                     <img src="${c.image_normal}" alt="${c.name}">
                 </div>
             `).join('');
@@ -1525,7 +1904,72 @@
             document.getElementById('zoneViewerModal').classList.remove('show');
         }
 
-        // ===== REVEAL ANIMATION =====
+        // Library Viewer
+        let libraryViewerCards = [];
+
+        function showLibraryViewerModal(cards) {
+            libraryViewerCards = cards;
+            renderLibraryViewer();
+            document.getElementById('libraryViewerModal').classList.add('show');
+        }
+
+        function renderLibraryViewer() {
+            document.getElementById('libraryViewerTitle').textContent = `Sua Biblioteca (${libraryViewerCards.length})`;
+            document.getElementById('libraryViewerCards').innerHTML = libraryViewerCards.map(c => `
+                <div class="card library-card" data-id="${c.id}"
+                     onclick="showLibraryCardActions('${c.id}', '${c.image_normal}', '${c.name}')"
+                     oncontextmenu="showLibraryCardContextMenu(event, '${c.id}', '${c.name}'); return false;">
+                    <img src="${c.image_normal || c.image_small}" alt="${c.name}">
+                </div>
+            `).join('');
+        }
+
+        function showLibraryCardActions(cardId, imageUrl, cardName) {
+            // Show card modal with library-specific actions
+            selectedCard = { id: cardId, zone: 'library', name: cardName };
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('modalActions').innerHTML = `
+                <button class="close" onclick="closeModal()">Fechar</button>
+                <button class="action-btn" onclick="moveFromLibrary('${cardId}', 'hand')">Colocar na Mao</button>
+                <button class="action-btn" onclick="moveFromLibrary('${cardId}', 'battlefield')">Colocar no Campo</button>
+                <button class="action-btn" onclick="moveFromLibrary('${cardId}', 'graveyard')">Enviar ao Cemiterio</button>
+                <button class="action-btn" onclick="moveFromLibrary('${cardId}', 'exile')">Exilar</button>
+            `;
+            document.getElementById('cardModal').classList.add('show');
+        }
+
+        function showLibraryCardContextMenu(e, cardId, cardName) {
+            showContextMenu(e, [
+                { label: 'Colocar na Mao', action: `moveFromLibrary('${cardId}', 'hand'); hideContextMenu();` },
+                { label: 'Colocar no Campo', action: `moveFromLibrary('${cardId}', 'battlefield'); hideContextMenu();` },
+                { divider: true },
+                { label: 'Enviar ao Cemiterio', action: `moveFromLibrary('${cardId}', 'graveyard'); hideContextMenu();` },
+                { label: 'Exilar', action: `moveFromLibrary('${cardId}', 'exile'); hideContextMenu();` },
+                { divider: true },
+                { label: 'Colocar no Topo', action: `sendAction('put_top', {object_id: '${cardId}'}); removeFromLibraryViewer('${cardId}'); hideContextMenu();` },
+                { label: 'Colocar no Fundo', action: `sendAction('put_bottom', {object_id: '${cardId}'}); removeFromLibraryViewer('${cardId}'); hideContextMenu();` },
+            ]);
+        }
+
+        function moveFromLibrary(cardId, zone) {
+            closeModal();
+            sendAction('move_card', { object_id: cardId, zone: zone });
+            removeFromLibraryViewer(cardId);
+        }
+
+        function removeFromLibraryViewer(cardId) {
+            libraryViewerCards = libraryViewerCards.filter(c => c.id !== cardId);
+            renderLibraryViewer();
+        }
+
+        function closeLibraryViewer() {
+            document.getElementById('libraryViewerModal').classList.remove('show');
+            libraryViewerCards = [];
+            // Auto shuffle when closing
+            sendAction('shuffle_library');
+            animateShuffle();
+        }
+
         function showRevealAnimation(cardData) {
             document.getElementById('revealedCardImage').src = cardData.image_normal;
             document.getElementById('revealedCardText').textContent = `${cardData.player} revelou ${cardData.name}`;
@@ -1540,13 +1984,11 @@
             setTimeout(() => lib.classList.remove('shuffling'), 500);
         }
 
-        // ===== CARD MODAL =====
         function showCard(objId, imageUrl, cardName, zone, isMe = false) {
             selectedCard = { id: objId, zone, name: cardName };
             document.getElementById('modalImage').src = imageUrl;
 
             let actions = '<button class="close" onclick="closeModal()">Fechar</button>';
-
             if (isMe) {
                 if (zone === 'hand') {
                     actions += `
@@ -1561,8 +2003,7 @@
                         <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
                         <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Mao</button>
                         <button class="action-btn" onclick="moveCard('${objId}', 'command')">Zona Comando</button>
-                        <button class="action-btn" onclick="addCounter('${objId}')">+1/+1</button>
-                        <button class="action-btn" onclick="removeCounter('${objId}')">-1/-1</button>
+                        <button class="action-btn" onclick="startArrowFromCard('${objId}'); closeModal();">Criar Seta</button>
                     `;
                 } else if (zone === 'command') {
                     actions += `<button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Lancar</button>`;
@@ -1577,9 +2018,15 @@
                         <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Mao</button>
                         <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Campo</button>
                     `;
+                } else if (zone === 'library') {
+                    actions += `
+                        <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Mao</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Campo</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'graveyard')">Cemiterio</button>
+                        <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
+                    `;
                 }
             }
-
             document.getElementById('modalActions').innerHTML = actions;
             document.getElementById('cardModal').classList.add('show');
         }
@@ -1592,14 +2039,10 @@
         // ===== GAME ACTIONS =====
         function moveCard(objId, zone, targetSeat = null) {
             closeModal();
+            closeZoneViewer();
             const data = { object_id: objId, zone };
             if (targetSeat !== null) data.target_seat = targetSeat;
             sendAction('move_card', data);
-        }
-
-        function tapCard(objId) {
-            closeModal();
-            sendAction('tap_card', { object_id: objId });
         }
 
         function changeLife(seat, delta) {
@@ -1625,6 +2068,14 @@
             if (e.target === this) closeZoneViewer();
         });
 
+        document.getElementById('libraryViewerModal').addEventListener('click', function(e) {
+            if (e.target === this) closeLibraryViewer();
+        });
+
+        document.getElementById('counterModal').addEventListener('click', function(e) {
+            if (e.target === this) closeCounterModal();
+        });
+
         document.addEventListener('keydown', function(e) {
             if (e.target.matches('input, textarea')) return;
             switch(e.key.toLowerCase()) {
@@ -1632,7 +2083,9 @@
                     closeModal();
                     closeZoneViewer();
                     closeScryModal();
+                    closeCounterModal();
                     hideContextMenu();
+                    cancelArrowMode();
                     selectedCards.clear();
                     renderGame();
                     break;
@@ -1644,14 +2097,17 @@
                 case 'e': showZoneViewer('exile'); break;
                 case 'l': showLibraryMenu(); break;
                 case 'c': toggleSidebar(); break;
+                case 'x': clearAllArrows(); break;
             }
         });
+
+        // Redraw arrows on resize
+        window.addEventListener('resize', renderArrows);
 
         if (tabId) {
             document.getElementById('lobbyLink').href = `/lobby/?tab=${tabId}`;
         }
 
-        // Start connection
         connectWebSocket();
     </script>
 </body>

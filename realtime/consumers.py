@@ -1048,6 +1048,57 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 obj.save()
                 return {'success': True}
 
+            elif action == 'go_to_phase':
+                # Go directly to a specific phase
+                target_phase = data.get('phase')
+                valid_phases = ['untap', 'upkeep', 'draw', 'main1', 'combat_begin', 'combat_attackers',
+                               'combat_blockers', 'combat_damage', 'combat_end', 'main2', 'end', 'cleanup']
+                if target_phase not in valid_phases:
+                    return {'success': False, 'error': 'Invalid phase'}
+
+                old_phase = game.current_phase
+                game.current_phase = target_phase
+                game.save()
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='phase_change',
+                    player=game_player,
+                    data={'from': old_phase, 'to': target_phase},
+                    display_text=f"Fase: {game.get_current_phase_display()}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+                return {'success': True, 'phase': target_phase}
+
+            elif action == 'view_library':
+                # View entire library - private action
+                library_cards = list(GameObject.objects.filter(
+                    game=game,
+                    owner=game_player,
+                    zone='library'
+                ).select_related('card').order_by('zone_position'))
+
+                cards_data = [{
+                    'id': str(c.id),
+                    'name': c.card.name,
+                    'type_line': c.card.type_line or '',
+                    'image_normal': c.card.image_normal or '',
+                    'image_small': c.card.image_small or ''
+                } for c in library_cards]
+
+                GameAction.objects.create(
+                    game=game,
+                    action_type='look_top',
+                    player=game_player,
+                    data={'count': len(library_cards), 'full': True},
+                    display_text=f"{game_player.player.nickname} olhou a biblioteca",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+
+                return {'success': True, 'cards': cards_data, 'private': True}
+
             return {'success': False, 'error': 'Unknown action'}
 
         except Exception as e:
@@ -1082,7 +1133,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         elif action in ['move_card', 'tap_card', 'change_life', 'add_counter', 'remove_counter',
                         'next_phase', 'next_turn', 'draw_card', 'shuffle_library', 'concede',
                         'scry', 'look_top', 'put_top', 'put_bottom', 'reveal_card',
-                        'shuffle_into', 'reorder_scry', 'set_battlefield_row']:
+                        'shuffle_into', 'reorder_scry', 'set_battlefield_row',
+                        'go_to_phase', 'view_library']:
             result = await self.execute_game_action(action, content.get('data', {}))
 
             # Send action result to the sender
