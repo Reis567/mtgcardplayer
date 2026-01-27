@@ -638,14 +638,40 @@ Dica: No Liga Magic, clique em Exportar > TXT"></textarea>
             return;
         }
 
-        // First try to find legendary creatures/planeswalkers from found cards
+        // First try to find valid commanders from found cards
+        // Commanders can be: legendary creatures, some planeswalkers, or cards with special text
         const commanderCandidates = parsedCards.filter(card => {
             if (!card.found) return false;
             const typeLine = (card.type_line || '').toLowerCase();
-            return typeLine.includes('legendary creature') ||
-                   typeLine.includes('planeswalker') ||
-                   (card.oracle_text && card.oracle_text.toLowerCase().includes('can be your commander'));
+            const oracleText = (card.oracle_text || '').toLowerCase();
+
+            // Standard legendary creatures
+            if (typeLine.includes('legendary') && typeLine.includes('creature')) return true;
+
+            // Planeswalkers that can be commanders (check oracle text)
+            if (typeLine.includes('planeswalker') && oracleText.includes('can be your commander')) return true;
+
+            // Any card with "can be your commander" text
+            if (oracleText.includes('can be your commander')) return true;
+
+            // Partner commanders (usually have Partner keyword)
+            if (oracleText.includes('partner')) return true;
+
+            // Background cards (from Baldur's Gate)
+            if (typeLine.includes('background')) return true;
+
+            // Legendary planeswalkers (some sets allow them as commanders by default)
+            if (typeLine.includes('legendary') && typeLine.includes('planeswalker')) return true;
+
+            return false;
         });
+
+        console.log('Commander candidates found:', commanderCandidates.length);
+        console.log('Commander candidates:', commanderCandidates.map(c => ({
+            name: c.name,
+            type_line: c.type_line,
+            oracle_text: (c.oracle_text || '').substring(0, 100)
+        })));
 
         // Determine what to show:
         // 1. If we found commander candidates, show them
