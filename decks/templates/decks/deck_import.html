@@ -4,7 +4,87 @@
 
 {% block extra_css %}
 <style>
-    .container { max-width: 700px; }
+    .container { max-width: 900px; }
+
+    /* Wizard Steps */
+    .wizard-steps {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+        gap: 10px;
+    }
+    .wizard-step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 20px;
+        color: #666;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+    }
+    .wizard-step.active {
+        background: rgba(233, 69, 96, 0.2);
+        color: #e94560;
+    }
+    .wizard-step.completed {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ecdc4;
+    }
+    .wizard-step .step-number {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: currentColor;
+        color: #0f0f1a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.75rem;
+    }
+    .wizard-step.completed .step-number::after {
+        content: '✓';
+    }
+    .wizard-step.completed .step-number span { display: none; }
+
+    /* Step Panels */
+    .step-panel { display: none; }
+    .step-panel.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Step 1 - Import Options */
+    .import-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .import-option {
+        background: rgba(255,255,255,0.03);
+        border: 2px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 25px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+    }
+    .import-option:hover {
+        border-color: rgba(233, 69, 96, 0.5);
+        background: rgba(233, 69, 96, 0.05);
+    }
+    .import-option.selected {
+        border-color: #e94560;
+        background: rgba(233, 69, 96, 0.1);
+    }
+    .import-option .icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    .import-option h3 { margin-bottom: 5px; color: #fff; }
+    .import-option p { color: #888; font-size: 0.85rem; }
+
     textarea {
         width: 100%;
         min-height: 300px;
@@ -17,63 +97,247 @@
         font-size: 0.9rem;
         resize: vertical;
     }
-    textarea:focus {
-        outline: none;
-        border-color: #e94560;
+    textarea:focus { outline: none; border-color: #e94560; }
+
+    .file-upload {
+        border: 2px dashed rgba(255,255,255,0.2);
+        border-radius: 12px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
     }
-    .help-text {
+    .file-upload:hover { border-color: #e94560; background: rgba(233,69,96,0.05); }
+    .file-upload.dragover { border-color: #4ecdc4; background: rgba(78,205,196,0.1); }
+    .file-upload input { display: none; }
+    .file-upload .icon { font-size: 3rem; color: #666; margin-bottom: 10px; }
+    .file-upload p { color: #888; }
+    .file-upload .filename { color: #4ecdc4; margin-top: 10px; font-weight: bold; }
+
+    /* Step 2 - Commander Selection */
+    .commander-selection {
+        margin-top: 20px;
+    }
+    .partner-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 8px;
+    }
+    .partner-toggle input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: #e94560;
+    }
+    .partner-toggle label { color: #ccc; cursor: pointer; }
+    .partner-toggle .help { color: #888; font-size: 0.8rem; margin-left: 10px; }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 10px;
+        background: rgba(0,0,0,0.2);
+        border-radius: 8px;
+    }
+    .card-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: rgba(255,255,255,0.03);
+        border: 2px solid transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .card-option:hover { border-color: rgba(233,69,96,0.5); }
+    .card-option.selected { border-color: #e94560; background: rgba(233,69,96,0.15); }
+    .card-option.selected-partner { border-color: #4ecdc4; background: rgba(78,205,196,0.15); }
+    .card-option.disabled { opacity: 0.4; pointer-events: none; }
+    .card-option.not-found { border-color: rgba(233,69,96,0.3); background: rgba(233,69,96,0.05); }
+    .card-option.not-found img { opacity: 0.5; }
+    .card-option img {
+        width: 40px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .card-option .card-info { flex: 1; }
+    .card-option .card-name { font-size: 0.85rem; color: #fff; }
+    .card-option .card-type { font-size: 0.7rem; color: #888; }
+    .card-option .selection-badge {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.65rem;
+        font-weight: bold;
+    }
+    .card-option .selection-badge.commander { background: #e94560; color: white; }
+    .card-option .selection-badge.partner { background: #4ecdc4; color: #000; }
+
+    .selected-commanders {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(233,69,96,0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(233,69,96,0.3);
+    }
+    .selected-commanders h4 { color: #e94560; margin-bottom: 10px; }
+    .selected-commanders .commander-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+    }
+    .selected-commanders .commander-item img {
+        width: 50px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    /* Step 3 - Confirmation */
+    .confirmation-section { margin-bottom: 25px; }
+    .confirmation-section h3 {
+        color: #4ecdc4;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(78,205,196,0.3);
+    }
+    .deck-preview {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 20px;
+    }
+    .commander-preview {
+        text-align: center;
+    }
+    .commander-preview img {
+        width: 200px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .commander-preview .name { margin-top: 10px; font-weight: bold; color: #e94560; }
+
+    .decklist-preview {
+        max-height: 400px;
+        overflow-y: auto;
+        background: rgba(0,0,0,0.2);
+        border-radius: 8px;
+        padding: 15px;
+    }
+    .decklist-preview .card-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 10px;
+        border-radius: 4px;
+    }
+    .decklist-preview .card-row:hover { background: rgba(255,255,255,0.05); }
+    .decklist-preview .card-row .qty { color: #4ecdc4; width: 30px; }
+    .decklist-preview .card-row .name { flex: 1; }
+    .decklist-preview .card-row.not-found { color: #e94560; }
+
+    .deck-stats {
+        display: flex;
+        gap: 20px;
+        margin-top: 15px;
+        padding: 15px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 8px;
+    }
+    .deck-stats .stat { text-align: center; }
+    .deck-stats .stat .value { font-size: 1.5rem; font-weight: bold; color: #4ecdc4; }
+    .deck-stats .stat .label { font-size: 0.75rem; color: #888; }
+
+    /* Navigation Buttons */
+    .wizard-nav {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .wizard-nav button {
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+    .wizard-nav .btn-back {
+        background: rgba(255,255,255,0.1);
         color: #888;
-        font-size: 0.85rem;
-        margin-top: 5px;
     }
-    .errors-list {
-        background: rgba(233, 69, 96, 0.1);
-        border: 1px solid rgba(233, 69, 96, 0.3);
+    .wizard-nav .btn-back:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    .wizard-nav .btn-next {
+        background: #e94560;
+        color: white;
+    }
+    .wizard-nav .btn-next:hover { background: #d63850; }
+    .wizard-nav .btn-next:disabled { background: #555; cursor: not-allowed; }
+    .wizard-nav .btn-confirm {
+        background: #4ecdc4;
+        color: #000;
+        font-weight: bold;
+    }
+    .wizard-nav .btn-confirm:hover { background: #3dbdb5; }
+
+    /* Search */
+    .search-box {
+        margin-bottom: 15px;
+    }
+    .search-box input {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid rgba(255,255,255,0.1);
         border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 20px;
+        background: rgba(0,0,0,0.3);
+        color: white;
     }
-    .errors-list h4 {
-        color: #e94560;
-        margin-bottom: 10px;
+    .search-box input:focus { outline: none; border-color: #e94560; }
+
+    /* Loading */
+    .loading-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
     }
-    .errors-list ul {
-        list-style: none;
-        padding: 0;
+    .loading-overlay.show { display: flex; }
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255,255,255,0.1);
+        border-top-color: #e94560;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
     }
-    .errors-list li {
-        padding: 5px 0;
-        color: #ff6b6b;
-        font-size: 0.9rem;
-    }
-    .warnings-list {
-        background: rgba(255, 193, 7, 0.1);
-        border: 1px solid rgba(255, 193, 7, 0.3);
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    .warnings-list h4 {
-        color: #ffc107;
-        margin-bottom: 10px;
-    }
-    .warnings-list ul {
-        list-style: none;
-        padding: 0;
-    }
-    .warnings-list li {
-        padding: 5px 0;
-        color: #ffc107;
-        font-size: 0.9rem;
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .back-link {
         display: inline-block;
         margin-bottom: 20px;
         color: #888;
         text-decoration: none;
     }
-    .back-link:hover {
-        color: #fff;
+    .back-link:hover { color: #fff; }
+
+    .error-message {
+        background: rgba(233,69,96,0.1);
+        border: 1px solid rgba(233,69,96,0.3);
+        color: #e94560;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
     }
 </style>
 {% endblock %}
@@ -81,69 +345,596 @@
 {% block content %}
 <a href="{% url 'deck_list' %}" class="back-link">&larr; Voltar para Meus Decks</a>
 
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+
 <div class="card">
     <h1>Importar Deck</h1>
-    <p class="subtitle">Cole sua lista de cartas no formato Commander</p>
+    <p class="subtitle">Importe seu deck do Liga Magic ou outras fontes</p>
 
-    {% if error %}
-    <div class="error">{{ error }}</div>
-    {% endif %}
-
-    {% if errors %}
-    <div class="errors-list">
-        <h4>Erros de Validacao</h4>
-        <ul>
-            {% for err in errors %}
-            <li>
-                {% if err.card_name %}<strong>{{ err.card_name }}:</strong> {% endif %}
-                {{ err.message }}
-            </li>
-            {% endfor %}
-        </ul>
+    <!-- Wizard Steps Indicator -->
+    <div class="wizard-steps">
+        <div class="wizard-step active" data-step="1">
+            <span class="step-number"><span>1</span></span>
+            <span>Importar Lista</span>
+        </div>
+        <div class="wizard-step" data-step="2">
+            <span class="step-number"><span>2</span></span>
+            <span>Escolher Comandante</span>
+        </div>
+        <div class="wizard-step" data-step="3">
+            <span class="step-number"><span>3</span></span>
+            <span>Confirmar</span>
+        </div>
     </div>
-    {% endif %}
 
-    {% if warnings %}
-    <div class="warnings-list">
-        <h4>Avisos</h4>
-        <ul>
-            {% for warn in warnings %}
-            <li>{{ warn }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+    <div id="errorMessage" class="error-message" style="display:none;"></div>
 
-    <form method="post">
-        {% csrf_token %}
+    <!-- Step 1: Import Method -->
+    <div class="step-panel active" id="step1">
+        <h2>Como deseja importar?</h2>
 
-        <div class="form-group">
-            <label for="name">Nome do Deck</label>
-            <input type="text" id="name" name="name" value="{{ form_data.name|default:'' }}" placeholder="Ex: Mono Red Krenko" required>
+        <div class="import-options">
+            <div class="import-option selected" data-method="paste" onclick="selectImportMethod('paste')">
+                <div class="icon">📋</div>
+                <h3>Colar Lista</h3>
+                <p>Cole o texto do deck diretamente</p>
+            </div>
+            <div class="import-option" data-method="file" onclick="selectImportMethod('file')">
+                <div class="icon">📁</div>
+                <h3>Carregar Arquivo</h3>
+                <p>Selecione o arquivo .txt exportado</p>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="commander">Comandante</label>
-            <input type="text" id="commander" name="commander" value="{{ form_data.commander|default:'' }}" placeholder="Ex: Krenko, Mob Boss" required>
-            <p class="help-text">Nome exato da carta comandante</p>
-        </div>
-
-        <div class="form-group">
-            <label for="partner">Partner (opcional)</label>
-            <input type="text" id="partner" name="partner" value="{{ form_data.partner|default:'' }}" placeholder="Ex: Tymna the Weaver">
-            <p class="help-text">Apenas se seu comandante tiver Partner</p>
-        </div>
-
-        <div class="form-group">
-            <label for="decklist">Lista de Cartas (99 cartas, sem o comandante)</label>
-            <textarea id="decklist" name="decklist" placeholder="1 Sol Ring
+        <!-- Paste Area -->
+        <div id="pasteArea">
+            <div class="form-group">
+                <label>Cole a lista completa (com comandante)</label>
+                <textarea id="decklistText" placeholder="1 Krenko, Mob Boss
+1 Sol Ring
 1 Lightning Bolt
-1 Mountain
-...">{{ form_data.decklist|default:'' }}</textarea>
-            <p class="help-text">Formato: "quantidade nome_da_carta" (ex: 1 Lightning Bolt)</p>
+1 Goblin Guide
+...
+
+Dica: No Liga Magic, clique em Exportar > TXT"></textarea>
+            </div>
         </div>
 
-        <button type="submit">Validar e Importar</button>
-    </form>
+        <!-- File Upload Area -->
+        <div id="fileArea" style="display:none;">
+            <div class="file-upload" id="fileUpload" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" accept=".txt,.dec,.dek" onchange="handleFileSelect(event)">
+                <div class="icon">📄</div>
+                <p>Clique ou arraste o arquivo .txt aqui</p>
+                <div class="filename" id="fileName"></div>
+            </div>
+        </div>
+
+        <div class="wizard-nav">
+            <div></div>
+            <button type="button" class="btn-next" id="btnToStep2">Proximo: Escolher Comandante &rarr;</button>
+        </div>
+    </div>
+
+    <!-- Step 2: Commander Selection -->
+    <div class="step-panel" id="step2">
+        <h2>Selecione seu Comandante</h2>
+
+        <div class="partner-toggle">
+            <input type="checkbox" id="partnerCheck" onchange="togglePartnerMode()">
+            <label for="partnerCheck">Meus comandantes tem <strong>Partner</strong></label>
+            <span class="help">(permite selecionar 2 comandantes)</span>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="cardSearch" placeholder="Buscar carta..." oninput="filterCards()">
+        </div>
+
+        <p style="color:#888;margin-bottom:10px;">Clique na carta que sera seu comandante:</p>
+
+        <div class="cards-grid" id="cardsGrid"></div>
+
+        <div class="selected-commanders" id="selectedCommanders" style="display:none;">
+            <h4>Comandante(s) Selecionado(s):</h4>
+            <div id="selectedCommandersList"></div>
+        </div>
+
+        <div class="wizard-nav">
+            <button class="btn-back" onclick="goToStep1()">&larr; Voltar</button>
+            <button class="btn-next" id="btnToStep3" disabled onclick="goToStep3()">Proximo: Confirmar &rarr;</button>
+        </div>
+    </div>
+
+    <!-- Step 3: Confirmation -->
+    <div class="step-panel" id="step3">
+        <h2>Confirme seu Deck</h2>
+
+        <div class="form-group" style="margin-bottom:20px;">
+            <label for="deckName">Nome do Deck</label>
+            <input type="text" id="deckName" placeholder="Ex: Krenko Goblins" value="">
+        </div>
+
+        <div class="deck-preview">
+            <div class="commander-preview" id="commanderPreview"></div>
+            <div>
+                <div class="confirmation-section">
+                    <h3>Deck (99 cartas)</h3>
+                    <div class="decklist-preview" id="decklistPreview"></div>
+                </div>
+                <div class="deck-stats" id="deckStats"></div>
+            </div>
+        </div>
+
+        <div class="wizard-nav">
+            <button class="btn-back" onclick="goToStep2()">&larr; Voltar</button>
+            <button class="btn-confirm" onclick="confirmImport()">✓ Confirmar e Importar</button>
+        </div>
+    </div>
 </div>
+
+<form id="importForm" method="post" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="name" id="formDeckName">
+    <input type="hidden" name="commander" id="formCommander">
+    <input type="hidden" name="partner" id="formPartner">
+    <input type="hidden" name="decklist" id="formDecklist">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Debug: catch all JavaScript errors
+    window.onerror = function(msg, url, line, col, error) {
+        console.error('JavaScript Error:', msg, 'at', url, ':', line, ':', col);
+        console.error('Error object:', error);
+        return false;
+    };
+
+    console.log('Script loaded');
+    const csrfToken = '{{ csrf_token }}';
+    console.log('CSRF Token:', csrfToken ? 'present' : 'MISSING!');
+
+    // State
+    let importMethod = 'paste';
+    let parsedCards = []; // [{qty, name, found, card_data}]
+    let selectedCommander = null;
+    let selectedPartner = null;
+    let partnerMode = false;
+
+    // Step navigation
+    function setStep(step) {
+        document.querySelectorAll('.wizard-step').forEach((el, i) => {
+            el.classList.remove('active', 'completed');
+            if (i + 1 < step) el.classList.add('completed');
+            if (i + 1 === step) el.classList.add('active');
+        });
+        document.querySelectorAll('.step-panel').forEach(el => el.classList.remove('active'));
+        document.getElementById('step' + step).classList.add('active');
+    }
+
+    function selectImportMethod(method) {
+        importMethod = method;
+        document.querySelectorAll('.import-option').forEach(el => {
+            el.classList.toggle('selected', el.dataset.method === method);
+        });
+        document.getElementById('pasteArea').style.display = method === 'paste' ? 'block' : 'none';
+        document.getElementById('fileArea').style.display = method === 'file' ? 'block' : 'none';
+    }
+
+    // File handling
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            document.getElementById('fileName').textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('decklistText').value = e.target.result;
+            };
+            reader.readAsText(file);
+        }
+    }
+
+    // Drag and drop
+    const fileUpload = document.getElementById('fileUpload');
+    fileUpload.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUpload.classList.add('dragover');
+    });
+    fileUpload.addEventListener('dragleave', () => {
+        fileUpload.classList.remove('dragover');
+    });
+    fileUpload.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUpload.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            document.getElementById('fileInput').files = e.dataTransfer.files;
+            handleFileSelect({target: {files: e.dataTransfer.files}});
+        }
+    });
+
+    // Go to Step 2
+    async function goToStep2() {
+        console.log('goToStep2 called');
+        const textArea = document.getElementById('decklistText');
+        console.log('textArea element:', textArea);
+        const text = textArea ? textArea.value.trim() : '';
+        console.log('Decklist text length:', text.length);
+        console.log('First 100 chars:', text.substring(0, 100));
+
+        if (!text) {
+            showError('Por favor, cole ou carregue uma lista de cartas.');
+            return;
+        }
+
+        showLoading(true);
+        hideError();
+
+        try {
+            console.log('Making fetch request to /decks/parse/');
+            const response = await fetch('/decks/parse/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ decklist: text })
+            });
+
+            console.log('Response status:', response.status);
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            if (data.error) {
+                showError(data.error);
+                showLoading(false);
+                return;
+            }
+
+            parsedCards = data.cards || [];
+            console.log('Parsed cards:', parsedCards);
+            console.log('Found cards:', parsedCards.filter(c => c.found).length);
+            console.log('Not found cards:', parsedCards.filter(c => !c.found).length);
+
+            if (parsedCards.length === 0) {
+                showError('Nenhuma carta encontrada na lista.');
+                showLoading(false);
+                return;
+            }
+
+            renderCardsGrid();
+            selectedCommander = null;
+            selectedPartner = null;
+            updateSelectedCommanders();
+            setStep(2);
+        } catch (err) {
+            console.error('Fetch error:', err);
+            showError('Erro ao processar lista: ' + err.message);
+        }
+
+        showLoading(false);
+    }
+
+    function goToStep1() {
+        setStep(1);
+    }
+
+    // Render cards grid for commander selection
+    function renderCardsGrid() {
+        console.log('renderCardsGrid called, parsedCards length:', parsedCards.length);
+
+        const grid = document.getElementById('cardsGrid');
+        const searchTerm = document.getElementById('cardSearch').value.toLowerCase();
+
+        // Remove previous notice if exists
+        const existingNotice = document.getElementById('allCardsNotice');
+        if (existingNotice) existingNotice.remove();
+
+        // Check if we have any cards to show
+        if (!parsedCards || parsedCards.length === 0) {
+            grid.innerHTML = '<p style="color:#888;padding:20px;">Nenhuma carta foi parseada. Verifique o formato da lista.</p>';
+            return;
+        }
+
+        // First try to find legendary creatures/planeswalkers from found cards
+        const commanderCandidates = parsedCards.filter(card => {
+            if (!card.found) return false;
+            const typeLine = (card.type_line || '').toLowerCase();
+            return typeLine.includes('legendary creature') ||
+                   typeLine.includes('planeswalker') ||
+                   (card.oracle_text && card.oracle_text.toLowerCase().includes('can be your commander'));
+        });
+
+        // Determine what to show:
+        // 1. If we found commander candidates, show them
+        // 2. Otherwise, show ALL cards (found or not) so user can select
+        let cardsToShow;
+        let showingAllCards = false;
+
+        if (commanderCandidates.length > 0) {
+            cardsToShow = commanderCandidates;
+        } else {
+            // Show all cards - user might need to select a commander that wasn't recognized
+            cardsToShow = parsedCards;
+            showingAllCards = true;
+        }
+
+        // Apply search filter
+        const filteredCards = cardsToShow.filter(card => card.name.toLowerCase().includes(searchTerm));
+
+        grid.innerHTML = filteredCards.map(card => {
+            const isSelected = selectedCommander && selectedCommander.name === card.name;
+            const isPartner = selectedPartner && selectedPartner.name === card.name;
+            const isDisabled = !partnerMode && selectedCommander && !isSelected;
+
+            let badge = '';
+            if (isSelected) badge = '<span class="selection-badge commander">Comandante</span>';
+            if (isPartner) badge = '<span class="selection-badge partner">Partner</span>';
+
+            const notFoundClass = !card.found ? 'not-found' : '';
+            const notFoundBadge = !card.found ? '<span style="color:#e94560;font-size:0.65rem;display:block;">Carta nao encontrada</span>' : '';
+
+            return `
+                <div class="card-option ${isSelected ? 'selected' : ''} ${isPartner ? 'selected-partner' : ''} ${isDisabled ? 'disabled' : ''} ${notFoundClass}"
+                     onclick="selectCard('${card.name.replace(/'/g, "\\'")}')">
+                    <img src="${card.image_small || '/static/images/card-back.jpg'}" alt="${card.name}">
+                    <div class="card-info">
+                        <div class="card-name">${card.name}</div>
+                        <div class="card-type">${card.type_line || 'Tipo desconhecido'}</div>
+                        ${notFoundBadge}
+                    </div>
+                    ${badge}
+                </div>
+            `;
+        }).join('');
+
+        if (filteredCards.length === 0) {
+            if (parsedCards.length === 0) {
+                grid.innerHTML = '<p style="color:#888;padding:20px;">Nenhuma carta foi parseada. Verifique o formato da lista.</p>';
+            } else if (searchTerm) {
+                grid.innerHTML = '<p style="color:#888;padding:20px;">Nenhuma carta encontrada com esse nome.</p>';
+            } else {
+                grid.innerHTML = '<p style="color:#888;padding:20px;">Nenhuma carta disponivel para selecao.</p>';
+            }
+        } else if (showingAllCards && commanderCandidates.length === 0) {
+            // Add a notice that we're showing all cards
+            grid.insertAdjacentHTML('beforebegin',
+                '<p style="color:#f39c12;padding:10px;margin-bottom:10px;background:rgba(243,156,18,0.1);border-radius:8px;font-size:0.85rem;" id="allCardsNotice">' +
+                'Nenhuma criatura lendaria foi identificada automaticamente. Mostrando todas as cartas para selecao manual.</p>'
+            );
+        }
+    }
+
+    function filterCards() {
+        // Only filter if we have cards
+        if (parsedCards && parsedCards.length > 0) {
+            renderCardsGrid();
+        }
+    }
+
+    function selectCard(cardName) {
+        const card = parsedCards.find(c => c.name === cardName);
+        if (!card) return;
+
+        if (partnerMode) {
+            if (selectedCommander && selectedCommander.name === cardName) {
+                // Deselect commander
+                selectedCommander = null;
+            } else if (selectedPartner && selectedPartner.name === cardName) {
+                // Deselect partner
+                selectedPartner = null;
+            } else if (!selectedCommander) {
+                selectedCommander = card;
+            } else if (!selectedPartner) {
+                selectedPartner = card;
+            } else {
+                // Both selected, replace partner
+                selectedPartner = card;
+            }
+        } else {
+            if (selectedCommander && selectedCommander.name === cardName) {
+                selectedCommander = null;
+            } else {
+                selectedCommander = card;
+            }
+            selectedPartner = null;
+        }
+
+        renderCardsGrid();
+        updateSelectedCommanders();
+    }
+
+    function togglePartnerMode() {
+        partnerMode = document.getElementById('partnerCheck').checked;
+        if (!partnerMode) {
+            selectedPartner = null;
+        }
+        renderCardsGrid();
+        updateSelectedCommanders();
+    }
+
+    function updateSelectedCommanders() {
+        const container = document.getElementById('selectedCommanders');
+        const list = document.getElementById('selectedCommandersList');
+        const btn = document.getElementById('btnToStep3');
+
+        if (!selectedCommander) {
+            container.style.display = 'none';
+            btn.disabled = true;
+            return;
+        }
+
+        container.style.display = 'block';
+        btn.disabled = false;
+
+        let html = `
+            <div class="commander-item">
+                <img src="${selectedCommander.image_small || '/static/images/card-back.jpg'}" alt="${selectedCommander.name}">
+                <div>
+                    <div style="color:#e94560;font-weight:bold;">Comandante</div>
+                    <div>${selectedCommander.name}</div>
+                </div>
+            </div>
+        `;
+
+        if (selectedPartner) {
+            html += `
+                <div class="commander-item">
+                    <img src="${selectedPartner.image_small || '/static/images/card-back.jpg'}" alt="${selectedPartner.name}">
+                    <div>
+                        <div style="color:#4ecdc4;font-weight:bold;">Partner</div>
+                        <div>${selectedPartner.name}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        list.innerHTML = html;
+
+        // Suggest deck name
+        if (!document.getElementById('deckName').value) {
+            document.getElementById('deckName').value = selectedCommander.name.split(',')[0];
+        }
+    }
+
+    function goToStep2Back() {
+        setStep(2);
+    }
+
+    // Go to Step 3
+    function goToStep3() {
+        if (!selectedCommander) {
+            showError('Selecione um comandante.');
+            return;
+        }
+
+        // Build preview
+        const commanderPreview = document.getElementById('commanderPreview');
+        let cmdHtml = `
+            <img src="${selectedCommander.image_normal || selectedCommander.image_small || '/static/images/card-back.jpg'}" alt="${selectedCommander.name}">
+            <div class="name">${selectedCommander.name}</div>
+        `;
+        if (selectedPartner) {
+            cmdHtml += `
+                <div style="margin-top:15px;">
+                    <img src="${selectedPartner.image_normal || selectedPartner.image_small || '/static/images/card-back.jpg'}" alt="${selectedPartner.name}" style="width:150px;">
+                    <div class="name" style="color:#4ecdc4;">${selectedPartner.name}</div>
+                </div>
+            `;
+        }
+        commanderPreview.innerHTML = cmdHtml;
+
+        // Build decklist preview
+        const decklistPreview = document.getElementById('decklistPreview');
+        const deckCards = parsedCards.filter(c => {
+            if (c.name === selectedCommander.name) return false;
+            if (selectedPartner && c.name === selectedPartner.name) return false;
+            return true;
+        });
+
+        decklistPreview.innerHTML = deckCards.map(card => `
+            <div class="card-row ${card.found ? '' : 'not-found'}">
+                <span class="qty">${card.qty}x</span>
+                <span class="name">${card.name}</span>
+                ${card.found ? '' : '<span style="color:#e94560;font-size:0.75rem;">(nao encontrada)</span>'}
+            </div>
+        `).join('');
+
+        // Stats
+        const totalCards = deckCards.reduce((sum, c) => sum + c.qty, 0);
+        const foundCards = deckCards.filter(c => c.found).reduce((sum, c) => sum + c.qty, 0);
+        const notFoundCards = totalCards - foundCards;
+
+        document.getElementById('deckStats').innerHTML = `
+            <div class="stat">
+                <div class="value">${totalCards}</div>
+                <div class="label">Cartas no Deck</div>
+            </div>
+            <div class="stat">
+                <div class="value" style="color:#4ecdc4;">${foundCards}</div>
+                <div class="label">Encontradas</div>
+            </div>
+            ${notFoundCards > 0 ? `
+            <div class="stat">
+                <div class="value" style="color:#e94560;">${notFoundCards}</div>
+                <div class="label">Nao Encontradas</div>
+            </div>
+            ` : ''}
+            <div class="stat">
+                <div class="value">${partnerMode && selectedPartner ? 2 : 1}</div>
+                <div class="label">Comandante(s)</div>
+            </div>
+        `;
+
+        setStep(3);
+    }
+
+    // Confirm import
+    function confirmImport() {
+        const deckName = document.getElementById('deckName').value.trim() || selectedCommander.name;
+
+        // Build decklist without commander(s)
+        const deckCards = parsedCards.filter(c => {
+            if (c.name === selectedCommander.name) return false;
+            if (selectedPartner && c.name === selectedPartner.name) return false;
+            return true;
+        });
+
+        const decklistText = deckCards.map(c => `${c.qty} ${c.name}`).join('\n');
+
+        // Fill form and submit
+        document.getElementById('formDeckName').value = deckName;
+        document.getElementById('formCommander').value = selectedCommander.name;
+        document.getElementById('formPartner').value = selectedPartner ? selectedPartner.name : '';
+        document.getElementById('formDecklist').value = decklistText;
+
+        showLoading(true);
+        document.getElementById('importForm').submit();
+    }
+
+    // Utilities
+    function showLoading(show) {
+        document.getElementById('loadingOverlay').classList.toggle('show', show);
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('errorMessage');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+
+    function hideError() {
+        document.getElementById('errorMessage').style.display = 'none';
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded');
+
+        // Add click handler for step 2 button
+        const btn = document.getElementById('btnToStep2');
+        if (btn) {
+            console.log('Button found, adding click handler');
+            console.log('goToStep2 is:', typeof goToStep2, goToStep2);
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                console.log('Button clicked, calling goToStep2...');
+                console.log('typeof goToStep2:', typeof goToStep2);
+                try {
+                    await goToStep2();
+                } catch (err) {
+                    console.error('Error calling goToStep2:', err);
+                }
+            });
+        } else {
+            console.error('Button NOT found!');
+        }
+
+        // Ensure step 1 is active on page load
+        setStep(1);
+        console.log('Step 1 set as active');
+    });
+</script>
 {% endblock %}

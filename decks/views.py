@@ -1,14 +1,79 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.http import JsonResponse
+import json
 from accounts.views import get_current_player, get_tab_id
 from cards.models import Card
 from .models import Deck, DeckCard
 from engine.validators import parse_decklist, validate_commander_deck
 
 
+class ParseDecklistView(View):
+    """API para parsear lista de cartas e retornar info"""
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            decklist_text = data.get('decklist', '').strip()
+
+            if not decklist_text:
+                return JsonResponse({'error': 'Lista vazia'})
+
+            # Parse the decklist
+            parsed, ignored = parse_decklist(decklist_text)
+
+            if not parsed:
+                return JsonResponse({'error': 'Nenhuma carta encontrada na lista'})
+
+            # Look up each card in the database
+            cards = []
+            for qty, name in parsed:
+                # Try exact match first
+                card = Card.objects.filter(name__iexact=name).first()
+
+                # If not found, try matching the front face of double-faced cards (Name // OtherName)
+                if not card:
+                    card = Card.objects.filter(name__istartswith=name + ' //').first()
+
+                # If still not found, try a more flexible search (contains)
+                if not card:
+                    card = Card.objects.filter(name__icontains=name).first()
+
+                card_data = {
+                    'qty': qty,
+                    'name': name,
+                    'found': card is not None,
+                }
+
+                if card:
+                    card_data.update({
+                        'name': card.name,  # Use exact name from DB
+                        'type_line': card.type_line or '',
+                        'oracle_text': card.oracle_text or '',
+                        'mana_cost': card.mana_cost or '',
+                        'color_identity': card.color_identity or '',
+                        'image_small': card.image_small or '',
+                        'image_normal': card.image_normal or '',
+                    })
+
+                cards.append(card_data)
+
+            return JsonResponse({
+                'cards': cards,
+                'ignored': ignored,
+                'total': len(cards)
+            })
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'JSON invalido'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
+
+
 class DeckListView(View):
-    """Lista de decks do jogador"""
+    """Lista de todos os decks"""
 
     def get(self, request):
         tab_id = get_tab_id(request)
@@ -16,10 +81,16 @@ class DeckListView(View):
         if not player:
             return redirect('login')
 
-        decks = Deck.objects.filter(owner=player).select_related('commander', 'partner_commander')
+        # Mostrar todos os decks, com os do jogador atual primeiro
+        decks = Deck.objects.all().select_related('commander', 'partner_commander', 'owner')
+
+        # Separar decks próprios e de outros
+        my_decks = [d for d in decks if d.owner_id == player.id]
+        other_decks = [d for d in decks if d.owner_id != player.id]
 
         return render(request, 'decks/deck_list.html', {
-            'decks': decks,
+            'my_decks': my_decks,
+            'other_decks': other_decks,
             'player': player,
             'tab_id': tab_id
         })
@@ -76,9 +147,13 @@ class DeckImportView(View):
                 }
             })
 
-        # Funcao de lookup
+        # Funcao de lookup (suporta cartas de duas faces como "Name // OtherName")
         def card_lookup(name):
             card = Card.objects.filter(name__iexact=name).first()
+            if not card:
+                card = Card.objects.filter(name__istartswith=name + ' //').first()
+            if not card:
+                card = Card.objects.filter(name__icontains=name).first()
             if card:
                 return {
                     'name': card.name,
@@ -107,9 +182,20 @@ class DeckImportView(View):
                 }
             })
 
-        # Criar deck
+        # Criar deck - usar mesma logica de lookup para cartas de duas faces
         commander = Card.objects.filter(name__iexact=commander_name).first()
-        partner = Card.objects.filter(name__iexact=partner_name).first() if partner_name else None
+        if not commander:
+            commander = Card.objects.filter(name__istartswith=commander_name + ' //').first()
+        if not commander:
+            commander = Card.objects.filter(name__icontains=commander_name).first()
+
+        partner = None
+        if partner_name:
+            partner = Card.objects.filter(name__iexact=partner_name).first()
+            if not partner:
+                partner = Card.objects.filter(name__istartswith=partner_name + ' //').first()
+            if not partner:
+                partner = Card.objects.filter(name__icontains=partner_name).first()
 
         deck = Deck.objects.create(
             owner=player,
@@ -121,7 +207,7 @@ class DeckImportView(View):
             is_valid=True,
         )
 
-        # Adicionar cartas
+        # Adicionar cartas - usar mesma logica de lookup para cartas de duas faces
         for qty, name in parsed:
             if name.lower() == commander_name.lower():
                 continue
@@ -129,6 +215,10 @@ class DeckImportView(View):
                 continue
 
             card = Card.objects.filter(name__iexact=name).first()
+            if not card:
+                card = Card.objects.filter(name__istartswith=name + ' //').first()
+            if not card:
+                card = Card.objects.filter(name__icontains=name).first()
             if card:
                 DeckCard.objects.create(deck=deck, card=card, quantity=qty)
 
@@ -145,24 +235,27 @@ class DeckDetailView(View):
         if not player:
             return redirect('login')
 
-        deck = get_object_or_404(Deck, id=deck_id, owner=player)
+        # Permitir visualizar qualquer deck
+        deck = get_object_or_404(Deck, id=deck_id)
         deck_cards = deck.cards.select_related('card').order_by('card__name')
 
         return render(request, 'decks/deck_detail.html', {
             'deck': deck,
             'deck_cards': deck_cards,
             'player': player,
+            'is_owner': deck.owner_id == player.id,
             'card_count': deck.card_count(),
             'tab_id': tab_id
         })
 
     def post(self, request, deck_id):
-        """Deletar deck"""
+        """Deletar deck - apenas o dono pode"""
         tab_id = get_tab_id(request)
         player = get_current_player(request)
         if not player:
             return redirect('login')
 
+        # Apenas o dono pode deletar
         deck = get_object_or_404(Deck, id=deck_id, owner=player)
 
         if request.POST.get('action') == 'delete':

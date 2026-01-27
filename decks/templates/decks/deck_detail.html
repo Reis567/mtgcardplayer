@@ -108,7 +108,7 @@
 {% endblock %}
 
 {% block content %}
-<a href="{% url 'deck_list' %}" class="back-link">&larr; Voltar para Meus Decks</a>
+<a href="{% url 'deck_list' %}{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="back-link">&larr; Voltar para Decks</a>
 
 <div class="deck-header">
     <div class="commander-image">
@@ -123,6 +123,7 @@
         <div class="commander-name">+ {{ deck.partner_commander.name }}</div>
         {% endif %}
         <div class="meta">{{ card_count }} cartas</div>
+        <div class="meta" style="color: #4ecdc4;">por {{ deck.owner.nickname }}{% if is_owner %} (voce){% endif %}</div>
 
         {% if deck.color_identity %}
         <div class="colors">
@@ -133,12 +134,14 @@
         {% endif %}
 
         <div class="actions">
-            <a href="{% url 'lobby_list' %}" class="btn">Ir para Lobby</a>
+            <a href="{% url 'lobby_list' %}{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="btn">Ir para Lobby</a>
+            {% if is_owner %}
             <form method="post" style="display: inline;">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="delete">
                 <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este deck?')">Excluir Deck</button>
             </form>
+            {% endif %}
         </div>
     </div>
 </div>
