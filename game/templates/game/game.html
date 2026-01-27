@@ -204,6 +204,18 @@
         .player-info { flex: 1; min-width: 0; }
         .player-info .name { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .player-info .stats { display: flex; gap: 6px; font-size: 0.65rem; color: #888; }
+        .commander-link {
+            font-size: 0.6rem;
+            color: #ffc107;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .commander-link:hover { opacity: 1; text-decoration: underline; }
 
         /* Life and Counters */
         .player-life-counters {
@@ -2332,6 +2344,27 @@
                     counterEls[4].textContent = counters.purple || '';
                 }
 
+                // Update commander link
+                const playerInfo = playerArea.querySelector('.player-info');
+                if (playerInfo) {
+                    let cmdLink = playerInfo.querySelector('.commander-link');
+                    if (zones.command && zones.command.length > 0) {
+                        const cmdText = '👑 ' + zones.command.map(c => c.name).join(' + ');
+                        if (cmdLink) {
+                            cmdLink.textContent = cmdText;
+                        } else {
+                            cmdLink = document.createElement('div');
+                            cmdLink.className = 'commander-link';
+                            cmdLink.textContent = cmdText;
+                            cmdLink.title = 'Ver comandante(s)';
+                            cmdLink.onclick = (e) => { e.stopPropagation(); showCommanderCards(player.seat_position); };
+                            playerInfo.appendChild(cmdLink);
+                        }
+                    } else if (cmdLink) {
+                        cmdLink.remove();
+                    }
+                }
+
                 // Update active turn indicator
                 const isActive = player.seat_position === gameState.active_player_seat;
                 playerArea.classList.toggle('active-turn', isActive);
@@ -2521,6 +2554,11 @@
                              title="Clique para apontar seta">${player.nickname.charAt(0).toUpperCase()}</div>
                         <div class="player-info">
                             <div class="name">${player.nickname}${isMe ? ' (Voce)' : ''}</div>
+                            ${zones.command && zones.command.length > 0 ? `
+                                <div class="commander-link" onclick="event.stopPropagation(); showCommanderCards(${player.seat_position})" title="Ver comandante(s)">
+                                    👑 ${zones.command.map(c => c.name).join(' + ')}
+                                </div>
+                            ` : ''}
                         </div>
                         <div class="player-life-counters">
                             <div class="player-life">
@@ -3808,6 +3846,23 @@
 
         function showOpponentZone(seat, zoneName) {
             showZoneViewer(zoneName, seat);
+        }
+
+        function showCommanderCards(seat) {
+            const zones = gameState.zones_data[seat];
+            if (!zones || !zones.command || zones.command.length === 0) {
+                alert('Comandante nao encontrado');
+                return;
+            }
+
+            // If only one commander, show the card modal directly
+            if (zones.command.length === 1) {
+                const cmd = zones.command[0];
+                showCard(cmd.id, cmd.image_normal, cmd.name, 'command', false);
+            } else {
+                // Multiple commanders (partner), show zone viewer
+                showZoneViewer('command', seat);
+            }
         }
 
         function closeZoneViewer() {
