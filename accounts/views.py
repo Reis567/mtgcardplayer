@@ -130,14 +130,31 @@ class ProfileView(View):
                 'colors': ['#e94560', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9', '#fd79a8', '#6c5ce7']
             })
 
-        # Criar novo jogador com session_key única
-        unique_key = f"tab_{tab_id}"
+        # Verificar se ja existe um jogador com este nickname
+        # Preferir perfil que tenha decks associados (para recuperar decks antigos)
+        from django.db.models import Count
+        existing_profile = PlayerProfile.objects.filter(
+            nickname__iexact=nickname
+        ).annotate(
+            deck_count=Count('decks')
+        ).order_by('-deck_count', '-last_seen').first()
 
-        profile = PlayerProfile.objects.create(
-            session_key=unique_key,
-            nickname=nickname,
-            avatar_color=avatar_color
-        )
+        if existing_profile:
+            # Reutilizar perfil existente, apenas atualizar session_key e cor
+            existing_profile.session_key = f"tab_{tab_id}"
+            existing_profile.avatar_color = avatar_color
+            existing_profile.is_online = True
+            existing_profile.save()
+            profile = existing_profile
+        else:
+            # Criar novo jogador com session_key única
+            unique_key = f"tab_{tab_id}"
+
+            profile = PlayerProfile.objects.create(
+                session_key=unique_key,
+                nickname=nickname,
+                avatar_color=avatar_color
+            )
 
         # Salvar o ID do jogador associado a este tab_id
         request.session[f'player_{tab_id}'] = str(profile.id)
