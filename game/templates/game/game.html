@@ -2033,8 +2033,21 @@
                 case 'game_state':
                     gameState = data.state;
                     renderGame();
-                    // Clear pending taps after render - the optimistic update already happened
+                    // Clear pending local actions after render - optimistic updates already happened
                     pendingTaps.clear();
+                    pendingRowChanges.clear();
+                    // Clear confirmed removals (cards that are no longer in game state)
+                    pendingRemovals.forEach(cardId => {
+                        if (!findCardById(cardId)) {
+                            pendingRemovals.delete(cardId);
+                        }
+                    });
+                    // Clear confirmed additions (cards that are now on battlefield)
+                    pendingAdditions.forEach((data, cardId) => {
+                        if (findCardZone(cardId) === 'battlefield') {
+                            pendingAdditions.delete(cardId);
+                        }
+                    });
                     break;
                 case 'chat':
                     addChatMessage(data.sender, data.message);
@@ -2232,36 +2245,86 @@
             renderArrows();
         }
 
-        // Generate hash for players grid to detect changes
-        function getPlayersGridHash() {
+        // Generate hash for CARDS ONLY - determines if battlefield needs re-render
+        function getCardsHash() {
             const parts = [];
             gameState.players.forEach(player => {
                 const zones = gameState.zones_data[player.seat_position];
-                if (!zones) return; // Safety check
-                const counters = playerCounters[player.seat_position] || {};
-                // Include player state
-                parts.push(`p${player.seat_position}:${player.life}:${player.is_alive}`);
-                // Include active player
-                parts.push(`act:${gameState.active_player_seat}`);
-                // Include zone counts
-                parts.push(`z:${zones.library_count}:${zones.hand.length}:${zones.graveyard.length}:${zones.exile.length}`);
-                // Include player counters
-                parts.push(`c:${counters.red||0}:${counters.blue||0}:${counters.green||0}:${counters.yellow||0}:${counters.purple||0}`);
-                // Include battlefield cards with their states
-                // Note: tap state is NOT included in hash - we update tap visually via toggleCardTapVisual()
+                if (!zones) return;
+                const seat = player.seat_position;
+
+                // Collect all card IDs for this player's battlefield (including pending additions)
+                const battlefieldCards = [];
+
+                // Add cards from game state (excluding pending removals)
                 (zones.battlefield || []).forEach(card => {
+                    if (pendingRemovals.has(card.id)) return;
+                    if (pendingAdditions.has(card.id)) return; // Skip, will be added from pendingAdditions
                     const countersStr = card.counters ? Object.entries(card.counters).map(([k,v]) => `${k}${v}`).join('') : '';
-                    parts.push(`bf:${card.id}:${card.battlefield_row||''}:${countersStr}`);
+                    battlefieldCards.push({ id: card.id, hash: `bf:${seat}:${card.id}:${countersStr}` });
                 });
-                // Include command zone cards
+
+                // Add pending additions for this player
+                pendingAdditions.forEach((data, cardId) => {
+                    if (data.seat === seat) {
+                        battlefieldCards.push({ id: cardId, hash: `bf:${seat}:${cardId}:` });
+                    }
+                });
+
+                // Sort by card ID to ensure consistent order
+                battlefieldCards.sort((a, b) => a.id.localeCompare(b.id));
+                battlefieldCards.forEach(c => parts.push(c.hash));
+
+                // Command zone
                 (zones.command || []).forEach(card => {
-                    parts.push(`cmd:${card.id}`);
+                    parts.push(`cmd:${seat}:${card.id}`);
                 });
+
+                // Player alive status
+                parts.push(`alive:${seat}:${player.is_alive}`);
             });
-            // Note: selectedCards is NOT included - we update selection visually via updateCardSelectionVisual()
-            // Include arrow state (arrows DO need re-render since they affect has-arrow class)
+
+            // Include arrow state (affects has-arrow class)
             parts.push(`arr:${arrowSourceCard||''}:${arrows.map(a=>`${a.sourceCardId}-${a.targetId}`).join(',')}`);
             return parts.join('|');
+        }
+
+        // Surgical update for player headers (life, counters, zone counts) without re-rendering cards
+        function updatePlayerHeadersVisual() {
+            gameState.players.forEach(player => {
+                const zones = gameState.zones_data[player.seat_position];
+                if (!zones) return;
+                const counters = playerCounters[player.seat_position] || {};
+                const playerArea = document.getElementById(`playerArea-${player.seat_position}`);
+                if (!playerArea) return;
+
+                // Update life display
+                const lifeSpan = playerArea.querySelector('.player-life .life');
+                if (lifeSpan) lifeSpan.textContent = player.life;
+
+                // Update zone counts in mini display
+                const miniZones = playerArea.querySelectorAll('.mini-zone');
+                if (miniZones.length >= 4) {
+                    miniZones[0].textContent = zones.library_count;
+                    miniZones[1].textContent = zones.hand.length;
+                    miniZones[2].textContent = zones.graveyard.length;
+                    miniZones[3].textContent = zones.exile.length;
+                }
+
+                // Update generic counters
+                const counterEls = playerArea.querySelectorAll('.generic-counter');
+                if (counterEls.length >= 5) {
+                    counterEls[0].textContent = counters.red || '';
+                    counterEls[1].textContent = counters.blue || '';
+                    counterEls[2].textContent = counters.green || '';
+                    counterEls[3].textContent = counters.yellow || '';
+                    counterEls[4].textContent = counters.purple || '';
+                }
+
+                // Update active turn indicator
+                const isActive = player.seat_position === gameState.active_player_seat;
+                playerArea.classList.toggle('active-turn', isActive);
+            });
         }
 
         function renderPlayersGrid(forceRender = false) {
@@ -2269,25 +2332,153 @@
             const playerCount = gameState.players.length;
             container.setAttribute('data-players', playerCount);
 
-            // Check if grid needs re-rendering
-            const gridHash = getPlayersGridHash();
-            if (!forceRender && gridHash === lastPlayersGridHash) {
-                return; // Nothing changed, skip re-render to avoid blink
+            // First render: full render
+            if (forceRender || container.children.length === 0) {
+                const sortedPlayers = [...gameState.players].sort((a, b) => {
+                    if (a.seat_position === mySeat) return 1;
+                    if (b.seat_position === mySeat) return -1;
+                    return a.seat_position - b.seat_position;
+                });
+
+                container.innerHTML = sortedPlayers.map(player => {
+                    const isMe = player.seat_position === mySeat;
+                    const zones = gameState.zones_data[player.seat_position];
+                    const isActive = player.seat_position === gameState.active_player_seat;
+                    return renderPlayerArea(player, zones, isMe, isActive);
+                }).join('');
+                return;
             }
-            lastPlayersGridHash = gridHash;
 
-            const sortedPlayers = [...gameState.players].sort((a, b) => {
-                if (a.seat_position === mySeat) return 1;
-                if (b.seat_position === mySeat) return -1;
-                return a.seat_position - b.seat_position;
+            // Incremental update: only update what changed
+            updatePlayerHeadersVisual();
+            updateBattlefieldCardsIncremental();
+        }
+
+        // Incremental update of battlefield cards - add/remove/update without full re-render
+        function updateBattlefieldCardsIncremental() {
+            gameState.players.forEach(player => {
+                const seat = player.seat_position;
+                const isMe = seat === mySeat;
+                const zones = gameState.zones_data[seat];
+                if (!zones) return;
+
+                // Get cards that should be on battlefield (excluding pending removals, including pending additions)
+                const shouldBeOnBattlefield = new Map();
+                (zones.battlefield || []).forEach(card => {
+                    if (pendingRemovals.has(card.id)) return;
+                    if (pendingAdditions.has(card.id)) return; // Will be added from pendingAdditions
+                    const row = card.battlefield_row || getCardRow(card.type_line);
+                    shouldBeOnBattlefield.set(card.id, { card, row });
+                });
+
+                // Add pending additions for this player
+                pendingAdditions.forEach((data, cardId) => {
+                    if (data.seat === seat) {
+                        const row = data.row || getCardRow(data.card.type_line);
+                        shouldBeOnBattlefield.set(cardId, { card: data.card, row });
+                    }
+                });
+
+                // Get cards currently in DOM for this player
+                const playerArea = document.getElementById(`playerArea-${seat}`);
+                if (!playerArea) return;
+
+                const currentCardsInDom = new Map();
+                playerArea.querySelectorAll('.player-battlefield .card').forEach(cardEl => {
+                    currentCardsInDom.set(cardEl.dataset.id, cardEl);
+                });
+
+                // Remove cards that shouldn't be there
+                currentCardsInDom.forEach((cardEl, cardId) => {
+                    if (!shouldBeOnBattlefield.has(cardId)) {
+                        cardEl.remove();
+                    }
+                });
+
+                // Add cards that are missing
+                shouldBeOnBattlefield.forEach(({ card, row }, cardId) => {
+                    if (!currentCardsInDom.has(cardId)) {
+                        // Card needs to be added
+                        const targetRow = playerArea.querySelector(`.battlefield-row[data-row="${row}"] .cards-container`);
+                        if (targetRow) {
+                            const cardEl = createBattlefieldCardElement(card, isMe);
+                            targetRow.appendChild(cardEl);
+                        }
+                    } else {
+                        // Card exists, update its state (counters, tapped, etc.)
+                        const cardEl = currentCardsInDom.get(cardId);
+                        updateCardElementState(cardEl, card);
+                    }
+                });
             });
+        }
 
-            container.innerHTML = sortedPlayers.map(player => {
-                const isMe = player.seat_position === mySeat;
-                const zones = gameState.zones_data[player.seat_position];
-                const isActive = player.seat_position === gameState.active_player_seat;
-                return renderPlayerArea(player, zones, isMe, isActive);
-            }).join('');
+        // Create a battlefield card DOM element
+        function createBattlefieldCardElement(card, isMe) {
+            const escapedName = (card.name || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+            const escapedImage = (card.image_small || card.image_normal || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+            const isSelected = selectedCards.has(card.id);
+            const isArrowSource = arrowSourceCard === card.id;
+            const hasArrow = arrows.some(a => a.sourceCardId === card.id);
+
+            const cardEl = document.createElement('div');
+            cardEl.className = `card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''}`;
+            cardEl.dataset.id = card.id;
+            if (isMe) {
+                cardEl.draggable = true;
+                cardEl.setAttribute('ondragstart', `handleDragStart(event, '${card.id}', 'battlefield')`);
+            }
+            cardEl.setAttribute('onclick', `handleBattlefieldCardClick(event, '${card.id}', ${isMe})`);
+            if (isMe) {
+                cardEl.setAttribute('ondblclick', `event.stopPropagation(); toggleTap('${card.id}')`);
+                cardEl.setAttribute('oncontextmenu', `showBattlefieldContextMenuById(event, '${card.id}', true); return false;`);
+            } else {
+                cardEl.setAttribute('oncontextmenu', `showBattlefieldContextMenuById(event, '${card.id}', false); return false;`);
+            }
+
+            // Build innerHTML with counters
+            let countersHtml = '';
+            if (card.counters && Object.keys(card.counters).length > 0) {
+                countersHtml = '<div class="card-counters">' +
+                    Object.entries(card.counters).map(([type, count]) =>
+                        `<span class="counter ${type}">${count}</span>`
+                    ).join('') + '</div>';
+            }
+            cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}">${countersHtml}`;
+
+            return cardEl;
+        }
+
+        // Update an existing card element's state
+        function updateCardElementState(cardEl, card) {
+            // Update tapped state
+            cardEl.classList.toggle('tapped', card.is_tapped || false);
+
+            // Update selection state
+            cardEl.classList.toggle('selected', selectedCards.has(card.id));
+
+            // Update arrow states
+            cardEl.classList.toggle('arrow-source', arrowSourceCard === card.id);
+            cardEl.classList.toggle('has-arrow', arrows.some(a => a.sourceCardId === card.id));
+
+            // Update counters
+            const existingCounters = cardEl.querySelector('.card-counters');
+            const hasCounters = card.counters && Object.keys(card.counters).length > 0;
+
+            if (hasCounters) {
+                const countersHtml = '<div class="card-counters">' +
+                    Object.entries(card.counters).map(([type, count]) =>
+                        `<span class="counter ${type}">${count}</span>`
+                    ).join('') + '</div>';
+
+                if (existingCounters) {
+                    existingCounters.outerHTML = countersHtml;
+                } else {
+                    cardEl.insertAdjacentHTML('beforeend', countersHtml);
+                }
+            } else if (existingCounters) {
+                existingCounters.remove();
+            }
         }
 
         function renderPlayerArea(player, zones, isMe, isActive) {
@@ -2373,6 +2564,44 @@
             return 'enchantments';
         }
 
+        // Find a card by ID from any zone
+        function findCardById(cardId) {
+            if (!gameState || !gameState.zones_data) return null;
+            for (const seat of Object.keys(gameState.zones_data)) {
+                const zones = gameState.zones_data[seat];
+                // Check hand
+                const handCard = zones.hand?.find(c => c.id === cardId);
+                if (handCard) return handCard;
+                // Check battlefield
+                const bfCard = zones.battlefield?.find(c => c.id === cardId);
+                if (bfCard) return bfCard;
+                // Check graveyard
+                const gravCard = zones.graveyard?.find(c => c.id === cardId);
+                if (gravCard) return gravCard;
+                // Check exile
+                const exileCard = zones.exile?.find(c => c.id === cardId);
+                if (exileCard) return exileCard;
+                // Check command zone
+                const cmdCard = zones.command?.find(c => c.id === cardId);
+                if (cmdCard) return cmdCard;
+            }
+            return null;
+        }
+
+        // Find which zone a card is currently in
+        function findCardZone(cardId) {
+            if (!gameState || !gameState.zones_data) return null;
+            for (const seat of Object.keys(gameState.zones_data)) {
+                const zones = gameState.zones_data[seat];
+                if (zones.hand?.find(c => c.id === cardId)) return 'hand';
+                if (zones.battlefield?.find(c => c.id === cardId)) return 'battlefield';
+                if (zones.graveyard?.find(c => c.id === cardId)) return 'graveyard';
+                if (zones.exile?.find(c => c.id === cardId)) return 'exile';
+                if (zones.command?.find(c => c.id === cardId)) return 'command';
+            }
+            return null;
+        }
+
         function renderBattlefieldCards(cards, isMe) {
             if (!cards.length) return '';
             return cards.map(card => {
@@ -2405,6 +2634,11 @@
             }).join('');
         }
 
+        // Track last state for my zones to avoid unnecessary re-renders
+        let lastGraveyardTopId = null;
+        let lastExileTopId = null;
+        let lastCommandIds = '';
+
         function renderMyZones() {
             const zones = gameState.zones_data[mySeat];
             if (!zones) return;
@@ -2413,27 +2647,42 @@
             document.getElementById('graveyardCount').textContent = zones.graveyard.length;
             document.getElementById('exileCount').textContent = zones.exile.length;
 
+            // Only update graveyard top if changed
             const gravTop = document.getElementById('graveyardTopCard');
-            if (zones.graveyard.length > 0) {
-                const top = zones.graveyard[zones.graveyard.length - 1];
-                gravTop.innerHTML = `<img src="${top.image_small}" alt="${top.name}">`;
-            } else gravTop.innerHTML = '';
+            const currentGravTopId = zones.graveyard.length > 0 ? zones.graveyard[zones.graveyard.length - 1].id : null;
+            if (currentGravTopId !== lastGraveyardTopId) {
+                lastGraveyardTopId = currentGravTopId;
+                if (zones.graveyard.length > 0) {
+                    const top = zones.graveyard[zones.graveyard.length - 1];
+                    gravTop.innerHTML = `<img src="${top.image_small}" alt="${top.name}">`;
+                } else gravTop.innerHTML = '';
+            }
 
+            // Only update exile top if changed
             const exileTop = document.getElementById('exileTopCard');
-            if (zones.exile.length > 0) {
-                const top = zones.exile[zones.exile.length - 1];
-                exileTop.innerHTML = `<img src="${top.image_small}" alt="${top.name}">`;
-            } else exileTop.innerHTML = '';
+            const currentExileTopId = zones.exile.length > 0 ? zones.exile[zones.exile.length - 1].id : null;
+            if (currentExileTopId !== lastExileTopId) {
+                lastExileTopId = currentExileTopId;
+                if (zones.exile.length > 0) {
+                    const top = zones.exile[zones.exile.length - 1];
+                    exileTop.innerHTML = `<img src="${top.image_small}" alt="${top.name}">`;
+                } else exileTop.innerHTML = '';
+            }
 
-            document.getElementById('commanderCards').innerHTML = zones.command.map(c => `
-                <div class="card commander" data-id="${c.id}" draggable="true"
-                     ondragstart="handleDragStart(event, '${c.id}', 'command')"
-                     onclick="showCard('${c.id}', '${c.image_normal}', '${c.name}', 'command', true)"
-                     ondblclick="event.stopPropagation(); moveCard('${c.id}', 'battlefield')"
-                     oncontextmenu="showCommandContextMenu(event, '${c.id}'); return false;">
-                    <img src="${c.image_small}" alt="${c.name}">
-                </div>
-            `).join('');
+            // Only update commander zone if changed
+            const currentCommandIds = zones.command.map(c => c.id).join(',');
+            if (currentCommandIds !== lastCommandIds) {
+                lastCommandIds = currentCommandIds;
+                document.getElementById('commanderCards').innerHTML = zones.command.map(c => `
+                    <div class="card commander" data-id="${c.id}" draggable="true"
+                         ondragstart="handleDragStart(event, '${c.id}', 'command')"
+                         onclick="showCard('${c.id}', '${c.image_normal}', '${c.name}', 'command', true)"
+                         ondblclick="event.stopPropagation(); moveCard('${c.id}', 'battlefield')"
+                         oncontextmenu="showCommandContextMenu(event, '${c.id}'); return false;">
+                        <img src="${c.image_small}" alt="${c.name}">
+                    </div>
+                `).join('');
+            }
         }
 
         // Track last hand state to avoid unnecessary re-renders (blink fix)
@@ -2446,21 +2695,63 @@
             const handCards = zones ? zones.hand : [];
             document.getElementById('handCount').textContent = handCards.length;
 
-            // Create hash of hand to check if it changed
-            const handHash = handCards.map(c => c.id).join(',');
-            if (!forceRender && handHash === lastHandHash) {
-                return; // Hand didn't change, skip re-render to avoid blink
+            const container = document.getElementById('myHand');
+            const newIds = handCards.map(c => c.id);
+            const oldIds = lastHandHash ? lastHandHash.split(',') : [];
+            const oldIdsSet = new Set(oldIds);
+            const newIdsSet = new Set(newIds);
+
+            // Check if only new cards were added (drawing) - order independent
+            const addedIds = newIds.filter(id => !oldIdsSet.has(id));
+            const removedIds = oldIds.filter(id => !newIdsSet.has(id));
+
+            // Case 1: Only cards added (drawing)
+            if (!forceRender && oldIds.length > 0 && addedIds.length > 0 && removedIds.length === 0) {
+                // Just add the new cards
+                addedIds.forEach(cardId => {
+                    const card = handCards.find(c => c.id === cardId);
+                    if (!card) return;
+                    const escapedName = (card.name || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                    const escapedImage = (card.image_normal || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'card';
+                    cardEl.dataset.id = card.id;
+                    cardEl.draggable = true;
+                    cardEl.setAttribute('ondragstart', `handleDragStart(event, '${card.id}', 'hand')`);
+                    cardEl.setAttribute('onclick', `showCardById('${card.id}', 'hand', true)`);
+                    cardEl.setAttribute('oncontextmenu', `showHandContextMenuById(event, '${card.id}'); return false;`);
+                    cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}">`;
+                    container.appendChild(cardEl);
+                });
+                lastHandHash = newIds.join(',');
+                return;
             }
+
+            // Case 2: Only cards removed (playing/discarding)
+            if (!forceRender && oldIds.length > 0 && removedIds.length > 0 && addedIds.length === 0) {
+                removedIds.forEach(id => {
+                    const cardEl = container.querySelector(`.card[data-id="${id}"]`);
+                    if (cardEl) cardEl.remove();
+                });
+                lastHandHash = newIds.join(',');
+                return;
+            }
+
+            // Case 3: No change
+            const handHash = newIds.join(',');
+            if (!forceRender && handHash === lastHandHash) {
+                return;
+            }
+
+            // Case 4: Full re-render (complex changes, first render, etc.)
             lastHandHash = handHash;
 
-            const container = document.getElementById('myHand');
             if (!handCards.length) {
                 container.innerHTML = '<div style="color:#555;font-size:0.75rem;">Mao vazia</div>';
                 return;
             }
 
             container.innerHTML = handCards.map(card => {
-                // Escape special characters for HTML attributes
                 const escapedName = (card.name || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
                 const escapedImage = (card.image_normal || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
                 return `
@@ -2669,6 +2960,12 @@
             document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
             document.querySelectorAll('.drag-over-player').forEach(el => el.classList.remove('drag-over-player'));
             if (!draggedCard) return;
+
+            // Optimistic visual update - move card element to new row immediately
+            if (moveCardToRowVisual(draggedCard, targetSeat, row)) {
+                pendingRowChanges.set(draggedCard, row);
+            }
+
             sendAction('move_card', { object_id: draggedCard, zone: 'battlefield', target_seat: targetSeat, row: row });
             draggedCard = null;
             draggedCardData = null;
@@ -2731,6 +3028,9 @@
         // Track pending local actions to avoid unnecessary re-renders
         let pendingTaps = new Set(); // Card IDs that were tapped locally, waiting for server confirmation
         let localTapStates = {}; // Track expected tap states after local action
+        let pendingRowChanges = new Map(); // Card ID -> new row, for cards being moved between rows
+        let pendingRemovals = new Set(); // Card IDs being removed from battlefield, waiting for server confirmation
+        let pendingAdditions = new Map(); // Card ID -> {card, row, seat}, for cards being added to battlefield
 
         // Surgical update for card selection - only toggles CSS classes without re-rendering
         function updateCardSelectionVisual() {
@@ -2750,6 +3050,87 @@
             if (cardEl) {
                 cardEl.classList.toggle('tapped');
             }
+        }
+
+        // Surgical update for card row change - moves card DOM element to new row without re-rendering
+        function moveCardToRowVisual(cardId, seat, newRow) {
+            const cardEl = document.querySelector(`.player-battlefield .card[data-id="${cardId}"]`);
+            if (!cardEl) return false;
+
+            // Find the target row container
+            const targetRow = document.querySelector(`.battlefield-row[data-row="${newRow}"][data-seat="${seat}"] .cards-container`);
+            if (!targetRow) return false;
+
+            // Move the card element to the new row
+            targetRow.appendChild(cardEl);
+            return true;
+        }
+
+        // Optimistic removal of card from battlefield - removes DOM element immediately
+        function removeCardFromBattlefieldVisual(cardId) {
+            const cardEl = document.querySelector(`.player-battlefield .card[data-id="${cardId}"]`);
+            if (cardEl) {
+                cardEl.remove();
+                pendingRemovals.add(cardId);
+                // Also remove from selection if selected
+                selectedCards.delete(cardId);
+                return true;
+            }
+            return false;
+        }
+
+        // Optimistic removal of card from hand
+        // Note: Don't add to pendingRemovals - that's only for battlefield cards
+        // Hand uses lastHandHash for tracking
+        function removeCardFromHandVisual(cardId) {
+            const cardEl = document.querySelector(`#myHand .card[data-id="${cardId}"]`);
+            if (cardEl) {
+                cardEl.remove();
+                // Update hand hash to reflect removal (prevents re-render from trying to re-add)
+                if (lastHandHash) {
+                    const ids = lastHandHash.split(',').filter(id => id !== cardId);
+                    lastHandHash = ids.join(',');
+                }
+                return true;
+            }
+            return false;
+        }
+
+        // Optimistic addition of card to battlefield - creates DOM element immediately
+        function addCardToBattlefieldVisual(card, row, seat) {
+            if (!card || !card.id) return false;
+
+            // Find the target row container
+            const targetRow = document.querySelector(`.battlefield-row[data-row="${row}"][data-seat="${seat}"] .cards-container`);
+            if (!targetRow) return false;
+
+            // Check if card already exists on battlefield (avoid duplicates)
+            const existing = document.querySelector(`.player-battlefield .card[data-id="${card.id}"]`);
+            if (existing) return false;
+
+            const isMe = seat === mySeat;
+            const escapedName = (card.name || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+            const escapedImage = (card.image_small || card.image_normal || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+
+            const cardEl = document.createElement('div');
+            cardEl.className = `card ${card.is_commander ? 'commander' : ''}`;
+            cardEl.dataset.id = card.id;
+            if (isMe) {
+                cardEl.draggable = true;
+                cardEl.setAttribute('ondragstart', `handleDragStart(event, '${card.id}', 'battlefield')`);
+            }
+            cardEl.setAttribute('onclick', `handleBattlefieldCardClick(event, '${card.id}', ${isMe})`);
+            if (isMe) {
+                cardEl.setAttribute('ondblclick', `event.stopPropagation(); toggleTap('${card.id}')`);
+                cardEl.setAttribute('oncontextmenu', `showBattlefieldContextMenuById(event, '${card.id}', true); return false;`);
+            } else {
+                cardEl.setAttribute('oncontextmenu', `showBattlefieldContextMenuById(event, '${card.id}', false); return false;`);
+            }
+            cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}">`;
+
+            targetRow.appendChild(cardEl);
+            pendingAdditions.set(card.id, { card, row, seat });
+            return true;
         }
 
         // Battlefield cards: single click only for selection, not opening modal
@@ -3027,36 +3408,67 @@
         function showBattlefieldContextMenu(e, card, isMe = false) {
             const items = [];
 
-            // Ver carta option (for all cards)
+            // Check if clicked card is in selection and there are multiple cards selected
+            const isMultiSelect = selectedCards.has(card.id) && selectedCards.size > 1;
+            const countLabel = isMultiSelect ? ` (${selectedCards.size})` : '';
+
+            // Ver carta option (always single card)
             items.push({ label: 'Ver carta', action: `showCard('${card.id}', '${card.image_normal}', '${card.name}', 'battlefield', ${isMe}); hideContextMenu();` });
 
             if (isMe) {
                 items.push({ divider: true });
                 const tapLabel = card.is_tapped ? 'Desvirar' : 'Virar';
-                items.push({ label: tapLabel, action: `toggleTap('${card.id}'); hideContextMenu();` });
-                if (selectedCards.size > 1) {
-                    items.push({ label: `${tapLabel} Selecionadas (${selectedCards.size})`, action: `tapSelected(); hideContextMenu();` });
+                if (isMultiSelect) {
+                    items.push({ label: `${tapLabel}${countLabel}`, action: `tapSelected(); hideContextMenu();` });
+                } else {
+                    items.push({ label: tapLabel, action: `toggleTap('${card.id}'); hideContextMenu();` });
                 }
                 items.push({ divider: true });
-                items.push({ label: 'Criar seta (jogador/carta)', action: `startArrowFromCard('${card.id}'); hideContextMenu();` });
-                // Check if card has arrows (can have multiple)
-                const cardArrows = arrows.filter(a => a.sourceCardId === card.id);
-                if (cardArrows.length === 1) {
-                    const idx = arrows.findIndex(a => a.sourceCardId === card.id);
-                    items.push({ label: 'Remover seta', action: `removeArrow(${idx}); hideContextMenu();` });
-                } else if (cardArrows.length > 1) {
-                    items.push({ label: `Remover todas setas (${cardArrows.length})`, action: `removeArrowsFromCard('${card.id}'); hideContextMenu();` });
+
+                // Arrow actions (single card only for creating, but can remove from selected)
+                if (!isMultiSelect) {
+                    items.push({ label: 'Criar seta (jogador/carta)', action: `startArrowFromCard('${card.id}'); hideContextMenu();` });
+                    const cardArrows = arrows.filter(a => a.sourceCardId === card.id);
+                    if (cardArrows.length === 1) {
+                        const idx = arrows.findIndex(a => a.sourceCardId === card.id);
+                        items.push({ label: 'Remover seta', action: `removeArrow(${idx}); hideContextMenu();` });
+                    } else if (cardArrows.length > 1) {
+                        items.push({ label: `Remover todas setas (${cardArrows.length})`, action: `removeArrowsFromCard('${card.id}'); hideContextMenu();` });
+                    }
+                } else {
+                    // Check if any selected card has arrows
+                    const selectedWithArrows = [...selectedCards].filter(id => arrows.some(a => a.sourceCardId === id));
+                    if (selectedWithArrows.length > 0) {
+                        items.push({ label: `Remover setas${countLabel}`, action: `removeArrowsFromSelected(); hideContextMenu();` });
+                    }
                 }
+
                 items.push({ divider: true });
-                items.push({ label: 'Enviar para Cemiterio', action: `moveCard('${card.id}', 'graveyard'); hideContextMenu();` });
-                items.push({ label: 'Exilar', action: `moveCard('${card.id}', 'exile'); hideContextMenu();` });
-                items.push({ label: 'Devolver a Mao', action: `moveCard('${card.id}', 'hand'); hideContextMenu();` });
-                if (card.is_commander) {
-                    items.push({ label: 'Devolver a Zona de Comando', action: `moveCard('${card.id}', 'command'); hideContextMenu();` });
+
+                // Move actions - use multi-select functions when applicable
+                if (isMultiSelect) {
+                    items.push({ label: `Enviar para Cemiterio${countLabel}`, action: `moveSelectedCards('graveyard'); hideContextMenu();` });
+                    items.push({ label: `Exilar${countLabel}`, action: `moveSelectedCards('exile'); hideContextMenu();` });
+                    items.push({ label: `Devolver a Mao${countLabel}`, action: `moveSelectedCards('hand'); hideContextMenu();` });
+                } else {
+                    items.push({ label: 'Enviar para Cemiterio', action: `moveCard('${card.id}', 'graveyard'); hideContextMenu();` });
+                    items.push({ label: 'Exilar', action: `moveCard('${card.id}', 'exile'); hideContextMenu();` });
+                    items.push({ label: 'Devolver a Mao', action: `moveCard('${card.id}', 'hand'); hideContextMenu();` });
+                    if (card.is_commander) {
+                        items.push({ label: 'Devolver a Zona de Comando', action: `moveCard('${card.id}', 'command'); hideContextMenu();` });
+                    }
                 }
+
                 items.push({ divider: true });
-                items.push({ label: 'Adicionar +1/+1', action: `addCounter('${card.id}'); hideContextMenu();` });
-                items.push({ label: 'Remover +1/+1', action: `removeCounter('${card.id}'); hideContextMenu();` });
+
+                // Counter actions
+                if (isMultiSelect) {
+                    items.push({ label: `Adicionar +1/+1${countLabel}`, action: `addCounterToSelected(); hideContextMenu();` });
+                    items.push({ label: `Remover +1/+1${countLabel}`, action: `removeCounterFromSelected(); hideContextMenu();` });
+                } else {
+                    items.push({ label: 'Adicionar +1/+1', action: `addCounter('${card.id}'); hideContextMenu();` });
+                    items.push({ label: 'Remover +1/+1', action: `removeCounter('${card.id}'); hideContextMenu();` });
+                }
             }
             showContextMenu(e, items);
         }
@@ -3068,10 +3480,45 @@
             ]);
         }
 
+        // Show battlefield context menu by ID (for optimistically added cards)
+        function showBattlefieldContextMenuById(e, cardId, isMe) {
+            const card = findCardById(cardId);
+            if (card) {
+                showBattlefieldContextMenu(e, card, isMe);
+            }
+        }
+
         function tapSelected() {
             selectedCards.forEach(id => sendAction('tap_card', { object_id: id }));
             selectedCards.clear();
             updateCardSelectionVisual(); // Surgical update for selection clear
+        }
+
+        // Multi-select helper functions
+        function moveSelectedCards(zone) {
+            // Use moveCard for each card to get optimistic updates
+            selectedCards.forEach(id => {
+                moveCard(id, zone);
+            });
+            selectedCards.clear();
+            updateCardSelectionVisual();
+        }
+
+        function addCounterToSelected() {
+            selectedCards.forEach(id => sendAction('add_counter', { object_id: id }));
+        }
+
+        function removeCounterFromSelected() {
+            selectedCards.forEach(id => sendAction('remove_counter', { object_id: id }));
+        }
+
+        function createArrowsFromSelected() {
+            // Start arrow mode from each selected card
+            selectedCards.forEach(id => startArrowFromCard(id));
+        }
+
+        function removeArrowsFromSelected() {
+            selectedCards.forEach(id => removeArrowsFromCard(id));
         }
 
         function promptScry() {
@@ -3290,11 +3737,37 @@
         }
 
         // ===== GAME ACTIONS =====
-        function moveCard(objId, zone, targetSeat = null) {
+        function moveCard(objId, zone, targetSeat = null, row = null) {
             closeModal();
             closeZoneViewer();
             const data = { object_id: objId, zone };
             if (targetSeat !== null) data.target_seat = targetSeat;
+
+            // Get card and current zone before any modifications
+            const card = findCardById(objId);
+            const currentZone = findCardZone(objId);
+
+            // Optimistic visual removal - check if card is on battlefield or hand and moving elsewhere
+            if (currentZone === 'battlefield' && zone !== 'battlefield') {
+                removeCardFromBattlefieldVisual(objId);
+            } else if (currentZone === 'hand' && zone !== 'hand') {
+                removeCardFromHandVisual(objId);
+            }
+
+            // When moving to battlefield, determine correct row based on card type
+            if (zone === 'battlefield') {
+                let targetRow = row;
+                if (!targetRow && card && card.type_line) {
+                    targetRow = getCardRow(card.type_line);
+                }
+                data.row = targetRow || 'enchantments'; // Default to enchantments if no type info
+
+                // Optimistic visual addition - add card to battlefield immediately
+                if (card && currentZone !== 'battlefield') {
+                    addCardToBattlefieldVisual(card, data.row, targetSeat || mySeat);
+                }
+            }
+
             sendAction('move_card', data);
         }
 
