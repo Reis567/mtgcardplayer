@@ -295,6 +295,7 @@
             gap: 2px;
             min-height: 0;
             overflow-y: auto;
+            overflow-x: hidden;
         }
         .battlefield-row {
             min-height: 40px;
@@ -302,7 +303,8 @@
             padding: 2px 5px;
             position: relative;
             transition: all 0.2s;
-            flex-shrink: 0;
+            flex-shrink: 1;
+            overflow: hidden;
         }
         .battlefield-row.drag-over {
             background: rgba(78, 205, 196, 0.15) !important;
@@ -311,20 +313,10 @@
         .creatures-row { background: rgba(233, 69, 96, 0.06); }
         .enchantments-row { background: rgba(78, 205, 196, 0.06); }
         .lands-row { background: rgba(255, 193, 7, 0.06); }
-        .row-label {
-            position: absolute;
-            top: 1px;
-            left: 5px;
-            font-size: 0.5rem;
-            color: #555;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
         .cards-container {
             display: flex;
             flex-wrap: wrap;
             gap: 3px;
-            padding-top: 10px;
             min-height: 28px;
             align-content: flex-start;
         }
@@ -1489,6 +1481,171 @@
             color: #ffc107;
             animation: fadeIn 0.5s;
         }
+
+        /* ===== RESPONSIVE LAYOUTS ===== */
+        /* Medium screens (laptops, smaller monitors) */
+        @media (max-height: 800px) {
+            .game-container { gap: 2px; padding: 2px; }
+            .game-header { padding: 3px 8px; }
+            .turn-info { font-size: 0.75rem; gap: 6px; }
+            .game-controls button { padding: 2px 6px; font-size: 0.7rem; }
+
+            .phase-tracker { padding: 2px 6px; }
+            .phase-btn { padding: 2px 4px; font-size: 0.6rem; }
+            .phase-next-btn { padding: 2px 8px; font-size: 0.65rem; }
+            .phase-separator { height: 14px; }
+
+            .player-area { padding: 3px; }
+            .player-header { gap: 4px; padding-bottom: 2px; margin-bottom: 2px; }
+            .player-avatar { width: 22px; height: 22px; font-size: 0.7rem; }
+            .player-info .name { font-size: 0.7rem; }
+            .player-info .stats { font-size: 0.6rem; gap: 4px; }
+            .commander-link { font-size: 0.55rem; max-width: 120px; }
+            .player-life .life { font-size: 0.85rem; min-width: 24px; }
+            .player-life button { width: 16px; height: 16px; font-size: 0.7rem; }
+            .generic-counter { width: 15px; height: 15px; font-size: 0.55rem; }
+            .mini-zone { font-size: 0.55rem; padding: 1px 3px; }
+
+            .battlefield-row { min-height: 32px; padding: 1px 4px; }
+            .cards-container { gap: 2px; min-height: 24px; }
+
+            .card { width: 38px; height: 53px; }
+            .card.tapped { margin: 4px 7px; }
+            .card .counters { font-size: 0.4rem; }
+
+            .my-zones-row { gap: 6px; padding: 3px; }
+            .stack-visual { width: 36px; height: 50px; }
+            .card-back { width: 36px; height: 50px; }
+            .zone-count { font-size: 0.8rem; }
+            .zone-label { font-size: 0.5rem; }
+            .graveyard-zone .top-card, .exile-zone .top-card { width: 36px; height: 50px; }
+            .command-zone-stack { min-height: 55px; padding: 2px; min-width: 44px; }
+            .command-zone-stack .card { width: 36px; height: 50px; }
+
+            .my-hand-container { padding: 4px; }
+            .my-hand-container h3 { font-size: 0.65rem; margin-bottom: 2px; }
+            .hand-cards .card { width: 60px; height: 84px; }
+            .hand-cards .card:hover { transform: translateY(-6px) scale(1.03); }
+        }
+
+        /* Small screens (small laptops, tablets) */
+        @media (max-height: 700px) {
+            .game-header { padding: 2px 6px; }
+            .turn-info { font-size: 0.65rem; }
+            .connection-status { font-size: 0.6rem; }
+            .connection-dot { width: 5px; height: 5px; }
+
+            .phase-tracker { padding: 1px 4px; gap: 1px; }
+            .phase-btn { padding: 2px 3px; font-size: 0.55rem; }
+            .phase-group-label { font-size: 0.5rem; }
+            .phase-next-btn { padding: 2px 6px; font-size: 0.6rem; margin-left: 4px; }
+            .phase-separator { height: 12px; margin: 0 2px; }
+
+            .player-area { padding: 2px; border-radius: 4px; }
+            .player-header { gap: 3px; padding-bottom: 1px; margin-bottom: 1px; }
+            .player-avatar { width: 18px; height: 18px; font-size: 0.6rem; }
+            .player-info .name { font-size: 0.6rem; }
+            .player-info .stats { font-size: 0.5rem; gap: 3px; }
+            .commander-link { font-size: 0.5rem; max-width: 100px; }
+            .player-life .life { font-size: 0.75rem; min-width: 20px; }
+            .player-life button { width: 14px; height: 14px; font-size: 0.6rem; }
+            .player-life-counters { gap: 4px; }
+            .generic-counters { gap: 2px; }
+            .generic-counter { width: 13px; height: 13px; font-size: 0.5rem; }
+            .mini-zone { font-size: 0.5rem; padding: 1px 2px; }
+            .player-zones-mini { gap: 2px; }
+
+            .battlefield-row { min-height: 26px; padding: 1px 3px; }
+            .cards-container { gap: 1px; min-height: 20px; }
+
+            .card { width: 32px; height: 45px; border-radius: 2px; }
+            .card.tapped { margin: 3px 6px; }
+            .card .counters { font-size: 0.35rem; padding: 0 1px; }
+
+            .my-zones-row { gap: 4px; padding: 2px; }
+            .stack-visual { width: 30px; height: 42px; }
+            .card-back { width: 30px; height: 42px; }
+            .card-back.offset-1 { top: 1px; left: 1px; }
+            .card-back.offset-2 { top: 2px; left: 2px; }
+            .zone-count { font-size: 0.7rem; }
+            .zone-label { font-size: 0.45rem; margin-top: 1px; }
+            .graveyard-zone .top-card, .exile-zone .top-card { width: 30px; height: 42px; }
+            .command-zone-stack { min-height: 48px; min-width: 38px; }
+            .command-zone-stack .card { width: 30px; height: 42px; }
+
+            .my-hand-container { padding: 3px; border-top-width: 1px; }
+            .my-hand-container h3 { font-size: 0.6rem; }
+            .hand-cards { gap: 1px; }
+            .hand-cards .card { width: 50px; height: 70px; }
+            .hand-cards .card:hover { transform: translateY(-4px) scale(1.02); }
+        }
+
+        /* Very small screens */
+        @media (max-height: 600px) {
+            .game-container { gap: 1px; padding: 1px; }
+            .game-header { padding: 1px 4px; border-radius: 3px; }
+            .turn-info { font-size: 0.55rem; }
+            .game-controls button { padding: 1px 4px; font-size: 0.6rem; }
+
+            .phase-tracker { border-radius: 3px; }
+            .phase-btn { padding: 1px 2px; font-size: 0.5rem; border-radius: 2px; }
+            .phase-next-btn { padding: 1px 4px; font-size: 0.55rem; }
+
+            .player-area { border-radius: 3px; border-width: 1px; }
+            .player-header { border-bottom: none; }
+            .player-avatar { width: 16px; height: 16px; font-size: 0.55rem; }
+            .player-info .name { font-size: 0.55rem; }
+            .player-info .stats { font-size: 0.45rem; }
+            .commander-link { display: none; }
+            .player-life .life { font-size: 0.65rem; min-width: 18px; }
+            .player-life button { width: 12px; height: 12px; font-size: 0.5rem; }
+            .generic-counter { width: 11px; height: 11px; font-size: 0.45rem; }
+            .mini-zone { font-size: 0.45rem; }
+
+            .battlefield-row { min-height: 22px; padding: 0 2px; border-radius: 2px; }
+            .cards-container { min-height: 18px; }
+
+            .card { width: 26px; height: 36px; }
+            .card.tapped { margin: 2px 5px; }
+            .card .counters { font-size: 0.3rem; }
+
+            .my-zones-row { gap: 3px; padding: 1px; border-radius: 3px; }
+            .stack-visual { width: 24px; height: 34px; }
+            .card-back { width: 24px; height: 34px; border-width: 1px; }
+            .zone-count { font-size: 0.6rem; }
+            .zone-label { font-size: 0.4rem; }
+            .graveyard-zone .top-card, .exile-zone .top-card { width: 24px; height: 34px; }
+            .command-zone-stack { min-height: 40px; min-width: 32px; border-width: 1px; }
+            .command-zone-stack .card { width: 24px; height: 34px; }
+
+            .my-hand-container { padding: 2px; border-radius: 3px 3px 0 0; }
+            .my-hand-container h3 { font-size: 0.55rem; }
+            .hand-cards .card { width: 42px; height: 59px; }
+            .hand-cards .card:hover { transform: translateY(-3px); }
+        }
+
+        /* Width-based adjustments for narrow screens */
+        @media (max-width: 1200px) {
+            .sidebar { width: 200px; }
+        }
+
+        @media (max-width: 900px) {
+            .players-grid[data-players="4"] { grid-template-columns: 1fr 1fr; }
+            .players-grid[data-players="5"] { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); }
+            .players-grid[data-players="6"] { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); }
+            .players-grid[data-players="7"] { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, 1fr); }
+            .players-grid[data-players="8"] { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, 1fr); }
+
+            .sidebar { width: 180px; }
+            .chat-panel { max-height: 100px; }
+        }
+
+        /* Compact mode for both small height AND width */
+        @media (max-height: 700px) and (max-width: 1200px) {
+            .card { width: 28px; height: 39px; }
+            .card.tapped { margin: 2px 5px; }
+            .hand-cards .card { width: 45px; height: 63px; }
+        }
     </style>
 </head>
 <body>
@@ -2585,19 +2742,16 @@
                         <div class="battlefield-row creatures-row" data-row="creatures" data-seat="${player.seat_position}"
                              ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
                              ondrop="handleRowDrop(event, ${player.seat_position}, 'creatures')">
-                            <span class="row-label">Criaturas</span>
                             <div class="cards-container">${renderBattlefieldCards(creatures, isMe)}</div>
                         </div>
                         <div class="battlefield-row enchantments-row" data-row="enchantments" data-seat="${player.seat_position}"
                              ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
                              ondrop="handleRowDrop(event, ${player.seat_position}, 'enchantments')">
-                            <span class="row-label">Encant/Artefatos</span>
                             <div class="cards-container">${renderBattlefieldCards(enchantments, isMe)}</div>
                         </div>
                         <div class="battlefield-row lands-row" data-row="lands" data-seat="${player.seat_position}"
                              ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
                              ondrop="handleRowDrop(event, ${player.seat_position}, 'lands')">
-                            <span class="row-label">Terrenos</span>
                             <div class="cards-container">${renderBattlefieldCards(lands, isMe)}</div>
                         </div>
                     </div>
