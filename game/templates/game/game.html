@@ -576,6 +576,10 @@
             z-index: 1000;
             display: none;
         }
+        .card.selection-preview {
+            outline: 2px solid #e94560;
+            outline-offset: 2px;
+        }
 
         /* ===== CONTEXT MENU ===== */
         .context-menu {
@@ -747,6 +751,228 @@
             margin-top: 6px;
         }
         .scry-content .btn.primary { background: #e94560; color: white; }
+
+        /* Auto-Pay Mana Modal */
+        .autopay-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 2500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .autopay-modal.show { display: flex; }
+        .autopay-content {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 90vw;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .autopay-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        .autopay-header h3 { font-size: 1rem; color: #4ecdc4; }
+        .autopay-beta {
+            background: #e94560;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 8px;
+        }
+        .autopay-header button {
+            background: #333;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .autopay-card-preview {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .autopay-card-preview img {
+            width: 150px;
+            border-radius: 8px;
+        }
+        .autopay-cost-info {
+            flex: 1;
+        }
+        .autopay-cost-info h4 {
+            margin-bottom: 8px;
+            color: #ffc107;
+        }
+        .autopay-mana-cost {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .mana-symbol {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+        .mana-symbol.W { background: #f9faf4; color: #333; }
+        .mana-symbol.U { background: #0e68ab; color: white; }
+        .mana-symbol.B { background: #150b00; color: #ccc; border: 1px solid #444; }
+        .mana-symbol.R { background: #d3202a; color: white; }
+        .mana-symbol.G { background: #00733e; color: white; }
+        .mana-symbol.C { background: #ccc2c0; color: #333; }
+        .mana-symbol.generic { background: #888; color: white; }
+        .autopay-lands-section h4 {
+            margin-bottom: 10px;
+            color: #888;
+            font-size: 0.85rem;
+        }
+        .autopay-lands-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .autopay-land-item {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .autopay-land-item img {
+            width: 70px;
+            border-radius: 5px;
+            border: 2px solid transparent;
+        }
+        .autopay-land-item.selected img {
+            border-color: #4ecdc4;
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+        }
+        .autopay-land-item.will-tap img {
+            border-color: #ffc107;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        }
+        .autopay-land-item .mana-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            display: flex;
+            gap: 2px;
+        }
+        .autopay-land-item .mana-badge .mana-symbol {
+            width: 18px;
+            height: 18px;
+            font-size: 0.6rem;
+        }
+        .autopay-multi-select {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .autopay-multi-select h5 {
+            color: #e94560;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        .multi-mana-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .multi-mana-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .multi-mana-btn.W { background: #f9faf4; color: #333; }
+        .multi-mana-btn.U { background: #0e68ab; color: white; }
+        .multi-mana-btn.B { background: #150b00; color: #ccc; border: 1px solid #444; }
+        .multi-mana-btn.R { background: #d3202a; color: white; }
+        .multi-mana-btn.G { background: #00733e; color: white; }
+        .multi-mana-btn.C { background: #ccc2c0; color: #333; }
+        .multi-mana-btn:hover { transform: scale(1.1); }
+        .autopay-status {
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid #4ecdc4;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+        }
+        .autopay-status.error {
+            background: rgba(233, 69, 96, 0.1);
+            border-color: #e94560;
+            color: #e94560;
+        }
+        .autopay-status.success {
+            background: rgba(78, 205, 196, 0.1);
+            border-color: #4ecdc4;
+            color: #4ecdc4;
+        }
+        .autopay-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .autopay-actions button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .autopay-actions .cancel { background: #333; color: white; }
+        .autopay-actions .confirm { background: #4ecdc4; color: #000; font-weight: bold; }
+        .autopay-actions .confirm:disabled { background: #555; color: #888; cursor: not-allowed; }
+
+        /* Pay-to-activate sources (Signets, etc) */
+        .autopay-pay-sources-divider {
+            width: 100%;
+            padding: 8px 0;
+            margin: 10px 0 5px 0;
+            border-top: 1px dashed #555;
+            font-size: 0.75rem;
+            color: #ffc107;
+        }
+        .autopay-land-item.pay-to-activate {
+            opacity: 0.7;
+            position: relative;
+        }
+        .autopay-land-item.pay-to-activate img {
+            border: 2px dashed #ffc107;
+        }
+        .autopay-land-item.pay-to-activate:hover {
+            opacity: 1;
+        }
+        .autopay-land-item .pay-badge {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: #ffc107;
+            color: #000;
+            font-size: 0.6rem;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
 
         /* Reveal Overlay */
         .reveal-overlay {
@@ -1476,6 +1702,40 @@
         </div>
     </div>
 
+    <!-- Auto-Pay Mana Modal -->
+    <div class="autopay-modal" id="autopayModal">
+        <div class="autopay-content">
+            <div class="autopay-header">
+                <h3>Auto-Pay Mana <span class="autopay-beta">🧪 BETA</span></h3>
+                <button onclick="closeAutopayModal()">Fechar</button>
+            </div>
+            <div class="autopay-card-preview">
+                <img id="autopayCardImage" src="" alt="Card">
+                <div class="autopay-cost-info">
+                    <h4 id="autopayCardName">Nome da Carta</h4>
+                    <div>Custo de Mana:</div>
+                    <div class="autopay-mana-cost" id="autopayManaCost"></div>
+                    <div style="font-size:0.7rem;color:#888;margin-top:5px;">
+                        Esta funcionalidade esta em fase de testes e pode conter bugs.
+                    </div>
+                </div>
+            </div>
+            <div id="autopayMultiSelect" class="autopay-multi-select" style="display:none;">
+                <h5>Selecione a cor de mana para: <span id="autopayMultiLandName"></span></h5>
+                <div class="multi-mana-options" id="autopayMultiOptions"></div>
+            </div>
+            <div class="autopay-lands-section">
+                <h4>Terrenos e Fontes de Mana Disponiveis (nao virados):</h4>
+                <div class="autopay-lands-grid" id="autopayLandsGrid"></div>
+            </div>
+            <div class="autopay-status" id="autopayStatus">Calculando mana necessaria...</div>
+            <div class="autopay-actions">
+                <button class="cancel" onclick="closeAutopayModal()">Cancelar</button>
+                <button class="confirm" id="autopayConfirmBtn" onclick="confirmAutopay()" disabled>Jogar com Auto-Pay</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Help Buttons -->
     <div class="help-buttons">
         <button class="help-btn guide" onclick="openGuideModal()" title="Guia (H)">?</button>
@@ -1773,6 +2033,8 @@
                 case 'game_state':
                     gameState = data.state;
                     renderGame();
+                    // Clear pending taps after render - the optimistic update already happened
+                    pendingTaps.clear();
                     break;
                 case 'chat':
                     addChatMessage(data.sender, data.message);
@@ -1970,10 +2232,49 @@
             renderArrows();
         }
 
-        function renderPlayersGrid() {
+        // Generate hash for players grid to detect changes
+        function getPlayersGridHash() {
+            const parts = [];
+            gameState.players.forEach(player => {
+                const zones = gameState.zones_data[player.seat_position];
+                if (!zones) return; // Safety check
+                const counters = playerCounters[player.seat_position] || {};
+                // Include player state
+                parts.push(`p${player.seat_position}:${player.life}:${player.is_alive}`);
+                // Include active player
+                parts.push(`act:${gameState.active_player_seat}`);
+                // Include zone counts
+                parts.push(`z:${zones.library_count}:${zones.hand.length}:${zones.graveyard.length}:${zones.exile.length}`);
+                // Include player counters
+                parts.push(`c:${counters.red||0}:${counters.blue||0}:${counters.green||0}:${counters.yellow||0}:${counters.purple||0}`);
+                // Include battlefield cards with their states
+                // Note: tap state is NOT included in hash - we update tap visually via toggleCardTapVisual()
+                (zones.battlefield || []).forEach(card => {
+                    const countersStr = card.counters ? Object.entries(card.counters).map(([k,v]) => `${k}${v}`).join('') : '';
+                    parts.push(`bf:${card.id}:${card.battlefield_row||''}:${countersStr}`);
+                });
+                // Include command zone cards
+                (zones.command || []).forEach(card => {
+                    parts.push(`cmd:${card.id}`);
+                });
+            });
+            // Note: selectedCards is NOT included - we update selection visually via updateCardSelectionVisual()
+            // Include arrow state (arrows DO need re-render since they affect has-arrow class)
+            parts.push(`arr:${arrowSourceCard||''}:${arrows.map(a=>`${a.sourceCardId}-${a.targetId}`).join(',')}`);
+            return parts.join('|');
+        }
+
+        function renderPlayersGrid(forceRender = false) {
             const container = document.getElementById('playersGrid');
             const playerCount = gameState.players.length;
             container.setAttribute('data-players', playerCount);
+
+            // Check if grid needs re-rendering
+            const gridHash = getPlayersGridHash();
+            if (!forceRender && gridHash === lastPlayersGridHash) {
+                return; // Nothing changed, skip re-render to avoid blink
+            }
+            lastPlayersGridHash = gridHash;
 
             const sortedPlayers = [...gameState.players].sort((a, b) => {
                 if (a.seat_position === mySeat) return 1;
@@ -2135,10 +2436,22 @@
             `).join('');
         }
 
-        function renderMyHand() {
+        // Track last hand state to avoid unnecessary re-renders (blink fix)
+        let lastHandHash = '';
+        // Track last players grid state to avoid battlefield blink
+        let lastPlayersGridHash = '';
+
+        function renderMyHand(forceRender = false) {
             const zones = gameState.zones_data[mySeat];
             const handCards = zones ? zones.hand : [];
             document.getElementById('handCount').textContent = handCards.length;
+
+            // Create hash of hand to check if it changed
+            const handHash = handCards.map(c => c.id).join(',');
+            if (!forceRender && handHash === lastHandHash) {
+                return; // Hand didn't change, skip re-render to avoid blink
+            }
+            lastHandHash = handHash;
 
             const container = document.getElementById('myHand');
             if (!handCards.length) {
@@ -2146,14 +2459,19 @@
                 return;
             }
 
-            container.innerHTML = handCards.map(card => `
-                <div class="card" data-id="${card.id}" draggable="true"
-                     ondragstart="handleDragStart(event, '${card.id}', 'hand')"
-                     onclick="showCard('${card.id}', '${card.image_normal}', '${card.name}', 'hand', true)"
-                     oncontextmenu="showHandContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}); return false;">
-                    <img src="${card.image_normal}" alt="${card.name}">
-                </div>
-            `).join('');
+            container.innerHTML = handCards.map(card => {
+                // Escape special characters for HTML attributes
+                const escapedName = (card.name || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                const escapedImage = (card.image_normal || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                return `
+                    <div class="card" data-id="${card.id}" draggable="true"
+                         ondragstart="handleDragStart(event, '${card.id}', 'hand')"
+                         onclick="showCardById('${card.id}', 'hand', true)"
+                         oncontextmenu="showHandContextMenuById(event, '${card.id}'); return false;">
+                        <img src="${escapedImage}" alt="${escapedName}">
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderActionLog() {
@@ -2400,10 +2718,38 @@
                 } else {
                     selectedCards.add(cardId);
                 }
-                renderGame();
+                updateCardSelectionVisual(); // Surgical update, no blink
                 return;
             }
             showCard(cardId, imageUrl, cardName, zone, isMe);
+        }
+
+        // Store selection before click for double-click handling
+        let preClickSelection = new Set();
+        let clickTimeout = null;
+
+        // Track pending local actions to avoid unnecessary re-renders
+        let pendingTaps = new Set(); // Card IDs that were tapped locally, waiting for server confirmation
+        let localTapStates = {}; // Track expected tap states after local action
+
+        // Surgical update for card selection - only toggles CSS classes without re-rendering
+        function updateCardSelectionVisual() {
+            document.querySelectorAll('.player-battlefield .card').forEach(cardEl => {
+                const cardId = cardEl.dataset.id;
+                if (selectedCards.has(cardId)) {
+                    cardEl.classList.add('selected');
+                } else {
+                    cardEl.classList.remove('selected');
+                }
+            });
+        }
+
+        // Surgical update for card tap - only toggles CSS class without re-rendering
+        function toggleCardTapVisual(cardId) {
+            const cardEl = document.querySelector(`.player-battlefield .card[data-id="${cardId}"]`);
+            if (cardEl) {
+                cardEl.classList.toggle('tapped');
+            }
         }
 
         // Battlefield cards: single click only for selection, not opening modal
@@ -2418,6 +2764,10 @@
                 cancelArrowMode();
                 return;
             }
+
+            // Store current selection before modifying (for double-click)
+            preClickSelection = new Set(selectedCards);
+
             // Shift+click for multi-select
             if (e.shiftKey && isMe) {
                 if (selectedCards.has(cardId)) {
@@ -2425,40 +2775,79 @@
                 } else {
                     selectedCards.add(cardId);
                 }
-                renderGame();
+                updateCardSelectionVisual(); // Surgical update, no blink
                 return;
             }
             // Regular click: toggle selection (don't open modal)
             if (isMe) {
-                if (selectedCards.has(cardId)) {
-                    selectedCards.delete(cardId);
-                } else {
-                    // Clear other selections unless shift is held
-                    selectedCards.clear();
-                    selectedCards.add(cardId);
-                }
-                renderGame();
+                // Use timeout to allow double-click to cancel single-click behavior
+                if (clickTimeout) clearTimeout(clickTimeout);
+                clickTimeout = setTimeout(() => {
+                    if (selectedCards.has(cardId) && selectedCards.size === 1) {
+                        selectedCards.delete(cardId);
+                    } else if (!selectedCards.has(cardId)) {
+                        // Clear other selections unless shift is held
+                        selectedCards.clear();
+                        selectedCards.add(cardId);
+                    }
+                    updateCardSelectionVisual(); // Surgical update, no blink
+                }, 200); // 200ms delay to detect double-click
             }
             // For opponent cards, single click does nothing (use right-click to view)
         }
 
         function toggleTap(cardId) {
-            if (selectedCards.size > 0 && selectedCards.has(cardId)) {
-                selectedCards.forEach(id => sendAction('tap_card', { object_id: id }));
+            // Cancel pending single-click
+            if (clickTimeout) {
+                clearTimeout(clickTimeout);
+                clickTimeout = null;
+            }
+
+            // Use pre-click selection if it had multiple cards including this one
+            if (preClickSelection.size > 1 && preClickSelection.has(cardId)) {
+                preClickSelection.forEach(id => {
+                    toggleCardTapVisual(id); // Optimistic update
+                    pendingTaps.add(id);
+                    sendAction('tap_card', { object_id: id });
+                });
                 selectedCards.clear();
+                preClickSelection.clear();
+                updateCardSelectionVisual();
+            } else if (selectedCards.size > 0 && selectedCards.has(cardId)) {
+                selectedCards.forEach(id => {
+                    toggleCardTapVisual(id); // Optimistic update
+                    pendingTaps.add(id);
+                    sendAction('tap_card', { object_id: id });
+                });
+                selectedCards.clear();
+                updateCardSelectionVisual();
             } else {
+                toggleCardTapVisual(cardId); // Optimistic update
+                pendingTaps.add(cardId);
                 sendAction('tap_card', { object_id: cardId });
             }
         }
 
         // ===== MULTI-SELECT =====
+        let selectionStartedInMyArea = false;
+
         document.addEventListener('mousedown', function(e) {
             if (e.button !== 0) return;
-            if (e.target.closest('.card, .context-menu, .card-modal, .modal-overlay, button, input, .sidebar, .phase-tracker')) return;
+            // Allow starting selection from anywhere in my player area (including battlefield rows)
+            if (e.target.closest('.context-menu, .card-modal, .modal-overlay, .autopay-modal, button, input, .sidebar, .phase-tracker, .player-header, .my-zones')) return;
+
             const playerArea = e.target.closest('.player-area.is-me');
-            if (!playerArea) return;
+            const battlefieldRow = e.target.closest('.battlefield-row');
+
+            // Must be in my player area or one of my battlefield rows
+            if (!playerArea && !battlefieldRow) return;
+            if (battlefieldRow && !battlefieldRow.closest('.player-area.is-me')) return;
+
+            // Don't start selection if clicking on a card (let card handlers deal with it)
+            if (e.target.closest('.card')) return;
 
             isSelecting = true;
+            selectionStartedInMyArea = true;
             selectionStart = { x: e.clientX, y: e.clientY };
             const box = document.getElementById('selectionBox');
             box.style.left = e.clientX + 'px';
@@ -2479,26 +2868,58 @@
             box.style.top = y + 'px';
             box.style.width = w + 'px';
             box.style.height = h + 'px';
+
+            // Live preview: highlight cards that would be selected
+            if (w > 5 || h > 5) {
+                const boxRect = { left: x, top: y, right: x + w, bottom: y + h };
+                const myArea = document.querySelector('.player-area.is-me');
+                if (myArea) {
+                    const cards = myArea.querySelectorAll('.battlefield-row .card[data-id]');
+                    cards.forEach(card => {
+                        const cardRect = card.getBoundingClientRect();
+                        if (rectsIntersect(boxRect, cardRect)) {
+                            card.classList.add('selection-preview');
+                        } else {
+                            card.classList.remove('selection-preview');
+                        }
+                    });
+                }
+            }
         });
 
         document.addEventListener('mouseup', function(e) {
             if (!isSelecting) return;
             isSelecting = false;
+            selectionStartedInMyArea = false;
             const box = document.getElementById('selectionBox');
             const boxRect = box.getBoundingClientRect();
             box.style.display = 'none';
-            if (boxRect.width < 10 || boxRect.height < 10) return;
+
+            // Remove all preview highlights
+            document.querySelectorAll('.selection-preview').forEach(el => el.classList.remove('selection-preview'));
+
+            // Minimum drag size to count as selection
+            if (boxRect.width < 5 || boxRect.height < 5) return;
+
             const myArea = document.querySelector('.player-area.is-me');
             if (!myArea) return;
-            const cards = myArea.querySelectorAll('.card[data-id]');
-            selectedCards.clear();
+
+            // Only select cards from battlefield rows (not from hand)
+            const cards = myArea.querySelectorAll('.battlefield-row .card[data-id]');
+            const newSelection = new Set();
+
             cards.forEach(card => {
                 const cardRect = card.getBoundingClientRect();
                 if (rectsIntersect(boxRect, cardRect)) {
-                    selectedCards.add(card.dataset.id);
+                    newSelection.add(card.dataset.id);
                 }
             });
-            renderGame();
+
+            // Only update if we selected at least one card
+            if (newSelection.size > 0) {
+                selectedCards = newSelection;
+                updateCardSelectionVisual(); // Surgical update, no blink
+            }
         });
 
         function rectsIntersect(r1, r2) {
@@ -2506,7 +2927,7 @@
         }
 
         // ===== CONTEXT MENUS =====
-        function showContextMenu(e, items) {
+        function showContextMenu(e, items, openUpward = false) {
             e.preventDefault();
             hideContextMenu();
             const menu = document.getElementById('contextMenu');
@@ -2515,9 +2936,28 @@
                 if (item.divider) return '<div class="context-menu-divider"></div>';
                 return `<div class="context-menu-item" onclick="${item.action}">${item.label}</div>`;
             }).join('');
-            menu.style.left = Math.min(e.clientX, window.innerWidth - 160) + 'px';
-            menu.style.top = Math.min(e.clientY, window.innerHeight - menu.offsetHeight - 20) + 'px';
+
+            // Calculate position
+            const menuWidth = 160;
+            let x = Math.min(e.clientX, window.innerWidth - menuWidth);
+
+            // Show menu first to get its height
+            menu.style.visibility = 'hidden';
             menu.classList.add('show');
+            const menuHeight = menu.offsetHeight;
+
+            let y;
+            if (openUpward) {
+                // Open upward (for hand cards at bottom)
+                y = Math.max(10, e.clientY - menuHeight);
+            } else {
+                // Open downward (default)
+                y = Math.min(e.clientY, window.innerHeight - menuHeight - 20);
+            }
+
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.style.visibility = 'visible';
         }
 
         function hideContextMenu() {
@@ -2545,9 +2985,34 @@
             showLibraryContextMenu({ clientX: window.innerWidth / 2, clientY: window.innerHeight / 2, preventDefault: () => {} });
         }
 
+        // Helper to find card by ID from hand
+        function getHandCardById(cardId) {
+            const zones = gameState.zones_data[mySeat];
+            return zones && zones.hand ? zones.hand.find(c => c.id === cardId) : null;
+        }
+
+        // Show card modal by ID (avoids escaping issues)
+        function showCardById(cardId, zone, isMe) {
+            const card = getHandCardById(cardId);
+            if (card) {
+                showCard(cardId, card.image_normal || '', card.name || '', zone, isMe);
+            }
+        }
+
+        // Show hand context menu by ID (avoids escaping issues)
+        function showHandContextMenuById(e, cardId) {
+            const card = getHandCardById(cardId);
+            if (card) {
+                showHandContextMenu(e, card);
+            }
+        }
+
         function showHandContextMenu(e, card) {
+            // Store card reference for autopay
+            window._autopayCardRef = card;
             showContextMenu(e, [
                 { label: 'Jogar no Campo', action: `moveCard('${card.id}', 'battlefield'); hideContextMenu();` },
+                { label: 'Jogar (Auto-Pay) 🧪', action: `openAutopayModal(window._autopayCardRef); hideContextMenu();` },
                 { divider: true },
                 { label: 'Descartar', action: `moveCard('${card.id}', 'graveyard'); hideContextMenu();` },
                 { label: 'Exilar', action: `moveCard('${card.id}', 'exile'); hideContextMenu();` },
@@ -2556,7 +3021,7 @@
                 { divider: true },
                 { label: 'Devolver ao topo', action: `sendAction('put_top', {object_id: '${card.id}'}); hideContextMenu();` },
                 { label: 'Devolver ao fundo', action: `sendAction('put_bottom', {object_id: '${card.id}'}); hideContextMenu();` },
-            ]);
+            ], true); // openUpward = true for hand cards
         }
 
         function showBattlefieldContextMenu(e, card, isMe = false) {
@@ -2606,6 +3071,7 @@
         function tapSelected() {
             selectedCards.forEach(id => sendAction('tap_card', { object_id: id }));
             selectedCards.clear();
+            updateCardSelectionVisual(); // Surgical update for selection clear
         }
 
         function promptScry() {
@@ -2771,7 +3237,7 @@
         }
 
         function showCard(objId, imageUrl, cardName, zone, isMe = false) {
-            selectedCard = { id: objId, zone, name: cardName };
+            selectedCard = { id: objId, zone, name: cardName, image: imageUrl };
             document.getElementById('modalImage').src = imageUrl;
 
             let actions = '<button class="close" onclick="closeModal()">Fechar</button>';
@@ -2779,6 +3245,7 @@
                 if (zone === 'hand') {
                     actions += `
                         <button class="action-btn" onclick="moveCard('${objId}', 'battlefield')">Jogar</button>
+                        <button class="action-btn" onclick="openAutopayFromModal('${objId}')">Auto-Pay 🧪</button>
                         <button class="action-btn" onclick="moveCard('${objId}', 'graveyard')">Descartar</button>
                         <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
                     `;
@@ -2875,9 +3342,9 @@
                     closeDiceModal();
                     closeStartSelection();
                     hideContextMenu();
-                    cancelArrowMode();
+                    cancelArrowMode(); // This already calls renderGame() for arrow state
                     selectedCards.clear();
-                    renderGame();
+                    updateCardSelectionVisual(); // Surgical update for selection clear
                     break;
                 case 'd': drawCard(); break;
                 case 'n': nextPhase(); break;
@@ -3351,6 +3818,564 @@
 
         document.getElementById('keywordsModal').addEventListener('click', function(e) {
             if (e.target === this) closeKeywordsModal();
+        });
+
+        // ===== AUTO-PAY MANA SYSTEM =====
+        let autopayCard = null;
+        let autopayLandsToTap = [];
+        let autopayPendingMultiSelections = [];
+        let autopayManaPool = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+
+        // Parse mana cost string like "{2}{G}{G}" into an object
+        function parseManaCost(manaCost) {
+            if (!manaCost) return { total: 0, colored: {}, generic: 0, colorless: 0 };
+
+            const result = { total: 0, colored: { W: 0, U: 0, B: 0, R: 0, G: 0 }, generic: 0, colorless: 0 };
+            const symbols = manaCost.match(/\{[^}]+\}/g) || [];
+
+            symbols.forEach(sym => {
+                const inner = sym.slice(1, -1);
+                if (/^\d+$/.test(inner)) {
+                    result.generic += parseInt(inner);
+                    result.total += parseInt(inner);
+                } else if (inner === 'C') {
+                    result.colorless += 1;
+                    result.total += 1;
+                } else if (inner === 'X') {
+                    // X costs are handled specially - for now we treat as 0
+                } else if (['W', 'U', 'B', 'R', 'G'].includes(inner)) {
+                    result.colored[inner] = (result.colored[inner] || 0) + 1;
+                    result.total += 1;
+                } else if (inner.includes('/')) {
+                    // Hybrid mana like {W/U} or {2/W}
+                    result.total += 1;
+                    // Store as special hybrid
+                    if (!result.hybrid) result.hybrid = [];
+                    result.hybrid.push(inner.split('/'));
+                }
+            });
+
+            return result;
+        }
+
+        // Render mana cost symbols as HTML
+        function renderManaCostSymbols(manaCost) {
+            if (!manaCost) return '';
+            const symbols = manaCost.match(/\{[^}]+\}/g) || [];
+
+            return symbols.map(sym => {
+                const inner = sym.slice(1, -1);
+                if (/^\d+$/.test(inner)) {
+                    return `<span class="mana-symbol generic">${inner}</span>`;
+                } else if (inner === 'C') {
+                    return `<span class="mana-symbol C">C</span>`;
+                } else if (['W', 'U', 'B', 'R', 'G'].includes(inner)) {
+                    return `<span class="mana-symbol ${inner}">${inner}</span>`;
+                } else if (inner === 'X') {
+                    return `<span class="mana-symbol generic">X</span>`;
+                } else {
+                    return `<span class="mana-symbol generic">${inner}</span>`;
+                }
+            }).join('');
+        }
+
+        // Get detailed mana ability info including activation cost
+        // Handles Signets, Talismans, and other pay-to-activate mana sources
+        function getManaAbilityInfo(card) {
+            const typeLine = (card.type_line || '').toLowerCase();
+            const oracleText = (card.oracle_text || '').toLowerCase();
+            const name = (card.name || '').toLowerCase();
+
+            const result = {
+                colors: [],
+                activationCost: 0,      // Generic mana cost to activate
+                activationColor: null,  // If requires specific color to activate
+                isFree: true,           // True if just tap, false if requires mana payment
+                manaProduced: 1,        // How many mana symbols it produces
+                netMana: 1              // Net mana gain (produced - cost)
+            };
+
+            // Check for pay-to-activate patterns like "{1}, {t}: add" or "{2}, {t}: add"
+            const payToActivateMatch = oracleText.match(/\{(\d+)\},?\s*\{t\}:\s*add/);
+            if (payToActivateMatch) {
+                result.activationCost = parseInt(payToActivateMatch[1]);
+                result.isFree = false;
+            }
+
+            // Also check for colored mana cost like "{g}, {t}: add"
+            const coloredCostMatch = oracleText.match(/\{([wubrgc])\},?\s*\{t\}:\s*add/);
+            if (coloredCostMatch) {
+                result.activationCost = 1;
+                result.isFree = false;
+                result.activationColor = coloredCostMatch[1].toUpperCase();
+            }
+
+            // Basic lands are always free
+            if (typeLine.includes('basic') && typeLine.includes('land')) {
+                result.isFree = true;
+                result.activationCost = 0;
+            }
+
+            // Regular lands with just "{t}: add" are free
+            if (typeLine.includes('land') && oracleText.match(/\{t\}:\s*add/) && !payToActivateMatch && !coloredCostMatch) {
+                result.isFree = true;
+                result.activationCost = 0;
+            }
+
+            // Detect mana colors produced from type line
+            if (typeLine.includes('plains') || name.includes('plains')) result.colors.push('W');
+            if (typeLine.includes('island') || name.includes('island')) result.colors.push('U');
+            if (typeLine.includes('swamp') || name.includes('swamp')) result.colors.push('B');
+            if (typeLine.includes('mountain') || name.includes('mountain')) result.colors.push('R');
+            if (typeLine.includes('forest') || name.includes('forest')) result.colors.push('G');
+
+            // Check oracle text for mana production - count how many mana symbols
+            const addMatch = oracleText.match(/add\s+((?:\{[wubrgc]\}\s*)+)/i);
+            if (addMatch) {
+                const symbols = addMatch[1].match(/\{([wubrgc])\}/gi) || [];
+                result.manaProduced = symbols.length;
+                symbols.forEach(sym => {
+                    const color = sym.replace(/[{}]/g, '').toUpperCase();
+                    if (!result.colors.includes(color)) result.colors.push(color);
+                });
+            }
+
+            // "Any color" lands/artifacts
+            if (oracleText.includes('mana of any color') || oracleText.includes('any one color') ||
+                oracleText.includes('one mana of any type') || oracleText.includes('mana of any one color')) {
+                result.colors = ['W', 'U', 'B', 'R', 'G'];
+            }
+
+            // Check for colorless
+            if (result.colors.length === 0 && (oracleText.includes('add {c}') || oracleText.includes('add {1}'))) {
+                result.colors.push('C');
+            }
+
+            // If still no colors found but it's a land, assume colorless
+            if (result.colors.length === 0 && typeLine.includes('land')) {
+                result.colors.push('C');
+            }
+
+            // Remove duplicates
+            result.colors = [...new Set(result.colors)];
+
+            // Calculate net mana
+            result.netMana = result.manaProduced - result.activationCost;
+
+            return result;
+        }
+
+        // Simple wrapper for backwards compatibility
+        function getManaProduction(card) {
+            return getManaAbilityInfo(card).colors;
+        }
+
+        // Check if a card is a mana source (land or mana-producing artifact)
+        function isManaSource(card) {
+            const typeLine = (card.type_line || '').toLowerCase();
+            const oracleText = (card.oracle_text || '').toLowerCase();
+
+            if (typeLine.includes('land')) return true;
+            if (typeLine.includes('artifact') && (oracleText.includes('add {') || oracleText.includes('add one mana'))) return true;
+            if (oracleText.includes('{t}: add {') || oracleText.includes('{t}: add one mana')) return true;
+
+            return false;
+        }
+
+        // Check if a mana source is "free" (just tap) or requires mana payment
+        function isFreeManaSource(card) {
+            return getManaAbilityInfo(card).isFree;
+        }
+
+        // Get all untapped mana sources on my battlefield
+        function getAvailableManaSources() {
+            const zones = gameState.zones_data[mySeat];
+            if (!zones || !zones.battlefield) return [];
+
+            return zones.battlefield.filter(card => !card.is_tapped && isManaSource(card));
+        }
+
+        // Open auto-pay from card modal (finds card by ID)
+        function openAutopayFromModal(cardId) {
+            closeModal();
+            const zones = gameState.zones_data[mySeat];
+            const handCard = zones && zones.hand ? zones.hand.find(c => c.id === cardId) : null;
+            if (handCard) {
+                openAutopayModal(handCard);
+            }
+        }
+
+        // Open the auto-pay modal
+        function openAutopayModal(card) {
+            autopayCard = card;
+            autopayLandsToTap = [];
+            autopayPendingMultiSelections = [];
+            autopayManaPool = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+
+            // Set card info
+            document.getElementById('autopayCardImage').src = card.image_normal || card.image_small;
+            document.getElementById('autopayCardName').textContent = card.name;
+            document.getElementById('autopayManaCost').innerHTML = renderManaCostSymbols(card.mana_cost);
+
+            // Get available mana sources
+            const manaSources = getAvailableManaSources();
+            const landsGrid = document.getElementById('autopayLandsGrid');
+
+            if (manaSources.length === 0) {
+                landsGrid.innerHTML = '<div style="color:#888;font-size:0.8rem;">Nenhum terreno ou fonte de mana desvirado disponivel.</div>';
+                updateAutopayStatus();
+                document.getElementById('autopayModal').classList.add('show');
+                return;
+            }
+
+            // Separate free mana sources from pay-to-activate
+            const freeSources = [];
+            const payToActivateSources = [];
+
+            manaSources.forEach(source => {
+                const info = getManaAbilityInfo(source);
+                if (info.isFree) {
+                    freeSources.push({ source, info });
+                } else {
+                    payToActivateSources.push({ source, info });
+                }
+            });
+
+            // Render available mana sources
+            let html = '';
+
+            // Free mana sources first
+            if (freeSources.length > 0) {
+                html += freeSources.map(({ source, info }) => {
+                    const manaHtml = info.colors.map(c => `<span class="mana-symbol ${c}">${c}</span>`).join('');
+                    const isMulti = info.colors.length > 1;
+
+                    return `
+                        <div class="autopay-land-item ${isMulti ? 'multi-color' : ''}"
+                             data-id="${source.id}"
+                             data-colors="${info.colors.join(',')}"
+                             data-free="true"
+                             onclick="toggleAutopayLand('${source.id}')">
+                            <img src="${source.image_small}" alt="${source.name}" title="${source.name}">
+                            <div class="mana-badge">${manaHtml}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Pay-to-activate sources with warning
+            if (payToActivateSources.length > 0) {
+                html += `<div class="autopay-pay-sources-divider">
+                    <span>⚠️ Fontes que requerem mana para ativar (Signets, etc):</span>
+                </div>`;
+
+                html += payToActivateSources.map(({ source, info }) => {
+                    const manaHtml = info.colors.map(c => `<span class="mana-symbol ${c}">${c}</span>`).join('');
+                    const costInfo = info.activationColor
+                        ? `Paga {${info.activationColor}} → gera ${info.manaProduced} mana`
+                        : `Paga {${info.activationCost}} → gera ${info.manaProduced} mana`;
+
+                    return `
+                        <div class="autopay-land-item pay-to-activate"
+                             data-id="${source.id}"
+                             data-colors="${info.colors.join(',')}"
+                             data-free="false"
+                             data-cost="${info.activationCost}"
+                             data-produces="${info.manaProduced}"
+                             title="${source.name} - ${costInfo}"
+                             onclick="toggleAutopayLand('${source.id}')">
+                            <img src="${source.image_small}" alt="${source.name}">
+                            <div class="mana-badge">${manaHtml}</div>
+                            <div class="pay-badge">💰${info.activationCost}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            landsGrid.innerHTML = html || '<div style="color:#888;font-size:0.8rem;">Nenhuma fonte de mana disponivel.</div>';
+
+            // Try to auto-select lands (only free sources for now)
+            autoSelectLands();
+
+            document.getElementById('autopayModal').classList.add('show');
+        }
+
+        // Close the auto-pay modal
+        function closeAutopayModal() {
+            document.getElementById('autopayModal').classList.remove('show');
+            document.getElementById('autopayMultiSelect').style.display = 'none';
+            autopayCard = null;
+            autopayLandsToTap = [];
+            autopayPendingMultiSelections = [];
+        }
+
+        // Toggle land selection for auto-pay
+        function toggleAutopayLand(landId) {
+            const landElement = document.querySelector(`.autopay-land-item[data-id="${landId}"]`);
+            if (!landElement) return;
+
+            const colors = landElement.dataset.colors.split(',');
+            const existingIndex = autopayLandsToTap.findIndex(l => l.id === landId);
+
+            if (existingIndex >= 0) {
+                // Deselect
+                autopayLandsToTap.splice(existingIndex, 1);
+                landElement.classList.remove('selected', 'will-tap');
+            } else {
+                // Check if it's a multi-color land
+                if (colors.length > 1) {
+                    showMultiColorSelection(landId, landElement, colors);
+                } else {
+                    // Single color - just add it
+                    autopayLandsToTap.push({ id: landId, color: colors[0] });
+                    landElement.classList.add('selected');
+                }
+            }
+
+            updateAutopayStatus();
+        }
+
+        // Show multi-color selection popup for a land
+        function showMultiColorSelection(landId, landElement, colors) {
+            const zones = gameState.zones_data[mySeat];
+            const land = zones.battlefield.find(c => c.id === landId);
+            if (!land) return;
+
+            document.getElementById('autopayMultiLandName').textContent = land.name;
+            document.getElementById('autopayMultiOptions').innerHTML = colors.map(color => `
+                <button class="multi-mana-btn ${color}" onclick="selectMultiManaColor('${landId}', '${color}')">
+                    ${color === 'W' ? 'Branco (W)' :
+                      color === 'U' ? 'Azul (U)' :
+                      color === 'B' ? 'Preto (B)' :
+                      color === 'R' ? 'Vermelho (R)' :
+                      color === 'G' ? 'Verde (G)' : 'Incolor (C)'}
+                </button>
+            `).join('');
+
+            document.getElementById('autopayMultiSelect').style.display = 'block';
+
+            // Store reference for selection
+            autopayPendingMultiSelections.push({ landId, landElement });
+        }
+
+        // Select color for multi-color land
+        function selectMultiManaColor(landId, color) {
+            const pendingIndex = autopayPendingMultiSelections.findIndex(p => p.landId === landId);
+            if (pendingIndex < 0) return;
+
+            const pending = autopayPendingMultiSelections[pendingIndex];
+            autopayLandsToTap.push({ id: landId, color: color });
+            pending.landElement.classList.add('selected');
+
+            autopayPendingMultiSelections.splice(pendingIndex, 1);
+
+            if (autopayPendingMultiSelections.length === 0) {
+                document.getElementById('autopayMultiSelect').style.display = 'none';
+            }
+
+            updateAutopayStatus();
+        }
+
+        // Auto-select lands to pay mana cost
+        function autoSelectLands() {
+            if (!autopayCard || !autopayCard.mana_cost) return;
+
+            const cost = parseManaCost(autopayCard.mana_cost);
+            const manaSources = getAvailableManaSources();
+
+            // Reset selections
+            autopayLandsToTap = [];
+            document.querySelectorAll('.autopay-land-item').forEach(el => {
+                el.classList.remove('selected', 'will-tap');
+            });
+
+            // First, pay colored costs
+            const coloredNeeds = { ...cost.colored };
+
+            // Only use FREE mana sources for auto-selection (exclude Signets etc.)
+            // Sort lands: single-color first, then multi-color
+            const freeSources = manaSources.filter(s => isFreeManaSource(s));
+            const sortedSources = [...freeSources].sort((a, b) => {
+                const aColors = getManaProduction(a);
+                const bColors = getManaProduction(b);
+                return aColors.length - bColors.length;
+            });
+
+            // Pay colored mana
+            for (const color of ['W', 'U', 'B', 'R', 'G']) {
+                while (coloredNeeds[color] > 0) {
+                    // Find a FREE land that produces this color and isn't selected
+                    const source = sortedSources.find(s => {
+                        const colors = getManaProduction(s);
+                        const alreadySelected = autopayLandsToTap.some(l => l.id === s.id);
+                        return colors.includes(color) && !alreadySelected;
+                    });
+
+                    if (source) {
+                        const colors = getManaProduction(source);
+                        if (colors.length > 1) {
+                            // Multi-color land - we need user to select
+                            const landElement = document.querySelector(`.autopay-land-item[data-id="${source.id}"]`);
+                            if (landElement) {
+                                landElement.classList.add('will-tap');
+                                showMultiColorSelection(source.id, landElement, colors);
+                            }
+                        } else {
+                            autopayLandsToTap.push({ id: source.id, color: color });
+                            const landElement = document.querySelector(`.autopay-land-item[data-id="${source.id}"]`);
+                            if (landElement) landElement.classList.add('selected');
+                        }
+                        coloredNeeds[color]--;
+                    } else {
+                        break; // Can't pay this color with free sources
+                    }
+                }
+            }
+
+            // Pay colorless requirement
+            let colorlessNeeded = cost.colorless;
+            while (colorlessNeeded > 0) {
+                const source = sortedSources.find(s => {
+                    const colors = getManaProduction(s);
+                    const alreadySelected = autopayLandsToTap.some(l => l.id === s.id);
+                    return colors.includes('C') && !alreadySelected;
+                });
+
+                if (source) {
+                    autopayLandsToTap.push({ id: source.id, color: 'C' });
+                    const landElement = document.querySelector(`.autopay-land-item[data-id="${source.id}"]`);
+                    if (landElement) landElement.classList.add('selected');
+                    colorlessNeeded--;
+                } else {
+                    break;
+                }
+            }
+
+            // Pay generic mana with remaining FREE lands
+            let genericNeeded = cost.generic + colorlessNeeded; // Add unpaid colorless to generic
+            while (genericNeeded > 0) {
+                const source = sortedSources.find(s => {
+                    const alreadySelected = autopayLandsToTap.some(l => l.id === s.id);
+                    return !alreadySelected;
+                });
+
+                if (source) {
+                    const colors = getManaProduction(source);
+                    if (colors.length > 1) {
+                        const landElement = document.querySelector(`.autopay-land-item[data-id="${source.id}"]`);
+                        if (landElement) {
+                            landElement.classList.add('will-tap');
+                            showMultiColorSelection(source.id, landElement, colors);
+                        }
+                    } else {
+                        autopayLandsToTap.push({ id: source.id, color: colors[0] || 'C' });
+                        const landElement = document.querySelector(`.autopay-land-item[data-id="${source.id}"]`);
+                        if (landElement) landElement.classList.add('selected');
+                    }
+                    genericNeeded--;
+                } else {
+                    break;
+                }
+            }
+
+            updateAutopayStatus();
+        }
+
+        // Update the status display
+        function updateAutopayStatus() {
+            if (!autopayCard) return;
+
+            const statusEl = document.getElementById('autopayStatus');
+            const confirmBtn = document.getElementById('autopayConfirmBtn');
+            const cost = parseManaCost(autopayCard.mana_cost);
+
+            // Calculate what we have selected
+            const manaAvailable = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0, generic: 0 };
+            autopayLandsToTap.forEach(land => {
+                if (['W', 'U', 'B', 'R', 'G', 'C'].includes(land.color)) {
+                    manaAvailable[land.color]++;
+                }
+            });
+
+            // Check if we can pay the cost
+            let canPay = true;
+            const missing = [];
+
+            // Check colored mana
+            for (const color of ['W', 'U', 'B', 'R', 'G']) {
+                if (cost.colored[color] > manaAvailable[color]) {
+                    canPay = false;
+                    missing.push(`${cost.colored[color] - manaAvailable[color]} ${color}`);
+                }
+            }
+
+            // Check colorless
+            if (cost.colorless > manaAvailable.C) {
+                // Can pay colorless with any mana? For now treat as generic
+            }
+
+            // Check total for generic
+            const totalColoredPaid = Object.values(cost.colored).reduce((a, b) => a + b, 0);
+            const totalSelected = autopayLandsToTap.length;
+            const genericPaid = totalSelected - totalColoredPaid;
+
+            if (cost.generic > 0 && genericPaid < cost.generic) {
+                const neededGeneric = cost.generic - genericPaid;
+                if (neededGeneric > 0) {
+                    canPay = false;
+                    missing.push(`${neededGeneric} generico`);
+                }
+            }
+
+            // Check if we're waiting for multi-color selections
+            if (autopayPendingMultiSelections.length > 0) {
+                canPay = false;
+                statusEl.innerHTML = `<span style="color:#ffc107;">⏳ Selecione a cor de mana para ${autopayPendingMultiSelections.length} terreno(s) multi-cor</span>`;
+                statusEl.className = 'autopay-status';
+                confirmBtn.disabled = true;
+                return;
+            }
+
+            if (canPay && totalSelected >= cost.total) {
+                statusEl.innerHTML = `✓ Mana suficiente! ${totalSelected} fonte(s) serao viradas.`;
+                statusEl.className = 'autopay-status success';
+                confirmBtn.disabled = false;
+            } else if (cost.total === 0) {
+                statusEl.innerHTML = `✓ Esta carta nao tem custo de mana.`;
+                statusEl.className = 'autopay-status success';
+                confirmBtn.disabled = false;
+            } else {
+                statusEl.innerHTML = `✗ Mana insuficiente. Faltando: ${missing.join(', ') || 'mais mana'}. Selecionadas: ${totalSelected}/${cost.total}`;
+                statusEl.className = 'autopay-status error';
+                confirmBtn.disabled = true;
+            }
+        }
+
+        // Confirm auto-pay and execute
+        function confirmAutopay() {
+            if (!autopayCard) return;
+
+            hideContextMenu();
+
+            // Tap all selected lands
+            autopayLandsToTap.forEach(land => {
+                const zones = gameState.zones_data[mySeat];
+                const landCard = zones.battlefield.find(c => c.id === land.id);
+                if (landCard && !landCard.is_tapped) {
+                    sendAction('tap_card', { object_id: land.id });
+                }
+            });
+
+            // Move the card to battlefield
+            setTimeout(() => {
+                moveCard(autopayCard.id, 'battlefield');
+                closeAutopayModal();
+            }, 100);
+        }
+
+        // Event listener for autopay modal
+        document.getElementById('autopayModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAutopayModal();
         });
 
         connectWebSocket();
