@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogo de Cards - MTG Commander</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(233, 69, 96, 0.3);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo h1 {
+            font-size: 1.4rem;
+            color: #fff;
+        }
+
+        .logo span {
+            color: #e94560;
+        }
+
+        /* Search Bar Principal */
+        .search-main {
+            flex: 1;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-main input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .search-main input:focus {
+            outline: none;
+            border-color: #e94560;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .search-main::before {
+            content: "";
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23888' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E") no-repeat center;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-links a.primary {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+        }
+
+        /* Layout Principal */
+        .main-layout {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 70px);
+        }
+
+        /* Sidebar de Filtros */
+        .filters-sidebar {
+            width: 280px;
+            background: rgba(0, 0, 0, 0.3);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+            position: sticky;
+            top: 70px;
+            height: calc(100vh - 70px);
+        }
+
+        .filter-section {
+            margin-bottom: 25px;
+        }
+
+        .filter-section h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Mana Colors Filter */
+        .mana-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .mana-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .mana-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .mana-btn.selected {
+            border-color: #fff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        .mana-W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+        .mana-U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+        .mana-B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #ccc; border: 2px solid #444; }
+        .mana-R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+        .mana-G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+        .mana-C { background: linear-gradient(135deg, #888, #aaa); color: #333; }
+
+        .color-mode-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .color-mode-selector label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #aaa;
+            cursor: pointer;
+        }
+
+        .color-mode-selector input[type="radio"] {
+            accent-color: #e94560;
+        }
+
+        /* Form Elements */
+        .filter-input,
+        .filter-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-row .filter-input {
+            flex: 1;
+        }
+
+        /* Checkboxes para raridade */
+        .rarity-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rarity-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .rarity-checkbox input {
+            display: none;
+        }
+
+        .rarity-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .rarity-checkbox input:checked + .rarity-badge {
+            border-color: #fff;
+        }
+
+        .rarity-common { background: rgba(170, 170, 170, 0.2); color: #aaa; }
+        .rarity-uncommon { background: rgba(192, 192, 192, 0.2); color: #c0c0c0; }
+        .rarity-rare { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
+        .rarity-mythic { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+
+        /* Type Pills */
+        .type-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .type-pill {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .type-pill:hover,
+        .type-pill.selected {
+            background: rgba(233, 69, 96, 0.3);
+            border-color: #e94560;
+        }
+
+        /* Filter Actions */
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-filter {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-apply {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: white;
+        }
+
+        .btn-clear {
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+        }
+
+        .btn-filter:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 20px;
+        }
+
+        /* Results Header */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .results-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .results-count {
+            font-size: 1.1rem;
+            color: #888;
+        }
+
+        .results-count strong {
+            color: #e94560;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .view-btn {
+            padding: 8px 15px;
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background: rgba(233, 69, 96, 0.3);
+            color: #fff;
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .sort-controls select {
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .cards-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        .card-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card-item:hover {
+            transform: translateY(-5px);
+            border-color: rgba(233, 69, 96, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-image-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .card-item:hover .card-image {
+            transform: scale(1.05);
+        }
+
+        .no-image {
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card-item:hover .card-overlay {
+            opacity: 1;
+        }
+
+        .card-info {
+            padding: 12px;
+        }
+
+        .card-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .card-type {
+            color: #888;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 60%;
+        }
+
+        .card-mana {
+            display: flex;
+            gap: 2px;
+        }
+
+        .mana-pip {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: bold;
+        }
+
+        /* List View Styles */
+        .cards-grid.list-view .card-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+        }
+
+        .cards-grid.list-view .card-image-container {
+            width: 60px;
+            flex-shrink: 0;
+        }
+
+        .cards-grid.list-view .card-image {
+            width: 60px;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .cards-grid.list-view .card-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .cards-grid.list-view .card-name {
+            flex: 1;
+            margin: 0;
+        }
+
+        .cards-grid.list-view .card-type {
+            width: 200px;
+        }
+
+        /* Rarity badges in cards */
+        .rarity-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .rarity-indicator.common { background: #aaa; }
+        .rarity-indicator.uncommon { background: #c0c0c0; }
+        .rarity-indicator.rare { background: #ffd700; }
+        .rarity-indicator.mythic { background: #ff6b6b; }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .pagination a:hover {
+            background: rgba(233, 69, 96, 0.3);
+        }
+
+        .pagination .current {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+        }
+
+        .pagination .dots {
+            background: none;
+            color: #888;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            padding: 8px 15px;
+            background: rgba(78, 205, 196, 0.2);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            border-radius: 20px;
+            color: #4ecdc4;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: rgba(78, 205, 196, 0.3);
+            border-color: #4ecdc4;
+        }
+
+        /* Mobile Filters Toggle */
+        .filters-toggle {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4);
+            z-index: 99;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .filters-sidebar {
+                position: fixed;
+                left: -300px;
+                top: 0;
+                height: 100vh;
+                z-index: 200;
+                transition: left 0.3s;
+            }
+
+            .filters-sidebar.open {
+                left: 0;
+            }
+
+            .filters-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .filters-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 199;
+            }
+
+            .filters-overlay.open {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap;
+            }
+
+            .search-main {
+                order: 3;
+                max-width: 100%;
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .nav-links {
+                gap: 5px;
+            }
+
+            .nav-links a {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 12px;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Active filters badges */
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .filter-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            background: rgba(233, 69, 96, 0.2);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #e94560;
+        }
+
+        .filter-badge button {
+            background: none;
+            border: none;
+            color: #e94560;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="{% url 'card_catalog' %}" class="logo">
+                <div class="logo-icon">M</div>
+                <h1>MTG <span>Catalog</span></h1>
+            </a>
+
+            <form method="get" class="search-main" id="searchForm">
+                <!-- Manter outros parametros -->
+                {% for key, value in current_params.items %}
+                    {% if key != 'q' and key != 'page' %}
+                        {% if value.0 %}
+                            {% for v in value %}
+                                <input type="hidden" name="{{ key }}" value="{{ v }}">
+                            {% endfor %}
+                        {% else %}
+                            <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                <input type="text" name="q" value="{{ q }}" placeholder="Buscar cards por nome ou texto...">
+            </form>
+
+            <nav class="nav-links">
+                <a href="{% url 'card_random' %}">Aleatorio</a>
+                <a href="/decks/">Decks</a>
+                <a href="/lobby/">Lobby</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <!-- Sidebar de Filtros -->
+        <aside class="filters-sidebar" id="filtersSidebar">
+            <form method="get" id="filtersForm">
+                <!-- Manter a busca -->
+                <input type="hidden" name="q" value="{{ q }}">
+
+                <!-- Filtro de Cores -->
+                <div class="filter-section">
+                    <h3>Identidade de Cor</h3>
+                    <div class="mana-filters">
+                        <button type="button" class="mana-btn mana-W {% if 'W' in selected_colors %}selected{% endif %}" data-color="W" title="Branco">W</button>
+                        <button type="button" class="mana-btn mana-U {% if 'U' in selected_colors %}selected{% endif %}" data-color="U" title="Azul">U</button>
+                        <button type="button" class="mana-btn mana-B {% if 'B' in selected_colors %}selected{% endif %}" data-color="B" title="Preto">B</button>
+                        <button type="button" class="mana-btn mana-R {% if 'R' in selected_colors %}selected{% endif %}" data-color="R" title="Vermelho">R</button>
+                        <button type="button" class="mana-btn mana-G {% if 'G' in selected_colors %}selected{% endif %}" data-color="G" title="Verde">G</button>
+                        <button type="button" class="mana-btn mana-C {% if 'C' in selected_colors %}selected{% endif %}" data-color="C" title="Incolor">C</button>
+                    </div>
+                    <!-- Hidden inputs for colors -->
+                    <div id="colorInputs"></div>
+
+                    <div class="color-mode-selector">
+                        <label>
+                            <input type="radio" name="color_mode" value="include" {% if color_mode == 'include' %}checked{% endif %}>
+                            Inclui estas cores
+                        </label>
+                        <label>
+                            <input type="radio" name="color_mode" value="exact" {% if color_mode == 'exact' %}checked{% endif %}>
+                            Exatamente estas cores
+                        </label>
+                        <label>
+                            <input type="radio" name="color_mode" value="at_most" {% if color_mode == 'at_most' %}checked{% endif %}>
+                            No maximo estas cores
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Filtro de Tipo -->
+                <div class="filter-section">
+                    <h3>Tipo de Carta</h3>
+                    <div class="type-pills">
+                        {% for type in card_types %}
+                        <span class="type-pill {% if selected_type == type %}selected{% endif %}"
+                              data-type="{{ type }}">{{ type }}</span>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="type" id="typeInput" value="{{ selected_type }}">
+                </div>
+
+                <!-- Filtro de Subtipo -->
+                <div class="filter-section">
+                    <h3>Subtipo</h3>
+                    <select name="subtype" class="filter-select">
+                        <option value="">Todos</option>
+                        {% for sub in subtypes %}
+                        <option value="{{ sub }}" {% if selected_subtype == sub %}selected{% endif %}>{{ sub }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtro de CMC -->
+                <div class="filter-section">
+                    <h3>Custo de Mana (CMC)</h3>
+                    <div class="filter-row">
+                        <input type="number" name="cmc_min" class="filter-input" placeholder="Min" min="0" max="20" value="{{ cmc_min }}">
+                        <input type="number" name="cmc_max" class="filter-input" placeholder="Max" min="0" max="20" value="{{ cmc_max }}">
+                    </div>
+                </div>
+
+                <!-- Filtro de Poder/Resistencia -->
+                <div class="filter-section">
+                    <h3>Poder / Resistencia</h3>
+                    <div class="filter-row">
+                        <input type="number" name="power_min" class="filter-input" placeholder="Poder Min" min="0" value="{{ power_min }}">
+                        <input type="number" name="power_max" class="filter-input" placeholder="Poder Max" min="0" value="{{ power_max }}">
+                    </div>
+                    <div class="filter-row">
+                        <input type="number" name="tough_min" class="filter-input" placeholder="Resist Min" min="0" value="{{ tough_min }}">
+                        <input type="number" name="tough_max" class="filter-input" placeholder="Resist Max" min="0" value="{{ tough_max }}">
+                    </div>
+                </div>
+
+                <!-- Filtro de Raridade -->
+                <div class="filter-section">
+                    <h3>Raridade</h3>
+                    <div class="rarity-filters">
+                        <label class="rarity-checkbox">
+                            <input type="checkbox" name="rarity" value="common" {% if 'common' in selected_rarities %}checked{% endif %}>
+                            <span class="rarity-badge rarity-common">Common</span>
+                        </label>
+                        <label class="rarity-checkbox">
+                            <input type="checkbox" name="rarity" value="uncommon" {% if 'uncommon' in selected_rarities %}checked{% endif %}>
+                            <span class="rarity-badge rarity-uncommon">Uncommon</span>
+                        </label>
+                        <label class="rarity-checkbox">
+                            <input type="checkbox" name="rarity" value="rare" {% if 'rare' in selected_rarities %}checked{% endif %}>
+                            <span class="rarity-badge rarity-rare">Rare</span>
+                        </label>
+                        <label class="rarity-checkbox">
+                            <input type="checkbox" name="rarity" value="mythic" {% if 'mythic' in selected_rarities %}checked{% endif %}>
+                            <span class="rarity-badge rarity-mythic">Mythic Rare</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Filtro de Set -->
+                <div class="filter-section">
+                    <h3>Colecao / Set</h3>
+                    <select name="set" class="filter-select">
+                        <option value="">Todas</option>
+                        {% for s in available_sets %}
+                        <option value="{{ s.set_code }}" {% if selected_set == s.set_code %}selected{% endif %}>
+                            {{ s.set_name }} ({{ s.set_code|upper }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Busca no Oracle -->
+                <div class="filter-section">
+                    <h3>Texto do Oracle</h3>
+                    <input type="text" name="oracle" class="filter-input" placeholder="Ex: Flying, Trample..." value="{{ oracle }}">
+                </div>
+
+                <!-- Botoes -->
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter btn-apply">Aplicar Filtros</button>
+                    <a href="{% url 'card_catalog' %}" class="btn-filter btn-clear" style="text-align: center; text-decoration: none;">Limpar</a>
+                </div>
+            </form>
+        </aside>
+
+        <!-- Overlay para mobile -->
+        <div class="filters-overlay" id="filtersOverlay"></div>
+
+        <!-- Area de Conteudo -->
+        <main class="content-area">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a href="{% url 'card_random' %}" class="quick-btn">Carta Aleatoria</a>
+                <a href="?type=Creature" class="quick-btn">Criaturas</a>
+                <a href="?type=Instant" class="quick-btn">Instants</a>
+                <a href="?type=Planeswalker" class="quick-btn">Planeswalkers</a>
+                <a href="?rarity=mythic" class="quick-btn">Miticas</a>
+            </div>
+
+            <!-- Active Filters -->
+            {% if q or selected_colors or selected_type or selected_rarities or selected_set %}
+            <div class="active-filters">
+                {% if q %}
+                <span class="filter-badge">
+                    Busca: "{{ q }}"
+                    <button type="button" onclick="removeFilter('q')">&times;</button>
+                </span>
+                {% endif %}
+                {% for color in selected_colors %}
+                <span class="filter-badge">
+                    Cor: {{ color }}
+                    <button type="button" onclick="removeColorFilter('{{ color }}')">&times;</button>
+                </span>
+                {% endfor %}
+                {% if selected_type %}
+                <span class="filter-badge">
+                    Tipo: {{ selected_type }}
+                    <button type="button" onclick="removeFilter('type')">&times;</button>
+                </span>
+                {% endif %}
+                {% for r in selected_rarities %}
+                <span class="filter-badge">
+                    {{ r|title }}
+                    <button type="button" onclick="removeRarityFilter('{{ r }}')">&times;</button>
+                </span>
+                {% endfor %}
+                {% if selected_set %}
+                <span class="filter-badge">
+                    Set: {{ selected_set|upper }}
+                    <button type="button" onclick="removeFilter('set')">&times;</button>
+                </span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Results Header -->
+            <div class="results-header">
+                <div class="results-info">
+                    <span class="results-count">
+                        <strong>{{ result_count }}</strong> cards encontrados
+                        {% if result_count != total_cards %}
+                        de {{ total_cards }} no total
+                        {% endif %}
+                    </span>
+
+                    <div class="view-toggle">
+                        <button type="button" class="view-btn {% if view_mode == 'grid' %}active{% endif %}" data-view="grid" title="Grade">
+                            &#9638;
+                        </button>
+                        <button type="button" class="view-btn {% if view_mode == 'list' %}active{% endif %}" data-view="list" title="Lista">
+                            &#9776;
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sort-controls">
+                    <span style="color: #888; font-size: 0.9rem;">Ordenar:</span>
+                    <select id="sortOrder" onchange="updateSort()">
+                        <option value="name" {% if order == 'name' %}selected{% endif %}>Nome</option>
+                        <option value="cmc" {% if order == 'cmc' %}selected{% endif %}>CMC</option>
+                        <option value="power" {% if order == 'power' %}selected{% endif %}>Poder</option>
+                        <option value="rarity" {% if order == 'rarity' %}selected{% endif %}>Raridade</option>
+                        <option value="set" {% if order == 'set' %}selected{% endif %}>Set</option>
+                    </select>
+                    <select id="sortDir" onchange="updateSort()">
+                        <option value="asc" {% if dir == 'asc' %}selected{% endif %}>A-Z / Menor</option>
+                        <option value="desc" {% if dir == 'desc' %}selected{% endif %}>Z-A / Maior</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Cards Grid -->
+            {% if cards %}
+            <div class="cards-grid {% if view_mode == 'list' %}list-view{% endif %}" id="cardsGrid">
+                {% for card in cards %}
+                <a href="{% url 'card_detail' card_id=card.id %}" class="card-item">
+                    <div class="card-image-container">
+                        {% if card.image_normal %}
+                        <img src="{{ card.image_normal }}" alt="{{ card.name }}" class="card-image" loading="lazy">
+                        {% else %}
+                        <div class="no-image">Sem imagem</div>
+                        {% endif %}
+                        <span class="rarity-indicator {{ card.rarity }}"></span>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-name" title="{{ card.name }}">{{ card.name }}</div>
+                        <div class="card-meta">
+                            <span class="card-type" title="{{ card.type_line }}">{{ card.type_line|truncatechars:25 }}</span>
+                            {% if card.mana_cost %}
+                            <span class="card-mana">{{ card.mana_cost }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                <a href="?{{ current_params.urlencode }}&page=1">&laquo;</a>
+                <a href="?{{ current_params.urlencode }}&page={{ page_obj.previous_page_number }}">&lsaquo; Anterior</a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                    <span class="current">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?{{ current_params.urlencode }}&page={{ num }}">{{ num }}</a>
+                    {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                    <a href="?{{ current_params.urlencode }}&page={{ num }}">{{ num }}</a>
+                    {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                    <span class="dots">...</span>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <a href="?{{ current_params.urlencode }}&page={{ page_obj.next_page_number }}">Proxima &rsaquo;</a>
+                <a href="?{{ current_params.urlencode }}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="empty-state">
+                <h3>Nenhum card encontrado</h3>
+                <p>Tente ajustar os filtros ou realizar uma nova busca.</p>
+                <a href="{% url 'card_catalog' %}" class="quick-btn">Limpar Filtros</a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- Mobile Filters Toggle -->
+    <button class="filters-toggle" id="filtersToggle">
+        &#9776;
+    </button>
+
+    <script>
+        // Color filters
+        const selectedColors = new Set({{ selected_colors|safe }});
+
+        document.querySelectorAll('.mana-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const color = btn.dataset.color;
+                if (selectedColors.has(color)) {
+                    selectedColors.delete(color);
+                    btn.classList.remove('selected');
+                } else {
+                    selectedColors.add(color);
+                    btn.classList.add('selected');
+                }
+                updateColorInputs();
+            });
+        });
+
+        function updateColorInputs() {
+            const container = document.getElementById('colorInputs');
+            container.innerHTML = '';
+            selectedColors.forEach(color => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'color';
+                input.value = color;
+                container.appendChild(input);
+            });
+        }
+
+        // Initialize color inputs
+        updateColorInputs();
+
+        // Type pills
+        document.querySelectorAll('.type-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('selected'));
+                pill.classList.add('selected');
+                document.getElementById('typeInput').value = pill.dataset.type;
+            });
+        });
+
+        // View toggle
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const view = btn.dataset.view;
+                const grid = document.getElementById('cardsGrid');
+
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                if (view === 'list') {
+                    grid.classList.add('list-view');
+                } else {
+                    grid.classList.remove('list-view');
+                }
+
+                // Update URL
+                const url = new URL(window.location);
+                url.searchParams.set('view', view);
+                history.replaceState({}, '', url);
+            });
+        });
+
+        // Sort
+        function updateSort() {
+            const order = document.getElementById('sortOrder').value;
+            const dir = document.getElementById('sortDir').value;
+            const url = new URL(window.location);
+            url.searchParams.set('order', order);
+            url.searchParams.set('dir', dir);
+            window.location = url;
+        }
+
+        // Remove filter functions
+        function removeFilter(param) {
+            const url = new URL(window.location);
+            url.searchParams.delete(param);
+            window.location = url;
+        }
+
+        function removeColorFilter(color) {
+            const url = new URL(window.location);
+            const colors = url.searchParams.getAll('color').filter(c => c !== color);
+            url.searchParams.delete('color');
+            colors.forEach(c => url.searchParams.append('color', c));
+            window.location = url;
+        }
+
+        function removeRarityFilter(rarity) {
+            const url = new URL(window.location);
+            const rarities = url.searchParams.getAll('rarity').filter(r => r !== rarity);
+            url.searchParams.delete('rarity');
+            rarities.forEach(r => url.searchParams.append('rarity', r));
+            window.location = url;
+        }
+
+        // Mobile filters toggle
+        const sidebar = document.getElementById('filtersSidebar');
+        const overlay = document.getElementById('filtersOverlay');
+        const toggle = document.getElementById('filtersToggle');
+
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+    </script>
+</body>
+</html>

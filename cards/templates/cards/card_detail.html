@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ card.name }} - MTG Commander</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(233, 69, 96, 0.3);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #fff;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Card Hero Section */
+        .card-hero {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .card-hero {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+
+        /* Card Image */
+        .card-image-section {
+            position: relative;
+        }
+
+        .card-image-wrapper {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s;
+        }
+
+        .card-image-wrapper:hover {
+            transform: scale(1.02);
+        }
+
+        .card-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .no-image {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+        }
+
+        .zoom-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            color: #aaa;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .card-image-wrapper:hover .zoom-hint {
+            opacity: 1;
+        }
+
+        /* Card Details */
+        .card-details {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .card-title-section {
+            border-bottom: 2px solid rgba(233, 69, 96, 0.3);
+            padding-bottom: 20px;
+        }
+
+        .card-name {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .card-mana-cost {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .mana-pip {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .mana-W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+        .mana-U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+        .mana-B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #ccc; }
+        .mana-R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+        .mana-G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+        .mana-C { background: linear-gradient(135deg, #888, #aaa); color: #333; }
+        .mana-generic { background: linear-gradient(135deg, #666, #888); color: white; }
+
+        .card-type-line {
+            font-size: 1.1rem;
+            color: #e94560;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .info-value.rarity-common { color: #aaa; }
+        .info-value.rarity-uncommon { color: #c0c0c0; }
+        .info-value.rarity-rare { color: #ffd700; }
+        .info-value.rarity-mythic { color: #ff6b6b; }
+
+        /* Oracle Text */
+        .oracle-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .oracle-section h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        .oracle-text {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #ddd;
+            white-space: pre-wrap;
+        }
+
+        .oracle-text i {
+            color: #4ecdc4;
+            font-style: italic;
+        }
+
+        /* Power/Toughness */
+        .pt-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        /* Loyalty */
+        .loyalty-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Format Legality */
+        .formats-section {
+            margin-top: 30px;
+        }
+
+        .formats-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .formats-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .format-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .format-badge.legal {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        .format-badge.not-legal {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+
+        /* Sections */
+        .section {
+            margin-top: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: #fff;
+        }
+
+        .section-link {
+            color: #4ecdc4;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .section-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Other Versions Grid */
+        .versions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .version-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .version-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(233, 69, 96, 0.5);
+        }
+
+        .version-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .version-info {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .version-set {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        /* Related Cards Grid */
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .related-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .related-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(78, 205, 196, 0.5);
+        }
+
+        .related-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .related-info {
+            padding: 10px;
+        }
+
+        .related-name {
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Decks Using */
+        .decks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .deck-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .deck-item:hover {
+            border-color: rgba(233, 69, 96, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .deck-commander-img {
+            width: 50px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .deck-info h4 {
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .deck-meta {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .deck-owner {
+            color: #4ecdc4;
+        }
+
+        /* External Links */
+        .external-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .external-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .external-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* Modal for zoom */
+        .zoom-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+
+        .zoom-modal.active {
+            display: flex;
+        }
+
+        .zoom-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .card-name {
+                font-size: 1.6rem;
+            }
+
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="{% url 'card_catalog' %}" class="back-link">
+                &larr; Voltar ao Catalogo
+            </a>
+            <nav class="nav-links">
+                <a href="{% url 'card_random' %}">Aleatorio</a>
+                <a href="/decks/">Decks</a>
+                <a href="/lobby/">Lobby</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Card Hero -->
+        <div class="card-hero">
+            <!-- Card Image -->
+            <div class="card-image-section">
+                <div class="card-image-wrapper" onclick="openZoom()">
+                    {% if card.image_large or card.image_normal %}
+                    <img src="{{ card.image_large|default:card.image_normal }}" alt="{{ card.name }}" class="card-image">
+                    {% else %}
+                    <div class="no-image">Sem imagem disponivel</div>
+                    {% endif %}
+                    <span class="zoom-hint">Clique para ampliar</span>
+                </div>
+            </div>
+
+            <!-- Card Details -->
+            <div class="card-details">
+                <div class="card-title-section">
+                    <h1 class="card-name">{{ card.name }}</h1>
+
+                    {% if card.mana_cost %}
+                    <div class="card-mana-cost">
+                        {{ card.mana_cost }}
+                    </div>
+                    {% endif %}
+
+                    <div class="card-type-line">{{ card.type_line }}</div>
+                </div>
+
+                <!-- Info Grid -->
+                <div class="info-grid">
+                    <div class="info-box">
+                        <div class="info-label">Raridade</div>
+                        <div class="info-value rarity-{{ card.rarity }}">{{ card.rarity|title }}</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">Set</div>
+                        <div class="info-value">{{ card.set_name }}</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">CMC</div>
+                        <div class="info-value">{{ card.cmc|floatformat:0 }}</div>
+                    </div>
+                    {% if card.colors %}
+                    <div class="info-box">
+                        <div class="info-label">Cores</div>
+                        <div class="info-value">{{ card.get_colors_display }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Oracle Text -->
+                {% if card.oracle_text %}
+                <div class="oracle-section">
+                    <h3>Texto do Oracle</h3>
+                    <div class="oracle-text">{{ card.oracle_text }}</div>
+                </div>
+                {% endif %}
+
+                <!-- Power/Toughness or Loyalty -->
+                {% if card.power and card.toughness %}
+                <div>
+                    <span class="pt-box">{{ card.power }} / {{ card.toughness }}</span>
+                </div>
+                {% endif %}
+
+                {% if card.loyalty %}
+                <div>
+                    <span class="loyalty-box">Lealdade: {{ card.loyalty }}</span>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="action-btn primary" onclick="copyCardName()">
+                        Copiar Nome
+                    </button>
+                    <a href="{% url 'card_catalog' %}?q={{ card.name|urlencode }}" class="action-btn secondary">
+                        Buscar Versoes
+                    </a>
+                </div>
+
+                <!-- Format Legality -->
+                <div class="formats-section">
+                    <h3>Legalidade nos Formatos</h3>
+                    <div class="formats-grid">
+                        {% for format, legal in formats_legal.items %}
+                        <span class="format-badge {% if legal %}legal{% else %}not-legal{% endif %}">
+                            {{ format }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- External Links -->
+                <div class="external-links">
+                    <a href="https://scryfall.com/search?q={{ card.name|urlencode }}" target="_blank" class="external-link">
+                        Scryfall
+                    </a>
+                    <a href="https://edhrec.com/cards/{{ card.name|slugify }}" target="_blank" class="external-link">
+                        EDHREC
+                    </a>
+                    <a href="https://gatherer.wizards.com/Pages/Search/Default.aspx?name=+[{{ card.name|urlencode }}]" target="_blank" class="external-link">
+                        Gatherer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Versions -->
+        {% if other_versions %}
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Outras Versoes ({{ other_versions|length }})</h2>
+            </div>
+            <div class="versions-grid">
+                {% for version in other_versions %}
+                <a href="{% url 'card_detail' card_id=version.id %}" class="version-card">
+                    {% if version.image_small %}
+                    <img src="{{ version.image_small }}" alt="{{ version.name }}" loading="lazy">
+                    {% endif %}
+                    <div class="version-info">
+                        <span class="version-set">{{ version.set_name }} ({{ version.set_code|upper }})</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Decks Using This Card -->
+        {% if decks_using %}
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Decks com esta Carta</h2>
+                <a href="/decks/" class="section-link">Ver todos os decks</a>
+            </div>
+            <div class="decks-list">
+                {% for dc in decks_using %}
+                <a href="/decks/{{ dc.deck.id }}/" class="deck-item">
+                    {% if dc.deck.commander.image_small %}
+                    <img src="{{ dc.deck.commander.image_small }}" alt="{{ dc.deck.commander.name }}" class="deck-commander-img">
+                    {% endif %}
+                    <div class="deck-info">
+                        <h4>{{ dc.deck.name }}</h4>
+                        <div class="deck-meta">
+                            <span>{{ dc.deck.commander.name }}</span>
+                            <span class="deck-owner">por {{ dc.deck.owner.nickname }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Related Cards -->
+        {% if related_cards %}
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Cards Relacionados</h2>
+            </div>
+            <div class="related-grid">
+                {% for related in related_cards %}
+                <a href="{% url 'card_detail' card_id=related.id %}" class="related-card">
+                    {% if related.image_small %}
+                    <img src="{{ related.image_small }}" alt="{{ related.name }}" loading="lazy">
+                    {% else %}
+                    <div class="no-image" style="height: 200px;">Sem imagem</div>
+                    {% endif %}
+                    <div class="related-info">
+                        <div class="related-name" title="{{ related.name }}">{{ related.name }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </main>
+
+    <!-- Zoom Modal -->
+    <div class="zoom-modal" id="zoomModal" onclick="closeZoom()">
+        {% if card.image_large or card.image_normal %}
+        <img src="{{ card.image_large|default:card.image_normal }}" alt="{{ card.name }}">
+        {% endif %}
+    </div>
+
+    <script>
+        function openZoom() {
+            document.getElementById('zoomModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeZoom() {
+            document.getElementById('zoomModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeZoom();
+        });
+
+        function copyCardName() {
+            navigator.clipboard.writeText('{{ card.name }}').then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copiado!';
+                setTimeout(() => btn.textContent = originalText, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

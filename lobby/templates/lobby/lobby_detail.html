@@ -4,286 +4,696 @@
 
 {% block extra_css %}
 <style>
-    .container { max-width: 900px; }
+    .container { max-width: 1100px; }
+
+    /* Back Link */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        color: #888;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .back-link:hover { color: #fff; }
+
+    /* Lobby Header */
     .lobby-header {
         text-align: center;
         margin-bottom: 30px;
-    }
-    .lobby-header h1 { margin-bottom: 10px; }
-    .lobby-header .status {
-        display: inline-block;
-        padding: 8px 20px;
+        padding: 30px;
+        background: linear-gradient(135deg, rgba(233, 69, 96, 0.1), rgba(78, 205, 196, 0.1));
         border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .lobby-header h1 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: #fff;
+    }
+
+    .status-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 25px;
+        border-radius: 25px;
         background: rgba(78, 205, 196, 0.2);
         color: #4ecdc4;
-        font-size: 1rem;
+        font-size: 1.1rem;
+        font-weight: 500;
     }
-    .lobby-header .status.can-start {
-        background: rgba(39, 174, 96, 0.3);
+
+    .status-badge.can-start {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(39, 174, 96, 0.3));
         color: #2ecc71;
-        animation: pulse 1.5s infinite;
+        animation: pulse-glow 2s infinite;
     }
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.02); }
+
+    @keyframes pulse-glow {
+        0%, 100% {
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
+            transform: scale(1);
+        }
+        50% {
+            box-shadow: 0 0 40px rgba(46, 204, 113, 0.5);
+            transform: scale(1.02);
+        }
     }
+
     .connection-badge {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        margin-top: 10px;
-        padding: 5px 12px;
-        border-radius: 15px;
-        background: rgba(0,0,0,0.3);
+        gap: 8px;
+        padding: 8px 15px;
+        border-radius: 20px;
+        background: rgba(0, 0, 0, 0.3);
         font-size: 0.85rem;
     }
+
     .connection-dot {
-        width: 8px;
-        height: 8px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
         background: #e74c3c;
+        transition: background 0.3s;
     }
-    .connection-dot.connected { background: #2ecc71; }
+
+    .connection-dot.connected {
+        background: #2ecc71;
+        box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+    }
+
+    /* Ready Progress */
+    .ready-progress {
+        margin-top: 20px;
+    }
+
+    .progress-bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4ecdc4, #2ecc71);
+        border-radius: 4px;
+        transition: width 0.5s ease-out;
+    }
+
+    .progress-text {
+        font-size: 0.9rem;
+        color: #888;
+    }
+
+    .progress-text span {
+        color: #4ecdc4;
+        font-weight: bold;
+    }
+
+    /* Players Grid */
+    .players-section {
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 
     .players-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 15px;
-        margin-bottom: 30px;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
     }
+
+    /* Player Card */
     .player-card {
+        position: relative;
         background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-        border: 2px solid transparent;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.1);
         transition: all 0.3s;
     }
+
+    .player-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
     .player-card.ready {
         border-color: #4ecdc4;
         background: rgba(78, 205, 196, 0.1);
     }
+
+    .player-card.ready::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), transparent);
+        pointer-events: none;
+    }
+
     .player-card.is-me {
         border-color: #e94560;
     }
+
+    .player-card.is-me::before {
+        content: "VOCE";
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(233, 69, 96, 0.3);
+        color: #e94560;
+        padding: 3px 10px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        z-index: 2;
+    }
+
     .player-card.empty {
         opacity: 0.4;
         border-style: dashed;
         border-color: #333;
     }
+
+    /* Commander Background */
+    .commander-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 120px;
+        background-size: cover;
+        background-position: center top;
+        opacity: 0.4;
+    }
+
+    .commander-bg-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 120px;
+        background: linear-gradient(to bottom, transparent, rgba(26, 26, 46, 1));
+    }
+
+    .player-card-content {
+        position: relative;
+        padding: 80px 20px 20px;
+        text-align: center;
+    }
+
     .player-avatar {
-        width: 60px;
-        height: 60px;
+        width: 70px;
+        height: 70px;
         border-radius: 50%;
-        margin: 0 auto 10px;
+        margin: 0 auto 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         font-weight: bold;
         color: white;
+        border: 3px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        z-index: 1;
     }
-    .player-card h3 {
-        margin-bottom: 5px;
-        font-size: 1.1rem;
+
+    .player-card.ready .player-avatar {
+        border-color: #4ecdc4;
+        box-shadow: 0 0 20px rgba(78, 205, 196, 0.4);
     }
-    .player-card .deck-info {
-        color: #e94560;
-        font-size: 0.85rem;
+
+    .player-name {
+        font-size: 1.15rem;
+        font-weight: 600;
         margin-bottom: 8px;
-        min-height: 20px;
+        color: #fff;
     }
-    .player-card .deck-info.none {
+
+    .deck-info {
+        color: #e94560;
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+        min-height: 22px;
+    }
+
+    .deck-info.none {
         color: #666;
         font-style: italic;
     }
-    .ready-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 10px;
-        font-size: 0.8rem;
+
+    /* Commander Thumbnail */
+    .commander-thumb {
+        width: 60px;
+        height: 85px;
+        border-radius: 8px;
+        margin: 0 auto 12px;
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        display: block;
     }
+
+    .player-card.ready .commander-thumb {
+        border-color: #4ecdc4;
+    }
+
+    /* Ready Badge */
+    .ready-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 15px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
     .ready-badge.ready {
         background: rgba(78, 205, 196, 0.2);
         color: #4ecdc4;
     }
+
+    .ready-badge.ready::before {
+        content: "✓";
+    }
+
     .ready-badge.waiting {
         background: rgba(255, 255, 255, 0.1);
         color: #888;
     }
 
+    .ready-badge.waiting::before {
+        content: "○";
+    }
+
+    /* Empty Slot */
+    .player-card.empty .player-card-content {
+        padding-top: 40px;
+    }
+
+    .player-card.empty .player-avatar {
+        background: #333;
+        border-style: dashed;
+    }
+
+    /* Controls Grid */
     .controls-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
         margin-bottom: 30px;
     }
-    @media (max-width: 700px) {
-        .controls-grid { grid-template-columns: 1fr; }
+
+    @media (max-width: 768px) {
+        .controls-grid {
+            grid-template-columns: 1fr;
+        }
     }
+
     .control-panel {
         background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 20px;
+        border-radius: 16px;
+        padding: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
+
     .control-panel h3 {
-        margin-bottom: 15px;
+        margin-bottom: 20px;
         color: #aaa;
         font-size: 0.9rem;
         text-transform: uppercase;
         letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
-    .control-panel select {
+
+    /* Deck Selector */
+    .deck-selector {
+        margin-bottom: 20px;
+    }
+
+    .deck-selector label {
+        display: block;
+        font-size: 0.85rem;
+        color: #888;
+        margin-bottom: 8px;
+    }
+
+    .deck-selector select {
         width: 100%;
-        padding: 12px 15px;
+        padding: 14px 18px;
         border: 2px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
+        border-radius: 10px;
         background: rgba(0, 0, 0, 0.3);
         color: #fff;
         font-size: 1rem;
-        margin-bottom: 15px;
+        transition: border-color 0.2s;
     }
-    .control-panel select:disabled {
+
+    .deck-selector select:focus {
+        outline: none;
+        border-color: #e94560;
+    }
+
+    .deck-selector select:disabled {
         opacity: 0.5;
     }
+
+    /* Action Buttons */
     .btn-row {
         display: flex;
-        gap: 10px;
+        gap: 12px;
     }
-    .btn-row .btn { flex: 1; }
+
+    .btn-row .btn {
+        flex: 1;
+        padding: 14px 20px;
+        font-size: 1rem;
+    }
 
     .btn-ready {
         background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+        position: relative;
+        overflow: hidden;
     }
+
+    .btn-ready::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        100% { left: 100%; }
+    }
+
     .btn-unready {
-        background: rgba(255, 193, 7, 0.3);
-        border: 1px solid #ffc107;
+        background: rgba(255, 193, 7, 0.2);
+        border: 2px solid #ffc107;
         color: #ffc107;
     }
+
     .btn-leave {
         background: rgba(233, 69, 96, 0.2);
-        border: 1px solid #e94560;
+        border: 2px solid #e94560;
+        color: #e94560;
     }
-    .btn-start {
-        background: linear-gradient(135deg, #2ecc71, #27ae60);
-        padding: 15px 40px;
-        font-size: 1.1rem;
-    }
+
     .btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
     }
 
+    .btn:disabled::after {
+        display: none;
+    }
+
+    /* Chat Panel */
     .chat-messages {
-        height: 120px;
+        height: 180px;
         overflow-y: auto;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        scroll-behavior: smooth;
     }
+
     .chat-message {
-        font-size: 0.85rem;
-        padding: 3px 0;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        font-size: 0.9rem;
     }
-    .chat-message .sender { color: #4ecdc4; font-weight: 500; }
+
+    .chat-message:last-child {
+        margin-bottom: 0;
+    }
+
+    .chat-message .sender {
+        color: #4ecdc4;
+        font-weight: 600;
+        margin-right: 8px;
+    }
+
+    .chat-message .time {
+        color: #555;
+        font-size: 0.75rem;
+        float: right;
+    }
+
+    .chat-message .text {
+        color: #ddd;
+    }
+
+    .chat-empty {
+        color: #555;
+        text-align: center;
+        padding: 30px;
+        font-style: italic;
+    }
+
     .chat-input-row {
         display: flex;
-        gap: 8px;
+        gap: 10px;
     }
+
     .chat-input-row input {
         flex: 1;
-        padding: 10px 12px;
-        border: none;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.1);
+        padding: 12px 15px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.3);
         color: white;
-    }
-    .chat-input-row button {
-        padding: 10px 15px;
+        font-size: 0.95rem;
     }
 
+    .chat-input-row input:focus {
+        outline: none;
+        border-color: #4ecdc4;
+    }
+
+    .chat-input-row button {
+        padding: 12px 20px;
+    }
+
+    /* Start Section */
     .start-section {
         text-align: center;
-        padding: 20px;
-    }
-    .start-section .waiting-msg {
-        color: #888;
-        font-size: 1rem;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .back-link {
-        display: inline-block;
-        margin-bottom: 20px;
+    .waiting-msg {
         color: #888;
-        text-decoration: none;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
     }
-    .back-link:hover { color: #fff; }
+
+    .waiting-msg::before {
+        content: "";
+        width: 20px;
+        height: 20px;
+        border: 2px solid #888;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+
+    .btn-start {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        padding: 18px 50px;
+        font-size: 1.2rem;
+        border-radius: 12px;
+        animation: pulse-glow 2s infinite;
+    }
+
+    /* Ready Animation */
+    .ready-animation {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3rem;
+        color: #4ecdc4;
+        text-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+        animation: ready-pop 0.5s ease-out;
+        pointer-events: none;
+        z-index: 1000;
+        display: none;
+    }
+
+    @keyframes ready-pop {
+        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .lobby-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .players-grid {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .player-card-content {
+            padding: 60px 15px 15px;
+        }
+
+        .player-avatar {
+            width: 55px;
+            height: 55px;
+            font-size: 1.4rem;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <a href="/lobby/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="back-link">&larr; Voltar ao Lobby</a>
 
+<!-- Ready Animation Overlay -->
+<div class="ready-animation" id="readyAnimation">PRONTO!</div>
+
+<!-- Lobby Header -->
 <div class="lobby-header">
     <h1>{{ lobby.name }}</h1>
-    <div class="status" id="statusBadge">
-        <span id="playerCount">{{ players|length }}</span>/{{ lobby.max_players }} jogadores
+    <div class="status-row">
+        <div class="status-badge" id="statusBadge">
+            <span id="playerCount">{{ players|length }}</span>/{{ lobby.max_players }} jogadores
+        </div>
+        <div class="connection-badge">
+            <div class="connection-dot" id="wsStatus"></div>
+            <span id="wsText">Conectando...</span>
+        </div>
     </div>
-    <div class="connection-badge">
-        <div class="connection-dot" id="wsStatus"></div>
-        <span id="wsText">Conectando...</span>
+
+    <!-- Ready Progress -->
+    <div class="ready-progress">
+        <div class="progress-bar">
+            <div class="progress-fill" id="readyProgress" style="width: 0%"></div>
+        </div>
+        <div class="progress-text">
+            <span id="readyCount">0</span> de <span id="totalPlayers">{{ players|length }}</span> jogadores prontos
+        </div>
     </div>
 </div>
 
-<div class="players-grid" id="playersGrid">
-    {% for lp in players %}
-    <div class="player-card {% if lp.is_ready %}ready{% endif %} {% if lp.player.id == player.id %}is-me{% endif %}"
-         data-player-id="{{ lp.player.id }}">
-        <div class="player-avatar" style="background-color: {{ lp.player.avatar_color|default:'#e94560' }}">
-            {{ lp.player.nickname|slice:":1"|upper }}
-        </div>
-        <h3>{{ lp.player.nickname }}</h3>
-        <div class="deck-info {% if not lp.deck %}none{% endif %}">
-            {% if lp.deck and lp.deck.commander %}
-                {{ lp.deck.commander.name }}
-            {% else %}
-                Sem deck
+<!-- Players Section -->
+<div class="players-section">
+    <div class="section-title">Jogadores na Sala</div>
+    <div class="players-grid" id="playersGrid">
+        {% for lp in players %}
+        <div class="player-card {% if lp.is_ready %}ready{% endif %} {% if lp.player.id == player.id %}is-me{% endif %}"
+             data-player-id="{{ lp.player.id }}">
+            {% if lp.deck and lp.deck.commander.image_large %}
+            <div class="commander-bg" style="background-image: url('{{ lp.deck.commander.image_large }}')"></div>
+            <div class="commander-bg-overlay"></div>
             {% endif %}
+            <div class="player-card-content">
+                <div class="player-avatar" style="background-color: {{ lp.player.avatar_color|default:'#e94560' }}">
+                    {{ lp.player.nickname|slice:":1"|upper }}
+                </div>
+                <div class="player-name">{{ lp.player.nickname }}</div>
+                {% if lp.deck and lp.deck.commander.image_small %}
+                <img src="{{ lp.deck.commander.image_small }}" alt="{{ lp.deck.commander.name }}" class="commander-thumb">
+                {% endif %}
+                <div class="deck-info {% if not lp.deck %}none{% endif %}">
+                    {% if lp.deck and lp.deck.commander %}
+                        {{ lp.deck.commander.name }}
+                    {% else %}
+                        Sem deck selecionado
+                    {% endif %}
+                </div>
+                <span class="ready-badge {% if lp.is_ready %}ready{% else %}waiting{% endif %}">
+                    {% if lp.is_ready %}Pronto!{% else %}Aguardando{% endif %}
+                </span>
+            </div>
         </div>
-        <span class="ready-badge {% if lp.is_ready %}ready{% else %}waiting{% endif %}">
-            {% if lp.is_ready %}Pronto!{% else %}Aguardando{% endif %}
-        </span>
-    </div>
-    {% endfor %}
+        {% endfor %}
 
-    {% for i in "123456"|make_list %}
-        {% if forloop.counter > players|length and forloop.counter <= lobby.max_players %}
-        <div class="player-card empty">
-            <div class="player-avatar" style="background-color: #333;">?</div>
-            <h3>Aguardando...</h3>
-        </div>
-        {% endif %}
-    {% endfor %}
+        {% for i in "123456"|make_list %}
+            {% if forloop.counter > players|length and forloop.counter <= lobby.max_players %}
+            <div class="player-card empty">
+                <div class="player-card-content">
+                    <div class="player-avatar" style="background-color: #333;">?</div>
+                    <div class="player-name" style="color: #555;">Aguardando jogador...</div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
 </div>
 
+<!-- Controls -->
 <div class="controls-grid">
     <div class="control-panel">
         <h3>Seus Controles</h3>
 
-        <form method="post" id="deckForm">
-            {% csrf_token %}
-            {% if tab_id %}<input type="hidden" name="tab_id" value="{{ tab_id }}">{% endif %}
-            <input type="hidden" name="action" value="select_deck">
-            <select name="deck_id" id="deckSelect" onchange="selectDeck(this.value)">
-                <option value="">-- Selecione um deck --</option>
-                {% for deck in player_decks %}
-                <option value="{{ deck.id }}" {% if lobby_player.deck and deck.id == lobby_player.deck.id %}selected{% endif %}>
-                    {{ deck.name }} - {{ deck.commander.name }} ({{ deck.owner.nickname }})
-                </option>
-                {% endfor %}
-            </select>
-        </form>
+        <div class="deck-selector">
+            <form method="post" id="deckForm">
+                {% csrf_token %}
+                {% if tab_id %}<input type="hidden" name="tab_id" value="{{ tab_id }}">{% endif %}
+                <input type="hidden" name="action" value="select_deck">
+                <label>Selecione seu Deck</label>
+                <select name="deck_id" id="deckSelect" onchange="selectDeck(this.value)">
+                    <option value="">-- Escolha um deck --</option>
+                    {% for deck in player_decks %}
+                    <option value="{{ deck.id }}"
+                            data-commander-img="{{ deck.commander.image_small }}"
+                            {% if lobby_player.deck and deck.id == lobby_player.deck.id %}selected{% endif %}>
+                        {{ deck.name }} - {{ deck.commander.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
 
         <div class="btn-row">
             <form method="post" id="readyForm" style="flex:1;">
@@ -307,16 +717,19 @@
     </div>
 
     <div class="control-panel">
-        <h3>Chat</h3>
-        <div class="chat-messages" id="chatBox"></div>
+        <h3>Chat da Sala</h3>
+        <div class="chat-messages" id="chatBox">
+            <div class="chat-empty">Nenhuma mensagem ainda...</div>
+        </div>
         <div class="chat-input-row">
-            <input type="text" id="chatInput" placeholder="Mensagem..."
+            <input type="text" id="chatInput" placeholder="Digite sua mensagem..."
                    onkeypress="if(event.key==='Enter')sendChat()">
             <button class="btn btn-ready" onclick="sendChat()">Enviar</button>
         </div>
     </div>
 </div>
 
+<!-- Start Section -->
 <div class="start-section" id="startSection">
     {% if lobby.can_start %}
     <form method="post" id="startForm">
@@ -344,6 +757,7 @@ const tabId = '{{ tab_id|default:"" }}';
 let ws = null;
 let wsConnected = false;
 let currentState = null;
+let previousReadyCount = 0;
 
 // Estado inicial do servidor
 let isReady = {{ lobby_player.is_ready|yesno:"true,false" }};
@@ -351,7 +765,6 @@ let hasDeck = {{ lobby_player.deck|yesno:"true,false" }};
 
 function connectWS() {
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // Pass tab_id and player_id through query string for correct identification
     const params = new URLSearchParams();
     if (tabId) params.set('tab', tabId);
     params.set('player_id', myPlayerId);
@@ -395,10 +808,7 @@ function handleMessage(data) {
 }
 
 function updateUI(state) {
-    console.log('[updateUI] Called with state:', state);
-    console.log('[updateUI] My player ID:', myPlayerId);
-
-    // Atualizar status badge (inclui contador de jogadores)
+    // Update status badge
     const badge = document.getElementById('statusBadge');
     if (state.can_start) {
         badge.classList.add('can-start');
@@ -408,54 +818,75 @@ function updateUI(state) {
         badge.innerHTML = `<span id="playerCount">${state.players.length}</span>/${maxPlayers} jogadores`;
     }
 
-    // Atualizar grid de jogadores
+    // Count ready players
+    const readyCount = state.players.filter(p => p.is_ready).length;
+    const totalPlayers = state.players.length;
+
+    // Update progress bar
+    const progressPercent = totalPlayers > 0 ? (readyCount / totalPlayers) * 100 : 0;
+    document.getElementById('readyProgress').style.width = progressPercent + '%';
+    document.getElementById('readyCount').textContent = readyCount;
+    document.getElementById('totalPlayers').textContent = totalPlayers;
+
+    // Show animation if someone just got ready
+    if (readyCount > previousReadyCount && previousReadyCount > 0) {
+        showReadyAnimation();
+    }
+    previousReadyCount = readyCount;
+
+    // Update players grid
     const grid = document.getElementById('playersGrid');
     let html = '';
 
     for (const p of state.players) {
         const isMe = p.id === myPlayerId;
-        console.log(`[updateUI] Player ${p.nickname}: p.id="${p.id}" myPlayerId="${myPlayerId}" isMe=${isMe}`);
         const readyClass = p.is_ready ? 'ready' : '';
         const meClass = isMe ? 'is-me' : '';
 
         if (isMe) {
-            console.log('[updateUI] Found myself! p.is_ready:', p.is_ready, 'p.commander_name:', p.commander_name);
             isReady = p.is_ready;
             hasDeck = !!p.commander_name;
         }
 
+        const commanderImg = p.commander_image || '';
+        const commanderLarge = p.commander_image_large || commanderImg;
+
         html += `
             <div class="player-card ${readyClass} ${meClass}" data-player-id="${p.id}">
-                <div class="player-avatar" style="background-color: ${p.avatar_color || '#e94560'}">
-                    ${p.nickname.charAt(0).toUpperCase()}
+                ${commanderLarge ? `<div class="commander-bg" style="background-image: url('${commanderLarge}')"></div><div class="commander-bg-overlay"></div>` : ''}
+                <div class="player-card-content">
+                    <div class="player-avatar" style="background-color: ${p.avatar_color || '#e94560'}">
+                        ${p.nickname.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="player-name">${p.nickname}</div>
+                    ${commanderImg ? `<img src="${commanderImg}" alt="${p.commander_name}" class="commander-thumb">` : ''}
+                    <div class="deck-info ${p.commander_name ? '' : 'none'}">
+                        ${p.commander_name || 'Sem deck selecionado'}
+                    </div>
+                    <span class="ready-badge ${p.is_ready ? 'ready' : 'waiting'}">
+                        ${p.is_ready ? 'Pronto!' : 'Aguardando'}
+                    </span>
                 </div>
-                <h3>${p.nickname}</h3>
-                <div class="deck-info ${p.commander_name ? '' : 'none'}">
-                    ${p.commander_name || 'Sem deck'}
-                </div>
-                <span class="ready-badge ${p.is_ready ? 'ready' : 'waiting'}">
-                    ${p.is_ready ? 'Pronto!' : 'Aguardando'}
-                </span>
             </div>
         `;
     }
 
-    // Slots vazios
+    // Empty slots
     for (let i = state.players.length; i < maxPlayers; i++) {
         html += `
             <div class="player-card empty">
-                <div class="player-avatar" style="background-color: #333;">?</div>
-                <h3>Aguardando...</h3>
+                <div class="player-card-content">
+                    <div class="player-avatar" style="background-color: #333;">?</div>
+                    <div class="player-name" style="color: #555;">Aguardando jogador...</div>
+                </div>
             </div>
         `;
     }
 
     grid.innerHTML = html;
-
-    // Atualizar botão ready
     updateReadyBtn();
 
-    // Atualizar seção de início
+    // Update start section
     const startSection = document.getElementById('startSection');
     if (state.can_start) {
         startSection.innerHTML = `
@@ -473,8 +904,13 @@ function updateUI(state) {
     }
 }
 
+function showReadyAnimation() {
+    const anim = document.getElementById('readyAnimation');
+    anim.style.display = 'block';
+    setTimeout(() => anim.style.display = 'none', 500);
+}
+
 function updateReadyBtn() {
-    console.log('[updateReadyBtn] Called, isReady:', isReady, 'hasDeck:', hasDeck);
     const btn = document.getElementById('readyBtn');
     const select = document.getElementById('deckSelect');
 
@@ -483,18 +919,15 @@ function updateReadyBtn() {
         btn.className = 'btn btn-unready';
         btn.disabled = false;
         select.disabled = true;
-        console.log('[updateReadyBtn] Set button to CANCEL state');
     } else {
         btn.textContent = 'Estou Pronto!';
         btn.className = 'btn btn-ready';
         btn.disabled = !select.value;
         select.disabled = false;
-        console.log('[updateReadyBtn] Set button to READY state, disabled:', !select.value);
     }
 }
 
 function selectDeck(deckId) {
-    console.log('[selectDeck] Called with deckId:', deckId);
     if (!deckId) {
         hasDeck = false;
         updateReadyBtn();
@@ -504,16 +937,12 @@ function selectDeck(deckId) {
     hasDeck = true;
 
     if (wsConnected) {
-        const msg = {
+        ws.send(JSON.stringify({
             action: 'select_deck',
             player_id: myPlayerId,
             deck_id: deckId
-        };
-        console.log('[selectDeck] Sending:', msg);
-        ws.send(JSON.stringify(msg));
+        }));
     } else {
-        // Fallback POST
-        console.log('[selectDeck] Falling back to form submit');
         document.getElementById('deckForm').submit();
     }
 
@@ -521,19 +950,15 @@ function selectDeck(deckId) {
 }
 
 function toggleReady(event) {
-    console.log('[toggleReady] Called, wsConnected:', wsConnected, 'myPlayerId:', myPlayerId);
     if (wsConnected) {
         event.preventDefault();
-        const msg = {
+        ws.send(JSON.stringify({
             action: 'toggle_ready',
             player_id: myPlayerId
-        };
-        console.log('[toggleReady] Sending:', msg);
-        ws.send(JSON.stringify(msg));
+        }));
         return false;
     }
-    console.log('[toggleReady] Falling back to form submit');
-    return true; // Allow form submit as fallback
+    return true;
 }
 
 function startGame(event) {
@@ -551,7 +976,6 @@ function sendChat() {
     if (!msg) return;
 
     if (wsConnected) {
-        console.log('[sendChat] Sending as:', myNickname);
         ws.send(JSON.stringify({
             action: 'chat',
             message: msg,
@@ -563,32 +987,30 @@ function sendChat() {
 
 function addChatMsg(sender, message) {
     const box = document.getElementById('chatBox');
+
+    // Remove empty message
+    const empty = box.querySelector('.chat-empty');
+    if (empty) empty.remove();
+
+    const now = new Date();
+    const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
     const div = document.createElement('div');
     div.className = 'chat-message';
-    div.innerHTML = `<span class="sender">${sender}:</span> ${message}`;
+    div.innerHTML = `
+        <span class="time">${time}</span>
+        <span class="sender">${sender}:</span>
+        <span class="text">${message}</span>
+    `;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
 
-// Debug: Log initial values
-console.log('=== LOBBY INIT ===');
-console.log('myPlayerId:', myPlayerId);
-console.log('myNickname:', myNickname);
-console.log('tabId:', tabId);
-console.log('lobbyId:', lobbyId);
-console.log('isReady:', isReady);
-console.log('hasDeck:', hasDeck);
-console.log('URL:', window.location.href);
-console.log('==================');
-
-// ALERTA: Se tab_id está faltando, a identificação do jogador pode estar errada!
-if (!tabId) {
-    console.error('AVISO: tab_id está faltando na URL! A identificação do jogador pode estar incorreta.');
-    console.error('Você deveria ter acessado esta página com ?tab=XXX na URL.');
-}
-
-// Inicializar
+// Initialize
 connectWS();
 updateReadyBtn();
+
+// Initial ready count
+previousReadyCount = {{ players|length }};
 </script>
 {% endblock %}

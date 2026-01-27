@@ -239,13 +239,83 @@ class DeckDetailView(View):
         deck = get_object_or_404(Deck, id=deck_id)
         deck_cards = deck.cards.select_related('card').order_by('card__name')
 
+        # Agrupar cartas por tipo
+        cards_by_type = {
+            'Creatures': [],
+            'Instants': [],
+            'Sorceries': [],
+            'Enchantments': [],
+            'Artifacts': [],
+            'Planeswalkers': [],
+            'Lands': [],
+            'Other': []
+        }
+
+        # Dados para curva de mana
+        mana_curve = {i: 0 for i in range(8)}  # 0-6 e 7+
+
+        # Distribuicao de cores
+        color_distribution = {'W': 0, 'U': 0, 'B': 0, 'R': 0, 'G': 0, 'C': 0}
+
+        for dc in deck_cards:
+            card = dc.card
+            qty = dc.quantity
+            type_line = card.type_line.lower() if card.type_line else ''
+
+            # Agrupar por tipo
+            if 'creature' in type_line:
+                cards_by_type['Creatures'].append(dc)
+            elif 'instant' in type_line:
+                cards_by_type['Instants'].append(dc)
+            elif 'sorcery' in type_line:
+                cards_by_type['Sorceries'].append(dc)
+            elif 'enchantment' in type_line:
+                cards_by_type['Enchantments'].append(dc)
+            elif 'artifact' in type_line:
+                cards_by_type['Artifacts'].append(dc)
+            elif 'planeswalker' in type_line:
+                cards_by_type['Planeswalkers'].append(dc)
+            elif 'land' in type_line:
+                cards_by_type['Lands'].append(dc)
+            else:
+                cards_by_type['Other'].append(dc)
+
+            # Curva de mana (excluir lands)
+            if 'land' not in type_line:
+                cmc = int(card.cmc) if card.cmc else 0
+                if cmc >= 7:
+                    mana_curve[7] += qty
+                else:
+                    mana_curve[cmc] += qty
+
+            # Distribuicao de cores
+            if card.colors:
+                for color in card.colors.split(','):
+                    color = color.strip().upper()
+                    if color in color_distribution:
+                        color_distribution[color] += qty
+            else:
+                color_distribution['C'] += qty
+
+        # Remover categorias vazias
+        cards_by_type = {k: v for k, v in cards_by_type.items() if v}
+
+        # Calcular max para escala do grafico
+        max_mana_curve = max(mana_curve.values()) if mana_curve.values() else 1
+        total_colored = sum(color_distribution.values()) or 1
+
         return render(request, 'decks/deck_detail.html', {
             'deck': deck,
             'deck_cards': deck_cards,
             'player': player,
             'is_owner': deck.owner_id == player.id,
             'card_count': deck.card_count(),
-            'tab_id': tab_id
+            'tab_id': tab_id,
+            'cards_by_type': cards_by_type,
+            'mana_curve': mana_curve,
+            'max_mana_curve': max_mana_curve,
+            'color_distribution': color_distribution,
+            'total_colored': total_colored,
         })
 
     def post(self, request, deck_id):

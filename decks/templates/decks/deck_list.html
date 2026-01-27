@@ -4,126 +4,26 @@
 
 {% block extra_css %}
 <style>
-    .container { max-width: 1100px; }
+    .container { max-width: 1200px; }
+
     .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 30px;
-    }
-    .deck-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        flex-wrap: wrap;
         gap: 20px;
     }
-    .deck-card {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        transition: transform 0.2s, border-color 0.2s;
-        position: relative;
-    }
-    .deck-card:hover {
-        transform: translateY(-3px);
-        border-color: #e94560;
-    }
-    .deck-card.mine {
-        border-color: rgba(78, 205, 196, 0.3);
-    }
-    .deck-card.mine:hover {
-        border-color: #4ecdc4;
-    }
-    .deck-card h3 {
-        margin-bottom: 10px;
-        color: #fff;
-    }
-    .deck-card .commander {
-        color: #e94560;
-        font-size: 0.9rem;
+
+    .header-left h1 {
         margin-bottom: 5px;
     }
-    .deck-card .meta {
-        color: #888;
-        font-size: 0.85rem;
-    }
-    .deck-card .owner {
-        color: #4ecdc4;
-        font-size: 0.8rem;
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .deck-card .owner-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(78, 205, 196, 0.2);
-        color: #4ecdc4;
-        padding: 3px 8px;
-        border-radius: 10px;
-        font-size: 0.7rem;
-        font-weight: bold;
-    }
-    .deck-card .colors {
-        margin-top: 10px;
-        display: flex;
-        gap: 5px;
-    }
-    .mana-symbol {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 0.8rem;
-    }
-    .mana-W { background: #f9faf4; color: #333; }
-    .mana-U { background: #0e68ab; color: white; }
-    .mana-B { background: #150b00; color: #ccc; border: 1px solid #333; }
-    .mana-R { background: #d3202a; color: white; }
-    .mana-G { background: #00733e; color: white; }
-    .deck-card a {
-        color: inherit;
-        text-decoration: none;
-    }
-    .section-title {
-        margin: 30px 0 20px 0;
-        padding-bottom: 10px;
-        border-bottom: 2px solid rgba(255,255,255,0.1);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .section-title h2 {
-        margin: 0;
-        font-size: 1.3rem;
-    }
-    .section-title .count {
-        background: rgba(255,255,255,0.1);
-        padding: 3px 10px;
-        border-radius: 15px;
-        font-size: 0.85rem;
-        color: #888;
-    }
-    .section-title.mine h2 { color: #4ecdc4; }
-    .section-title.community h2 { color: #e94560; }
-    .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-        color: #888;
-        background: rgba(255,255,255,0.03);
-        border-radius: 12px;
-    }
-    .empty-state p {
-        margin-bottom: 20px;
-    }
+
     .nav-links {
         display: flex;
         gap: 10px;
     }
+
     .nav-links a {
         padding: 10px 20px;
         background: rgba(255, 255, 255, 0.1);
@@ -131,65 +31,529 @@
         color: #fff;
         text-decoration: none;
         font-size: 0.9rem;
+        transition: all 0.2s;
     }
+
     .nav-links a:hover {
         background: rgba(255, 255, 255, 0.2);
     }
+
     .nav-links a.primary {
         background: linear-gradient(135deg, #e94560, #ff6b6b);
+    }
+
+    /* Search and Filters */
+    .filters-bar {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .filters-row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-group label {
+        display: block;
+        font-size: 0.8rem;
+        color: #888;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        padding: 10px 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        border-color: #e94560;
+    }
+
+    /* Color Filter */
+    .color-filters {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .color-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .color-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .color-btn.selected {
+        border-color: #fff;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    .color-btn.W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+    .color-btn.U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+    .color-btn.B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #ccc; }
+    .color-btn.R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+    .color-btn.G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+
+    /* Section Title */
+    .section-title {
+        margin: 30px 0 20px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .section-title h2 {
+        margin: 0;
+        font-size: 1.4rem;
+    }
+
+    .section-title .count {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        color: #888;
+    }
+
+    .section-title.mine h2 { color: #4ecdc4; }
+    .section-title.community h2 { color: #e94560; }
+
+    .view-toggle {
+        display: flex;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .view-btn {
+        padding: 8px 14px;
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .view-btn.active {
+        background: rgba(233, 69, 96, 0.3);
+        color: #fff;
+    }
+
+    /* Deck Grid */
+    .deck-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .deck-grid.compact {
+        grid-template-columns: 1fr;
+    }
+
+    /* Deck Card */
+    .deck-card {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        min-height: 200px;
+    }
+
+    .deck-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .deck-card.mine {
+        border-color: rgba(78, 205, 196, 0.3);
+    }
+
+    .deck-card.mine:hover {
+        border-color: #4ecdc4;
+        box-shadow: 0 15px 40px rgba(78, 205, 196, 0.2);
+    }
+
+    .deck-card a {
+        color: inherit;
+        text-decoration: none;
+        display: block;
+        height: 100%;
+    }
+
+    /* Card Background */
+    .deck-card-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-size: cover;
+        background-position: center top;
+        opacity: 0.3;
+        transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .deck-card:hover .deck-card-bg {
+        opacity: 0.4;
+        transform: scale(1.05);
+    }
+
+    .deck-card-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.9) 100%);
+    }
+
+    .deck-card-content {
+        position: relative;
+        padding: 20px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .owner-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(78, 205, 196, 0.3);
+        color: #4ecdc4;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        backdrop-filter: blur(5px);
+    }
+
+    .deck-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+        color: #fff;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .commander-name {
+        color: #e94560;
+        font-size: 1rem;
+        margin-bottom: 5px;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .deck-meta {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    .meta-item {
+        color: #aaa;
+        font-size: 0.85rem;
+    }
+
+    .colors {
+        display: flex;
+        gap: 5px;
+    }
+
+    .mana-symbol {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.8rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    .mana-W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+    .mana-U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+    .mana-B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #ccc; border: 1px solid #444; }
+    .mana-R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+    .mana-G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+    .mana-C { background: linear-gradient(135deg, #666, #888); color: white; }
+
+    .deck-owner {
+        color: #4ecdc4;
+        font-size: 0.85rem;
+        margin-top: 8px;
+    }
+
+    /* Compact View */
+    .deck-grid.compact .deck-card {
+        min-height: auto;
+    }
+
+    .deck-grid.compact .deck-card a {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .deck-grid.compact .deck-card-bg {
+        width: 80px;
+        height: 100%;
+        position: relative;
+        flex-shrink: 0;
+        opacity: 1;
+    }
+
+    .deck-grid.compact .deck-card-overlay {
+        display: none;
+    }
+
+    .deck-grid.compact .deck-card-content {
+        flex: 1;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 20px;
+    }
+
+    .deck-grid.compact .owner-badge {
+        position: static;
+    }
+
+    .deck-grid.compact .deck-meta {
+        margin-top: 0;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #888;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        border: 2px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    .empty-state h3 {
+        color: #aaa;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        margin-bottom: 20px;
+    }
+
+    .empty-state .btn {
+        display: inline-block;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 20px;
+        padding: 15px 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #e94560;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: #888;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 768px) {
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .filters-row {
+            flex-direction: column;
+        }
+
+        .filter-group {
+            width: 100%;
+        }
+
+        .deck-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-bar {
+            flex-wrap: wrap;
+            gap: 20px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="header">
-    <div>
+    <div class="header-left">
         <h1>Decks</h1>
         <p class="subtitle">{{ player.nickname }}</p>
     </div>
     <div class="nav-links">
+        <a href="/cards/">Catalogo</a>
         <a href="{% url 'deck_import' %}" class="primary">+ Importar Deck</a>
         <a href="{% url 'lobby_list' %}">Lobby</a>
         <a href="{% url 'profile' %}">Perfil</a>
     </div>
 </div>
 
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <div class="stat-item">
+        <div class="stat-value">{{ my_decks|length }}</div>
+        <div class="stat-label">Meus Decks</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value">{{ other_decks|length }}</div>
+        <div class="stat-label">Comunidade</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value">{{ my_decks|length|add:other_decks|length }}</div>
+        <div class="stat-label">Total</div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="filters-bar">
+    <div class="filters-row">
+        <div class="filter-group" style="flex: 2;">
+            <label>Buscar</label>
+            <input type="text" id="searchInput" placeholder="Nome do deck ou comandante..." oninput="filterDecks()">
+        </div>
+        <div class="filter-group">
+            <label>Cores</label>
+            <div class="color-filters">
+                <button type="button" class="color-btn W" data-color="W" onclick="toggleColor(this)">W</button>
+                <button type="button" class="color-btn U" data-color="U" onclick="toggleColor(this)">U</button>
+                <button type="button" class="color-btn B" data-color="B" onclick="toggleColor(this)">B</button>
+                <button type="button" class="color-btn R" data-color="R" onclick="toggleColor(this)">R</button>
+                <button type="button" class="color-btn G" data-color="G" onclick="toggleColor(this)">G</button>
+            </div>
+        </div>
+        <div class="filter-group" style="flex: 0; min-width: auto;">
+            <label>Ordenar</label>
+            <select id="sortSelect" onchange="filterDecks()">
+                <option value="name">Nome</option>
+                <option value="cards">Cartas</option>
+                <option value="recent">Recente</option>
+            </select>
+        </div>
+    </div>
+</div>
+
 <!-- Meus Decks -->
 <div class="section-title mine">
-    <h2>Meus Decks</h2>
-    <span class="count">{{ my_decks|length }}</span>
+    <div class="section-title-left">
+        <h2>Meus Decks</h2>
+        <span class="count" id="myDecksCount">{{ my_decks|length }}</span>
+    </div>
+    <div class="view-toggle">
+        <button class="view-btn active" onclick="setView('grid', this)">&#9638;</button>
+        <button class="view-btn" onclick="setView('compact', this)">&#9776;</button>
+    </div>
 </div>
 
 {% if my_decks %}
-<div class="deck-grid">
+<div class="deck-grid" id="myDecksGrid">
     {% for deck in my_decks %}
-    <div class="deck-card mine">
-        <span class="owner-badge">MEU</span>
+    <div class="deck-card mine"
+         data-name="{{ deck.name|lower }}"
+         data-commander="{{ deck.commander.name|lower }}"
+         data-colors="{{ deck.color_identity }}"
+         data-cards="{{ deck.card_count }}">
         <a href="{% url 'deck_detail' deck.id %}{% if tab_id %}?tab={{ tab_id }}{% endif %}">
-            <h3>{{ deck.name }}</h3>
-            <div class="commander">{{ deck.commander.name }}</div>
-            {% if deck.partner_commander %}
-            <div class="commander">+ {{ deck.partner_commander.name }}</div>
+            {% if deck.commander.image_large %}
+            <div class="deck-card-bg" style="background-image: url('{{ deck.commander.image_large }}')"></div>
             {% endif %}
-            <div class="meta">{{ deck.card_count }} cartas</div>
-            {% if deck.color_identity %}
-            <div class="colors">
-                {% for c in deck.color_identity %}
-                <span class="mana-symbol mana-{{ c }}">{{ c }}</span>
-                {% endfor %}
+            <div class="deck-card-overlay"></div>
+            <div class="deck-card-content">
+                <span class="owner-badge">MEU</span>
+                <div>
+                    <h3>{{ deck.name }}</h3>
+                    <div class="commander-name">{{ deck.commander.name }}</div>
+                    {% if deck.partner_commander %}
+                    <div class="commander-name">+ {{ deck.partner_commander.name }}</div>
+                    {% endif %}
+                    <div class="deck-meta">
+                        <span class="meta-item">{{ deck.card_count }} cartas</span>
+                        {% if deck.color_identity %}
+                        <div class="colors">
+                            {% for c in deck.color_identity %}
+                            <span class="mana-symbol mana-{{ c }}">{{ c }}</span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="colors">
+                            <span class="mana-symbol mana-C">C</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-            {% else %}
-            <div class="colors">
-                <span class="mana-symbol" style="background: #888;">C</span>
-            </div>
-            {% endif %}
         </a>
     </div>
     {% endfor %}
 </div>
 {% else %}
-<div class="empty-state">
-    <p>Voce ainda nao tem nenhum deck.</p>
+<div class="empty-state" id="myDecksEmpty">
+    <h3>Nenhum deck ainda</h3>
+    <p>Importe seu primeiro deck para comecar a jogar!</p>
     <a href="{% url 'deck_import' %}" class="btn">Importar Deck</a>
 </div>
 {% endif %}
@@ -197,35 +561,125 @@
 <!-- Decks da Comunidade -->
 {% if other_decks %}
 <div class="section-title community">
-    <h2>Decks da Comunidade</h2>
-    <span class="count">{{ other_decks|length }}</span>
+    <div class="section-title-left">
+        <h2>Decks da Comunidade</h2>
+        <span class="count" id="otherDecksCount">{{ other_decks|length }}</span>
+    </div>
 </div>
 
-<div class="deck-grid">
+<div class="deck-grid" id="otherDecksGrid">
     {% for deck in other_decks %}
-    <div class="deck-card">
+    <div class="deck-card"
+         data-name="{{ deck.name|lower }}"
+         data-commander="{{ deck.commander.name|lower }}"
+         data-colors="{{ deck.color_identity }}"
+         data-cards="{{ deck.card_count }}">
         <a href="{% url 'deck_detail' deck.id %}{% if tab_id %}?tab={{ tab_id }}{% endif %}">
-            <h3>{{ deck.name }}</h3>
-            <div class="commander">{{ deck.commander.name }}</div>
-            {% if deck.partner_commander %}
-            <div class="commander">+ {{ deck.partner_commander.name }}</div>
+            {% if deck.commander.image_large %}
+            <div class="deck-card-bg" style="background-image: url('{{ deck.commander.image_large }}')"></div>
             {% endif %}
-            <div class="meta">{{ deck.card_count }} cartas</div>
-            {% if deck.color_identity %}
-            <div class="colors">
-                {% for c in deck.color_identity %}
-                <span class="mana-symbol mana-{{ c }}">{{ c }}</span>
-                {% endfor %}
+            <div class="deck-card-overlay"></div>
+            <div class="deck-card-content">
+                <div>
+                    <h3>{{ deck.name }}</h3>
+                    <div class="commander-name">{{ deck.commander.name }}</div>
+                    {% if deck.partner_commander %}
+                    <div class="commander-name">+ {{ deck.partner_commander.name }}</div>
+                    {% endif %}
+                    <div class="deck-meta">
+                        <span class="meta-item">{{ deck.card_count }} cartas</span>
+                        {% if deck.color_identity %}
+                        <div class="colors">
+                            {% for c in deck.color_identity %}
+                            <span class="mana-symbol mana-{{ c }}">{{ c }}</span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="colors">
+                            <span class="mana-symbol mana-C">C</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="deck-owner">por {{ deck.owner.nickname }}</div>
+                </div>
             </div>
-            {% else %}
-            <div class="colors">
-                <span class="mana-symbol" style="background: #888;">C</span>
-            </div>
-            {% endif %}
-            <div class="owner">por {{ deck.owner.nickname }}</div>
         </a>
     </div>
     {% endfor %}
 </div>
 {% endif %}
+
+<script>
+    const selectedColors = new Set();
+
+    function toggleColor(btn) {
+        const color = btn.dataset.color;
+        if (selectedColors.has(color)) {
+            selectedColors.delete(color);
+            btn.classList.remove('selected');
+        } else {
+            selectedColors.add(color);
+            btn.classList.add('selected');
+        }
+        filterDecks();
+    }
+
+    function filterDecks() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const sort = document.getElementById('sortSelect').value;
+
+        filterGrid('myDecksGrid', 'myDecksCount', search);
+        filterGrid('otherDecksGrid', 'otherDecksCount', search);
+    }
+
+    function filterGrid(gridId, countId, search) {
+        const grid = document.getElementById(gridId);
+        if (!grid) return;
+
+        const cards = Array.from(grid.querySelectorAll('.deck-card'));
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const name = card.dataset.name;
+            const commander = card.dataset.commander;
+            const colors = card.dataset.colors || '';
+
+            // Search filter
+            const matchesSearch = !search ||
+                name.includes(search) ||
+                commander.includes(search);
+
+            // Color filter
+            let matchesColor = selectedColors.size === 0;
+            if (!matchesColor) {
+                matchesColor = Array.from(selectedColors).every(c => colors.includes(c));
+            }
+
+            if (matchesSearch && matchesColor) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        const countEl = document.getElementById(countId);
+        if (countEl) {
+            countEl.textContent = visibleCount;
+        }
+    }
+
+    function setView(view, btn) {
+        document.querySelectorAll('.deck-grid').forEach(grid => {
+            if (view === 'compact') {
+                grid.classList.add('compact');
+            } else {
+                grid.classList.remove('compact');
+            }
+        });
+
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+</script>
 {% endblock %}

@@ -4,17 +4,64 @@
 
 {% block extra_css %}
 <style>
-    .container { max-width: 900px; }
+    .container { max-width: 1000px; }
+
     .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
     }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .player-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px 15px;
+        border-radius: 25px;
+    }
+
+    .player-avatar-large {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.1rem;
+    }
+
+    .player-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .player-name {
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .player-stats {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
     .nav-links {
         display: flex;
         gap: 10px;
     }
+
     .nav-links a {
         padding: 10px 20px;
         background: rgba(255, 255, 255, 0.1);
@@ -22,94 +69,113 @@
         color: #fff;
         text-decoration: none;
         font-size: 0.9rem;
+        transition: all 0.2s;
     }
+
     .nav-links a:hover {
         background: rgba(255, 255, 255, 0.2);
     }
-    .create-lobby {
-        background: rgba(255, 255, 255, 0.05);
+
+    .nav-links a.primary {
+        background: linear-gradient(135deg, #e94560, #ff6b6b);
+    }
+
+    /* Warning Banner */
+    .warning {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+        border: 1px solid rgba(255, 193, 7, 0.3);
         border-radius: 12px;
         padding: 20px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .warning-icon {
+        font-size: 2rem;
+    }
+
+    .warning-content {
+        flex: 1;
+    }
+
+    .warning-content h3 {
+        color: #ffc107;
+        margin-bottom: 5px;
+        font-size: 1rem;
+    }
+
+    .warning-content p {
+        color: #aaa;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .warning a {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #ffc107, #ff9800);
+        color: #333;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* Create Lobby Section */
+    .create-lobby {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 25px;
         margin-bottom: 30px;
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
+
     .create-lobby h2 {
-        margin-bottom: 15px;
+        margin-bottom: 20px;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .create-lobby h2::before {
+        content: "+";
+        width: 30px;
+        height: 30px;
+        background: linear-gradient(135deg, #e94560, #ff6b6b);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-size: 1.2rem;
     }
+
     .create-lobby form {
         display: flex;
         gap: 15px;
         flex-wrap: wrap;
         align-items: flex-end;
     }
+
     .create-lobby .form-group {
         flex: 1;
         min-width: 200px;
         margin-bottom: 0;
     }
-    .create-lobby button {
-        width: auto;
-        padding: 12px 30px;
-    }
-    .lobbies-list {
-        display: grid;
-        gap: 15px;
-    }
-    .lobby-card {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: border-color 0.2s;
-    }
-    .lobby-card:hover {
-        border-color: #e94560;
-    }
-    .lobby-info h3 {
-        margin-bottom: 5px;
-    }
-    .lobby-info .meta {
+
+    .create-lobby .form-group label {
+        display: block;
+        margin-bottom: 8px;
         color: #888;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    .lobby-info .players {
-        margin-top: 10px;
-        display: flex;
-        gap: 5px;
-    }
-    .player-avatar {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.8rem;
-        font-weight: bold;
-        color: white;
-    }
-    .join-btn {
-        padding: 10px 25px;
-        background: linear-gradient(135deg, #e94560, #ff6b6b);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-    }
-    .join-btn:hover {
-        transform: translateY(-2px);
-    }
-    .empty-state {
-        text-align: center;
-        padding: 40px;
-        color: #888;
-    }
-    select {
+
+    .create-lobby input,
+    .create-lobby select {
+        width: 100%;
         padding: 12px 15px;
         border: 2px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
@@ -117,24 +183,321 @@
         color: #fff;
         font-size: 1rem;
     }
-    .warning {
-        background: rgba(255, 193, 7, 0.1);
-        border: 1px solid rgba(255, 193, 7, 0.3);
-        border-radius: 8px;
-        padding: 15px;
+
+    .create-lobby input:focus,
+    .create-lobby select:focus {
+        outline: none;
+        border-color: #e94560;
+    }
+
+    .create-lobby button {
+        width: auto;
+        padding: 14px 35px;
+        font-size: 1rem;
+    }
+
+    .create-lobby button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Section Header */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .lobby-count {
+        background: rgba(233, 69, 96, 0.2);
+        color: #e94560;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+    }
+
+    /* Lobbies Grid */
+    .lobbies-list {
+        display: grid;
+        gap: 15px;
+    }
+
+    .lobby-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.3s;
+    }
+
+    .lobby-card:hover {
+        border-color: #e94560;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .lobby-card.full {
+        opacity: 0.6;
+    }
+
+    .lobby-main {
+        flex: 1;
+    }
+
+    .lobby-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 12px;
+    }
+
+    .lobby-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .lobby-status {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .lobby-status.waiting {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ecdc4;
+    }
+
+    .lobby-status.full {
+        background: rgba(255, 193, 7, 0.2);
         color: #ffc107;
+    }
+
+    .lobby-meta {
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+    }
+
+    /* Players Section */
+    .players-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .players-avatars {
+        display: flex;
+        gap: -8px;
+    }
+
+    .player-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: bold;
+        color: white;
+        border: 2px solid #1a1a2e;
+        margin-left: -8px;
+        transition: transform 0.2s;
+    }
+
+    .player-avatar:first-child {
+        margin-left: 0;
+    }
+
+    .player-avatar:hover {
+        transform: scale(1.1);
+        z-index: 1;
+    }
+
+    .empty-slot {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+        margin-left: -8px;
+    }
+
+    /* Commander Preview */
+    .commanders-preview {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+    }
+
+    .commander-thumb {
+        width: 45px;
+        height: 65px;
+        border-radius: 6px;
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: transform 0.2s;
+    }
+
+    .commander-thumb:hover {
+        transform: scale(1.1);
+        z-index: 1;
+    }
+
+    /* Join Button */
+    .lobby-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-end;
+    }
+
+    .join-btn {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #e94560, #ff6b6b);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+
+    .join-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+    }
+
+    .join-btn.disabled {
+        background: rgba(255, 255, 255, 0.1);
+        color: #888;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .player-slots {
+        font-size: 0.85rem;
+        color: #888;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #888;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        border: 2px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    .empty-state h3 {
+        color: #aaa;
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+    }
+
+    .empty-state p {
+        margin-bottom: 5px;
+    }
+
+    /* Quick Stats */
+    .quick-stats {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .stat-box {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 15px 20px;
+        text-align: center;
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #e94560;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: #888;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 768px) {
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .lobby-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .lobby-actions {
+            width: 100%;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .join-btn {
+            flex: 1;
+            text-align: center;
+        }
+
+        .commanders-preview {
+            margin-left: 0;
+            margin-top: 15px;
+        }
+
+        .quick-stats {
+            flex-wrap: wrap;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="header">
-    <div>
-        <h1>Lobby</h1>
-        <p class="subtitle">{{ player.nickname }}</p>
+    <div class="header-left">
+        <div>
+            <h1>Lobby</h1>
+        </div>
+        <div class="player-info">
+            <div class="player-avatar-large" style="background-color: {{ player.avatar_color|default:'#e94560' }}">
+                {{ player.nickname|slice:":1"|upper }}
+            </div>
+            <div class="player-details">
+                <span class="player-name">{{ player.nickname }}</span>
+                <span class="player-stats">{{ player_decks|length }} decks</span>
+            </div>
+        </div>
     </div>
     <div class="nav-links">
+        <a href="/cards/">Catalogo</a>
         <a href="/decks/{% if tab_id %}?tab={{ tab_id }}{% endif %}">Meus Decks</a>
         <a href="/logout/{% if tab_id %}?tab={{ tab_id }}{% endif %}">Sair</a>
     </div>
@@ -142,10 +505,30 @@
 
 {% if not player_decks %}
 <div class="warning">
-    Voce precisa importar um deck antes de criar ou entrar em uma partida.
-    <a href="/decks/import/{% if tab_id %}?tab={{ tab_id }}{% endif %}" style="color: #fff; margin-left: 10px;">Importar Deck</a>
+    <span class="warning-icon">&#9888;</span>
+    <div class="warning-content">
+        <h3>Voce precisa de um deck!</h3>
+        <p>Importe um deck antes de criar ou entrar em uma partida.</p>
+    </div>
+    <a href="/decks/import/{% if tab_id %}?tab={{ tab_id }}{% endif %}">Importar Deck</a>
 </div>
 {% endif %}
+
+<!-- Quick Stats -->
+<div class="quick-stats">
+    <div class="stat-box">
+        <div class="stat-value">{{ lobbies|length }}</div>
+        <div class="stat-label">Partidas Abertas</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{% for lobby in lobbies %}{% if lobby.player_count < lobby.max_players %}1{% endif %}{% endfor %}</div>
+        <div class="stat-label">Com Vagas</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ player_decks|length }}</div>
+        <div class="stat-label">Seus Decks</div>
+    </div>
+</div>
 
 <div class="create-lobby">
     <h2>Criar Nova Partida</h2>
@@ -154,14 +537,14 @@
         {% if tab_id %}<input type="hidden" name="tab_id" value="{{ tab_id }}">{% endif %}
         <div class="form-group">
             <label for="name">Nome da Partida</label>
-            <input type="text" id="name" name="name" placeholder="Ex: Partida casual">
+            <input type="text" id="name" name="name" placeholder="Ex: Partida casual, FFA competitivo...">
         </div>
         <div class="form-group">
-            <label for="max_players">Max Jogadores</label>
+            <label for="max_players">Jogadores</label>
             <select id="max_players" name="max_players">
-                <option value="2">2 jogadores</option>
+                <option value="2">2 jogadores (1v1)</option>
                 <option value="3">3 jogadores</option>
-                <option value="4" selected>4 jogadores</option>
+                <option value="4" selected>4 jogadores (Recomendado)</option>
                 <option value="5">5 jogadores</option>
                 <option value="6">6 jogadores</option>
             </select>
@@ -170,33 +553,66 @@
     </form>
 </div>
 
-<h2 style="margin-bottom: 15px;">Partidas Abertas</h2>
+<div class="section-header">
+    <h2>Partidas Abertas <span class="lobby-count">{{ lobbies|length }}</span></h2>
+</div>
 
 {% if lobbies %}
 <div class="lobbies-list">
     {% for lobby in lobbies %}
-    <div class="lobby-card">
-        <div class="lobby-info">
-            <h3>{{ lobby.name }}</h3>
-            <div class="meta">{{ lobby.player_count }}/{{ lobby.max_players }} jogadores</div>
-            <div class="players">
-                {% for lp in lobby.players.all %}
-                <div class="player-avatar" style="background-color: {{ lp.player.avatar_color|default:'#e94560' }}" title="{{ lp.player.nickname }}">
-                    {{ lp.player.nickname|slice:":1"|upper }}
+    <div class="lobby-card {% if lobby.player_count >= lobby.max_players %}full{% endif %}">
+        <div class="lobby-main">
+            <div class="lobby-header">
+                <span class="lobby-name">{{ lobby.name }}</span>
+                {% if lobby.player_count >= lobby.max_players %}
+                <span class="lobby-status full">Lotada</span>
+                {% else %}
+                <span class="lobby-status waiting">Aguardando</span>
+                {% endif %}
+            </div>
+            <div class="lobby-meta">
+                {{ lobby.max_players }} jogadores {% if lobby.max_players == 2 %}(1v1){% else %}(FFA){% endif %}
+            </div>
+            <div class="players-row">
+                <div class="players-avatars">
+                    {% for lp in lobby.players.all %}
+                    <div class="player-avatar" style="background-color: {{ lp.player.avatar_color|default:'#e94560' }}" title="{{ lp.player.nickname }}">
+                        {{ lp.player.nickname|slice:":1"|upper }}
+                    </div>
+                    {% endfor %}
+                    {% for i in "123456"|make_list %}
+                        {% if forloop.counter > lobby.players.count and forloop.counter <= lobby.max_players %}
+                        <div class="empty-slot">?</div>
+                        {% endif %}
+                    {% endfor %}
                 </div>
-                {% endfor %}
+                <div class="commanders-preview">
+                    {% for lp in lobby.players.all %}
+                        {% if lp.deck and lp.deck.commander.image_small %}
+                        <img src="{{ lp.deck.commander.image_small }}" alt="{{ lp.deck.commander.name }}" class="commander-thumb" title="{{ lp.player.nickname }}: {{ lp.deck.commander.name }}">
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
-        {% if player_decks and lobby.player_count < lobby.max_players %}
-        <a href="/lobby/{{ lobby.id }}/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="join-btn">Entrar</a>
-        {% endif %}
+        <div class="lobby-actions">
+            <span class="player-slots">{{ lobby.player_count }}/{{ lobby.max_players }}</span>
+            {% if player_decks and lobby.player_count < lobby.max_players %}
+            <a href="/lobby/{{ lobby.id }}/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="join-btn">Entrar</a>
+            {% elif lobby.player_count >= lobby.max_players %}
+            <span class="join-btn disabled">Lotada</span>
+            {% else %}
+            <span class="join-btn disabled">Sem Deck</span>
+            {% endif %}
+        </div>
     </div>
     {% endfor %}
 </div>
 {% else %}
-<div class="empty-state card">
-    <p>Nenhuma partida aberta no momento.</p>
-    <p>Crie uma nova partida para comecar!</p>
+<div class="empty-state">
+    <h3>Nenhuma partida aberta</h3>
+    <p>Seja o primeiro a criar uma partida!</p>
+    <p style="color: #666; font-size: 0.9rem;">Crie uma partida acima e convide seus amigos.</p>
 </div>
 {% endif %}
 {% endblock %}
