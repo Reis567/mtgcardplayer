@@ -1985,8 +1985,15 @@
 
         // Arrow state
         let arrowMode = false;
-        let arrowSourceCard = null;
-        let arrows = []; // {sourceCardId, targetType: 'player'|'card', targetId: seatNumber|cardId}
+        let arrowSourceCards = new Set(); // Multiple source cards
+        let arrowPreviewPos = null; // {x, y} - mouse position during arrow mode
+        let lastMousePos = { x: 0, y: 0 }; // Always track last mouse position
+        let arrows = []; // {sourceCardId, targetType: 'player'|'card'|'position', targetId: seatNumber|cardId, targetX, targetY}
+
+        // Global mouse tracker (always active)
+        document.addEventListener('mousemove', (e) => {
+            lastMousePos = { x: e.clientX, y: e.clientY };
+        });
 
         // Counter modal state
         let counterModalData = { seat: null, color: null };
@@ -2075,6 +2082,10 @@
                     if (data.player) {
                         addChatMessage('Sistema', `🎯 ${data.player} foi escolhido para comecar! (rolou ${data.roll})`);
                     }
+                    break;
+                case 'arrows_update':
+                    // Another player created/removed arrows
+                    handleArrowsUpdate(data);
                     break;
             }
         }
@@ -2285,7 +2296,7 @@
             });
 
             // Include arrow state (affects has-arrow class)
-            parts.push(`arr:${arrowSourceCard||''}:${arrows.map(a=>`${a.sourceCardId}-${a.targetId}`).join(',')}`);
+            parts.push(`arr:${[...arrowSourceCards].join(',')}:${arrows.map(a=>`${a.sourceCardId}-${a.targetId || a.targetX}`).join(',')}`);
             return parts.join('|');
         }
 
@@ -2418,7 +2429,7 @@
             const escapedName = (card.name || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
             const escapedImage = (card.image_small || card.image_normal || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
             const isSelected = selectedCards.has(card.id);
-            const isArrowSource = arrowSourceCard === card.id;
+            const isArrowSource = arrowSourceCards.has(card.id);
             const hasArrow = arrows.some(a => a.sourceCardId === card.id);
 
             const cardEl = document.createElement('div');
@@ -2458,7 +2469,7 @@
             cardEl.classList.toggle('selected', selectedCards.has(card.id));
 
             // Update arrow states
-            cardEl.classList.toggle('arrow-source', arrowSourceCard === card.id);
+            cardEl.classList.toggle('arrow-source', arrowSourceCards.has(card.id));
             cardEl.classList.toggle('has-arrow', arrows.some(a => a.sourceCardId === card.id));
 
             // Update counters
@@ -2611,7 +2622,7 @@
                     if (text) countersHtml = `<div class="counters">${text}</div>`;
                 }
                 const isSelected = selectedCards.has(card.id);
-                const isArrowSource = arrowSourceCard === card.id;
+                const isArrowSource = arrowSourceCards.has(card.id);
                 const hasArrowFrom = arrows.some(a => a.sourceCardId === card.id);
                 const hasArrowTo = arrows.some(a => a.targetType === 'card' && a.targetId === card.id);
                 const hasArrow = hasArrowFrom || hasArrowTo;
@@ -2775,29 +2786,123 @@
 
         // ===== ARROWS =====
         function startArrowFromCard(cardId) {
-            arrowMode = true;
-            arrowSourceCard = cardId;
-            // Highlight all potential targets
-            document.querySelectorAll('.player-area').forEach(el => el.classList.add('arrow-target'));
-            document.querySelectorAll('.card').forEach(el => {
-                if (el.dataset.id !== cardId) el.classList.add('arrow-target-card');
-            });
+            // If already in arrow mode, add this card to sources
+            if (arrowMode) {
+                arrowSourceCards.add(cardId);
+            } else {
+                arrowMode = true;
+                arrowSourceCards.clear();
+                arrowSourceCards.add(cardId);
+                arrowPreviewPos = { ...lastMousePos }; // Use current mouse position
+                // Add mousemove listener for preview
+                document.addEventListener('mousemove', handleArrowMouseMove);
+            }
+            document.body.style.cursor = 'crosshair';
             renderGame();
+            renderArrows(); // Immediately render preview at current position
+        }
+
+        function startArrowFromSelected() {
+            if (selectedCards.size === 0) return;
+            arrowMode = true;
+            arrowSourceCards = new Set(selectedCards);
+            arrowPreviewPos = { ...lastMousePos }; // Use current mouse position
+            document.addEventListener('mousemove', handleArrowMouseMove);
+            document.body.style.cursor = 'crosshair';
+            renderGame();
+            renderArrows(); // Immediately render preview at current position
+        }
+
+        function handleArrowMouseMove(e) {
+            arrowPreviewPos = { x: e.clientX, y: e.clientY };
+            renderArrows();
+        }
+
+        function finalizeArrows(e) {
+            if (!arrowMode || arrowSourceCards.size === 0) return;
+
+            // Find which player area the click landed in
+            let targetSeat = null;
+            let targetXPercent = 50;
+            let targetYPercent = 50;
+
+            // Check each player area
+            document.querySelectorAll('.player-area').forEach(area => {
+                const rect = area.getBoundingClientRect();
+                if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                    e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                    // Found the player area
+                    const seatMatch = area.id.match(/playerArea-(\d+)/);
+                    if (seatMatch) {
+                        targetSeat = parseInt(seatMatch[1]);
+                        // Calculate position as percentage within this player's area
+                        targetXPercent = ((e.clientX - rect.left) / rect.width) * 100;
+                        targetYPercent = ((e.clientY - rect.top) / rect.height) * 100;
+                    }
+                }
+            });
+
+            // If click wasn't in any player area, use playersGrid as reference
+            if (targetSeat === null) {
+                const grid = document.getElementById('playersGrid');
+                if (grid) {
+                    const rect = grid.getBoundingClientRect();
+                    targetXPercent = ((e.clientX - rect.left) / rect.width) * 100;
+                    targetYPercent = ((e.clientY - rect.top) / rect.height) * 100;
+                }
+            }
+
+            // Create an arrow from each source card to the clicked position
+            const newArrows = [];
+            arrowSourceCards.forEach(cardId => {
+                const arrow = {
+                    sourceCardId: cardId,
+                    targetType: 'position',
+                    targetSeat: targetSeat, // Which player's area (null = grid)
+                    targetXPercent: targetXPercent,
+                    targetYPercent: targetYPercent,
+                    creatorSeat: mySeat
+                };
+                arrows.push(arrow);
+                newArrows.push(arrow);
+            });
+
+            // Send to server
+            sendAction('create_arrows', { arrows: newArrows });
+
+            cancelArrowMode();
+            renderArrows();
         }
 
         function startArrowToPlayer(targetSeat) {
-            if (arrowMode && arrowSourceCard) {
-                // Complete the arrow to player
-                arrows.push({ sourceCardId: arrowSourceCard, targetType: 'player', targetId: targetSeat });
+            if (arrowMode && arrowSourceCards.size > 0) {
+                const newArrows = [];
+                arrowSourceCards.forEach(cardId => {
+                    const arrow = { sourceCardId: cardId, targetType: 'player', targetId: targetSeat, creatorSeat: mySeat };
+                    arrows.push(arrow);
+                    newArrows.push(arrow);
+                });
+
+                // Send to server
+                sendAction('create_arrows', { arrows: newArrows });
+
                 cancelArrowMode();
                 renderArrows();
             }
         }
 
         function startArrowToCard(targetCardId) {
-            if (arrowMode && arrowSourceCard && targetCardId !== arrowSourceCard) {
-                // Complete the arrow to card
-                arrows.push({ sourceCardId: arrowSourceCard, targetType: 'card', targetId: targetCardId });
+            if (arrowMode && arrowSourceCards.size > 0 && !arrowSourceCards.has(targetCardId)) {
+                const newArrows = [];
+                arrowSourceCards.forEach(cardId => {
+                    const arrow = { sourceCardId: cardId, targetType: 'card', targetId: targetCardId, creatorSeat: mySeat };
+                    arrows.push(arrow);
+                    newArrows.push(arrow);
+                });
+
+                // Send to server
+                sendAction('create_arrows', { arrows: newArrows });
+
                 cancelArrowMode();
                 renderArrows();
             }
@@ -2805,53 +2910,84 @@
 
         function cancelArrowMode() {
             arrowMode = false;
-            arrowSourceCard = null;
+            arrowSourceCards.clear();
+            arrowPreviewPos = null;
+            document.removeEventListener('mousemove', handleArrowMouseMove);
+            document.body.style.cursor = '';
             document.querySelectorAll('.player-area').forEach(el => el.classList.remove('arrow-target'));
             document.querySelectorAll('.card').forEach(el => el.classList.remove('arrow-target-card'));
             renderGame();
         }
 
         function handlePlayerAreaClick(event, seat) {
-            if (arrowMode && arrowSourceCard) {
-                arrows.push({ sourceCardId: arrowSourceCard, targetType: 'player', targetId: seat });
+            if (arrowMode && arrowSourceCards.size > 0) {
+                arrowSourceCards.forEach(cardId => {
+                    arrows.push({ sourceCardId: cardId, targetType: 'player', targetId: seat });
+                });
                 cancelArrowMode();
                 renderArrows();
             }
         }
 
         function renderArrows() {
-            // Use requestAnimationFrame to ensure DOM is updated
             requestAnimationFrame(() => {
                 const svg = document.getElementById('arrowsSvg');
-                // Clear existing arrows (except defs)
                 const defs = svg.querySelector('defs');
                 svg.innerHTML = '';
                 svg.appendChild(defs);
 
+                // Render existing arrows
                 arrows.forEach((arrow, idx) => {
                     const sourceEl = document.querySelector(`[data-id="${arrow.sourceCardId}"]`);
-                    let targetEl;
-
-                    if (arrow.targetType === 'player') {
-                        targetEl = document.getElementById(`playerArea-${arrow.targetId}`);
-                    } else if (arrow.targetType === 'card') {
-                        targetEl = document.querySelector(`[data-id="${arrow.targetId}"]`);
-                    } else {
-                        // Legacy support for old format
-                        targetEl = document.getElementById(`playerArea-${arrow.targetSeat}`);
-                    }
-
-                    if (!sourceEl || !targetEl) return;
+                    if (!sourceEl) return;
 
                     const sourceRect = sourceEl.getBoundingClientRect();
-                    const targetRect = targetEl.getBoundingClientRect();
-
                     const x1 = sourceRect.left + sourceRect.width / 2;
                     const y1 = sourceRect.top + sourceRect.height / 2;
-                    const x2 = targetRect.left + targetRect.width / 2;
-                    const y2 = arrow.targetType === 'card'
-                        ? targetRect.top + targetRect.height / 2
-                        : targetRect.top + 30;
+                    let x2, y2;
+
+                    if (arrow.targetType === 'position') {
+                        // Convert percentage to pixels based on target player area or grid
+                        if (arrow.targetSeat !== null && arrow.targetSeat !== undefined) {
+                            const targetArea = document.getElementById(`playerArea-${arrow.targetSeat}`);
+                            if (targetArea) {
+                                const rect = targetArea.getBoundingClientRect();
+                                x2 = rect.left + (arrow.targetXPercent / 100) * rect.width;
+                                y2 = rect.top + (arrow.targetYPercent / 100) * rect.height;
+                            } else {
+                                return; // Target area not found
+                            }
+                        } else {
+                            // Fallback to playersGrid
+                            const grid = document.getElementById('playersGrid');
+                            if (grid) {
+                                const rect = grid.getBoundingClientRect();
+                                x2 = rect.left + (arrow.targetXPercent / 100) * rect.width;
+                                y2 = rect.top + (arrow.targetYPercent / 100) * rect.height;
+                            } else {
+                                return;
+                            }
+                        }
+                    } else if (arrow.targetType === 'player') {
+                        const targetEl = document.getElementById(`playerArea-${arrow.targetId}`);
+                        if (!targetEl) return;
+                        const targetRect = targetEl.getBoundingClientRect();
+                        x2 = targetRect.left + targetRect.width / 2;
+                        y2 = targetRect.top + 30;
+                    } else if (arrow.targetType === 'card') {
+                        const targetEl = document.querySelector(`[data-id="${arrow.targetId}"]`);
+                        if (!targetEl) return;
+                        const targetRect = targetEl.getBoundingClientRect();
+                        x2 = targetRect.left + targetRect.width / 2;
+                        y2 = targetRect.top + targetRect.height / 2;
+                    } else {
+                        // Legacy support
+                        const targetEl = document.getElementById(`playerArea-${arrow.targetSeat}`);
+                        if (!targetEl) return;
+                        const targetRect = targetEl.getBoundingClientRect();
+                        x2 = targetRect.left + targetRect.width / 2;
+                        y2 = targetRect.top + 30;
+                    }
 
                     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     line.setAttribute('x1', x1);
@@ -2860,28 +2996,98 @@
                     line.setAttribute('y2', y2);
                     line.setAttribute('class', 'arrow-line');
                     line.setAttribute('data-arrow-idx', idx);
+                    line.style.pointerEvents = 'stroke';
                     line.onclick = (e) => {
                         e.stopPropagation();
                         removeArrow(idx);
                     };
                     svg.appendChild(line);
                 });
+
+                // Render preview arrows (during arrow mode)
+                if (arrowMode && arrowPreviewPos && arrowSourceCards.size > 0) {
+                    arrowSourceCards.forEach(cardId => {
+                        const sourceEl = document.querySelector(`[data-id="${cardId}"]`);
+                        if (!sourceEl) return;
+
+                        const sourceRect = sourceEl.getBoundingClientRect();
+                        const x1 = sourceRect.left + sourceRect.width / 2;
+                        const y1 = sourceRect.top + sourceRect.height / 2;
+
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', x1);
+                        line.setAttribute('y1', y1);
+                        line.setAttribute('x2', arrowPreviewPos.x);
+                        line.setAttribute('y2', arrowPreviewPos.y);
+                        line.setAttribute('class', 'arrow-line');
+                        line.style.opacity = '0.6';
+                        line.style.strokeDasharray = '5,5';
+                        svg.appendChild(line);
+                    });
+                }
             });
         }
 
         function removeArrow(idx) {
+            const removedArrow = arrows[idx];
             arrows.splice(idx, 1);
+            // Send to server
+            if (removedArrow) {
+                sendAction('remove_arrow', { arrow: removedArrow });
+            }
             renderGame();
         }
 
         function removeArrowsFromCard(cardId) {
+            const removedArrows = arrows.filter(a => a.sourceCardId === cardId);
             arrows = arrows.filter(a => a.sourceCardId !== cardId);
+            // Send to server
+            if (removedArrows.length > 0) {
+                sendAction('remove_arrows', { sourceCardId: cardId });
+            }
             renderGame();
         }
 
         function clearAllArrows() {
             arrows = [];
+            // Send to server
+            sendAction('clear_arrows', {});
             renderGame();
+        }
+
+        // Receive arrows from server (called when other players create/remove arrows)
+        function handleArrowsUpdate(data) {
+            if (data.action === 'set_arrows') {
+                // Full sync
+                arrows = data.arrows || [];
+            } else if (data.action === 'add_arrows') {
+                // Add new arrows from another player
+                const newArrows = data.arrows || [];
+                newArrows.forEach(arrow => {
+                    // Avoid duplicates
+                    const exists = arrows.some(a =>
+                        a.sourceCardId === arrow.sourceCardId &&
+                        a.targetType === arrow.targetType &&
+                        a.targetId === arrow.targetId &&
+                        a.targetXPercent === arrow.targetXPercent
+                    );
+                    if (!exists) {
+                        arrows.push(arrow);
+                    }
+                });
+            } else if (data.action === 'remove_arrow') {
+                const arrow = data.arrow;
+                arrows = arrows.filter(a => !(
+                    a.sourceCardId === arrow.sourceCardId &&
+                    a.targetType === arrow.targetType &&
+                    a.targetId === arrow.targetId
+                ));
+            } else if (data.action === 'remove_from_card') {
+                arrows = arrows.filter(a => a.sourceCardId !== data.sourceCardId);
+            } else if (data.action === 'clear_all') {
+                arrows = [];
+            }
+            renderArrows();
         }
 
         // ===== GENERIC COUNTERS =====
@@ -3004,9 +3210,9 @@
         // ===== CARD INTERACTIONS =====
         function handleCardClick(e, cardId, imageUrl, cardName, zone, isMe) {
             e.stopPropagation();
-            if (arrowMode) {
-                // Cancel arrow mode on card click
-                cancelArrowMode();
+            if (arrowMode && arrowSourceCards.size > 0) {
+                // Finalize arrows at click position
+                finalizeArrows(e);
                 return;
             }
             if (e.shiftKey && isMe) {
@@ -3136,13 +3342,15 @@
         // Battlefield cards: single click only for selection, not opening modal
         function handleBattlefieldCardClick(e, cardId, isMe) {
             e.stopPropagation();
-            // If in arrow mode, target this card with the arrow
-            if (arrowMode && arrowSourceCard && cardId !== arrowSourceCard) {
-                startArrowToCard(cardId);
-                return;
-            }
-            if (arrowMode) {
-                cancelArrowMode();
+            // If in arrow mode, finalize arrows at click position
+            if (arrowMode && arrowSourceCards.size > 0) {
+                // If clicking on a card that's not a source, target that card
+                if (!arrowSourceCards.has(cardId)) {
+                    startArrowToCard(cardId);
+                } else {
+                    // Clicking on own source card - finalize at position
+                    finalizeArrows(e);
+                }
                 return;
             }
 
@@ -3347,6 +3555,13 @@
 
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.context-menu')) hideContextMenu();
+            // Finalize arrows when clicking anywhere (not on cards/players/context menu)
+            if (arrowMode && arrowSourceCards.size > 0) {
+                // Don't finalize if clicking on a card, context menu, or modal
+                if (!e.target.closest('.card') && !e.target.closest('.context-menu') && !e.target.closest('.modal')) {
+                    finalizeArrows(e);
+                }
+            }
         });
 
         function showLibraryContextMenu(e) {
@@ -3425,21 +3640,22 @@
                 }
                 items.push({ divider: true });
 
-                // Arrow actions (single card only for creating, but can remove from selected)
-                if (!isMultiSelect) {
-                    items.push({ label: 'Criar seta (jogador/carta)', action: `startArrowFromCard('${card.id}'); hideContextMenu();` });
+                // Arrow actions - can create from selected cards
+                if (isMultiSelect) {
+                    items.push({ label: `Criar seta${countLabel}`, action: `startArrowFromSelected(); hideContextMenu();` });
+                    // Check if any selected card has arrows
+                    const selectedWithArrows = [...selectedCards].filter(id => arrows.some(a => a.sourceCardId === id));
+                    if (selectedWithArrows.length > 0) {
+                        items.push({ label: `Remover setas${countLabel}`, action: `removeArrowsFromSelected(); hideContextMenu();` });
+                    }
+                } else {
+                    items.push({ label: 'Criar seta', action: `startArrowFromCard('${card.id}'); hideContextMenu();` });
                     const cardArrows = arrows.filter(a => a.sourceCardId === card.id);
                     if (cardArrows.length === 1) {
                         const idx = arrows.findIndex(a => a.sourceCardId === card.id);
                         items.push({ label: 'Remover seta', action: `removeArrow(${idx}); hideContextMenu();` });
                     } else if (cardArrows.length > 1) {
                         items.push({ label: `Remover todas setas (${cardArrows.length})`, action: `removeArrowsFromCard('${card.id}'); hideContextMenu();` });
-                    }
-                } else {
-                    // Check if any selected card has arrows
-                    const selectedWithArrows = [...selectedCards].filter(id => arrows.some(a => a.sourceCardId === id));
-                    if (selectedWithArrows.length > 0) {
-                        items.push({ label: `Remover setas${countLabel}`, action: `removeArrowsFromSelected(); hideContextMenu();` });
                     }
                 }
 
@@ -3510,11 +3726,6 @@
 
         function removeCounterFromSelected() {
             selectedCards.forEach(id => sendAction('remove_counter', { object_id: id }));
-        }
-
-        function createArrowsFromSelected() {
-            // Start arrow mode from each selected card
-            selectedCards.forEach(id => startArrowFromCard(id));
         }
 
         function removeArrowsFromSelected() {

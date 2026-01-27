@@ -1209,6 +1209,50 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         elif action == 'get_state':
             await self.send_game_state()
 
+        # Arrow actions (visual only, no persistence needed)
+        elif action == 'create_arrows':
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'arrows_broadcast',
+                    'action': 'add_arrows',
+                    'arrows': content.get('data', {}).get('arrows', []),
+                    'sender_channel': self.channel_name
+                }
+            )
+
+        elif action == 'remove_arrow':
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'arrows_broadcast',
+                    'action': 'remove_arrow',
+                    'arrow': content.get('data', {}).get('arrow', {}),
+                    'sender_channel': self.channel_name
+                }
+            )
+
+        elif action == 'remove_arrows':
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'arrows_broadcast',
+                    'action': 'remove_from_card',
+                    'sourceCardId': content.get('data', {}).get('sourceCardId'),
+                    'sender_channel': self.channel_name
+                }
+            )
+
+        elif action == 'clear_arrows':
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'arrows_broadcast',
+                    'action': 'clear_all',
+                    'sender_channel': self.channel_name
+                }
+            )
+
         elif action in ['move_card', 'tap_card', 'change_life', 'add_counter', 'remove_counter',
                         'next_phase', 'next_turn', 'draw_card', 'shuffle_library', 'concede',
                         'scry', 'look_top', 'put_top', 'put_bottom', 'reveal_card',
@@ -1324,4 +1368,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'player': event['player'],
             'seat': event['seat'],
             'roll': event['roll']
+        })
+
+    async def arrows_broadcast(self, event):
+        """Broadcast arrow updates to all players except sender"""
+        # Don't send back to the sender (they already updated locally)
+        if event.get('sender_channel') == self.channel_name:
+            return
+
+        data = {'action': event['action']}
+
+        if event['action'] == 'add_arrows':
+            data['arrows'] = event.get('arrows', [])
+        elif event['action'] == 'remove_arrow':
+            data['arrow'] = event.get('arrow', {})
+        elif event['action'] == 'remove_from_card':
+            data['sourceCardId'] = event.get('sourceCardId')
+        # clear_all doesn't need extra data
+
+        await self.send_json({
+            'type': 'arrows_update',
+            **data
         })
