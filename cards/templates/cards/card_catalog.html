@@ -18,15 +18,175 @@
             min-height: 100vh;
         }
 
+        /* ===== NAVBAR ===== */
+        .main-navbar {
+            background: rgba(15, 15, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .main-navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .main-navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .main-navbar-logo {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #e94560, #4ecdc4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .main-navbar-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .main-navbar-title span {
+            color: #e94560;
+        }
+
+        .main-navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-nav-link {
+            padding: 10px 18px;
+            border-radius: 10px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-nav-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .main-nav-link.active {
+            background: rgba(233, 69, 96, 0.15);
+            color: #e94560;
+        }
+
+        .main-nav-icon {
+            font-size: 1.1rem;
+        }
+
+        .main-navbar-guest {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .main-btn-login {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border-radius: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .main-btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.35);
+        }
+
+        .main-navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .main-user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .main-user-info {
+            text-align: right;
+        }
+
+        .main-user-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .main-btn-logout {
+            padding: 8px 15px;
+            background: rgba(233, 69, 96, 0.15);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            border-radius: 8px;
+            color: #e94560;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .main-btn-logout:hover {
+            background: rgba(233, 69, 96, 0.25);
+        }
+
+        @media (max-width: 768px) {
+            .main-navbar-nav {
+                display: none;
+            }
+
+            .main-navbar-title {
+                display: none;
+            }
+
+            .main-user-info {
+                display: none;
+            }
+        }
+
         /* Header */
         .header {
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(233, 69, 96, 0.3);
             padding: 15px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
 
         .header-content {
@@ -128,7 +288,7 @@
             display: flex;
             max-width: 1600px;
             margin: 0 auto;
-            min-height: calc(100vh - 70px);
+            min-height: calc(100vh - 150px);
         }
 
         /* Sidebar de Filtros */
@@ -139,8 +299,9 @@
             padding: 20px;
             overflow-y: auto;
             position: sticky;
-            top: 70px;
-            height: calc(100vh - 70px);
+            top: 75px;
+            height: calc(100vh - 75px);
+            align-self: flex-start;
         }
 
         .filter-section {
@@ -516,7 +677,17 @@
             justify-content: center;
             font-size: 0.65rem;
             font-weight: bold;
+            flex-shrink: 0;
         }
+
+        .mana-pip.mana-W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+        .mana-pip.mana-U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+        .mana-pip.mana-B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #ccc; border: 1px solid #444; }
+        .mana-pip.mana-R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+        .mana-pip.mana-G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+        .mana-pip.mana-C { background: linear-gradient(135deg, #888, #aaa); color: #333; }
+        .mana-pip.mana-generic { background: linear-gradient(135deg, #666, #888); color: white; }
+        .mana-pip.mana-X { background: linear-gradient(135deg, #666, #888); color: white; }
 
         /* List View Styles */
         .cards-grid.list-view .card-item {
@@ -760,14 +931,49 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <a href="{% url 'card_catalog' %}" class="logo">
-                <div class="logo-icon">M</div>
-                <h1>MTG <span>Catalog</span></h1>
+    <!-- Navbar -->
+    <nav class="main-navbar">
+        <div class="main-navbar-content">
+            <a href="/" class="main-navbar-brand">
+                <div class="main-navbar-logo">M</div>
+                <div class="main-navbar-title">MTG <span>Commander</span></div>
             </a>
 
+            <div class="main-navbar-nav">
+                {% if player %}
+                <a href="/lobby/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link">
+                    <span class="main-nav-icon">&#127968;</span> Dashboard
+                </a>
+                {% endif %}
+                <a href="/cards/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link active">
+                    <span class="main-nav-icon">&#127183;</span> Cartas
+                </a>
+                <a href="/decks/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link">
+                    <span class="main-nav-icon">&#128451;</span> Decks
+                </a>
+            </div>
+
+            {% if player %}
+            <div class="main-navbar-user">
+                <div class="main-user-info">
+                    <div class="main-user-name">{{ player.nickname }}</div>
+                </div>
+                <div class="main-user-avatar" style="background: {{ player.avatar_color }};">
+                    {{ player.nickname|slice:":1"|upper }}
+                </div>
+                <a href="/logout/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-btn-logout">Sair</a>
+            </div>
+            {% else %}
+            <div class="main-navbar-guest">
+                <a href="/login/" class="main-btn-login">Entrar</a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Search Header -->
+    <header class="header">
+        <div class="header-content">
             <form method="get" class="search-main" id="searchForm">
                 <!-- Manter outros parametros -->
                 {% for key, value in current_params.items %}
@@ -786,8 +992,6 @@
 
             <nav class="nav-links">
                 <a href="{% url 'card_random' %}">Aleatorio</a>
-                <a href="/decks/">Decks</a>
-                <a href="/lobby/">Lobby</a>
             </nav>
         </div>
     </header>
@@ -1028,7 +1232,7 @@
                         <div class="card-meta">
                             <span class="card-type" title="{{ card.type_line }}">{{ card.type_line|truncatechars:25 }}</span>
                             {% if card.mana_cost %}
-                            <span class="card-mana">{{ card.mana_cost }}</span>
+                            <span class="card-mana" data-mana="{{ card.mana_cost }}"></span>
                             {% endif %}
                         </div>
                     </div>
@@ -1079,6 +1283,29 @@
     </button>
 
     <script>
+        // Mana cost rendering
+        function renderManaCost(manaString) {
+            if (!manaString) return '';
+            const symbols = manaString.match(/\{[^}]+\}/g) || [];
+            return symbols.map(sym => {
+                const value = sym.replace(/[{}]/g, '');
+                let cssClass = 'mana-pip ';
+                if (['W', 'U', 'B', 'R', 'G', 'C'].includes(value)) {
+                    cssClass += 'mana-' + value;
+                } else if (value === 'X') {
+                    cssClass += 'mana-X';
+                } else {
+                    cssClass += 'mana-generic';
+                }
+                return `<span class="${cssClass}">${value}</span>`;
+            }).join('');
+        }
+
+        // Render all mana costs on page load
+        document.querySelectorAll('.card-mana[data-mana]').forEach(el => {
+            el.innerHTML = renderManaCost(el.dataset.mana);
+        });
+
         // Color filters
         const selectedColors = new Set({{ selected_colors|safe }});
 

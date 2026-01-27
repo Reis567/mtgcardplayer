@@ -12,6 +12,9 @@ class LobbyListView(View):
     """Lista de lobbies disponiveis"""
 
     def get(self, request):
+        from accounts.models import PlayerProfile
+        from game.models import Game
+
         tab_id = get_tab_id(request)
         player = get_current_player(request)
 
@@ -29,16 +32,55 @@ class LobbyListView(View):
 
         lobbies = Lobby.objects.filter(
             status__in=['waiting', 'ready']
-        ).prefetch_related('players__player')
+        ).prefetch_related('players__player', 'players__deck__commander')
 
         # Mostrar TODOS os decks válidos (compartilhados entre todos os jogadores)
         all_decks = Deck.objects.filter(is_valid=True).select_related('commander', 'owner')
 
+        # Estatísticas adicionais
+        total_players_online = PlayerProfile.objects.filter(is_online=True).count()
+        total_games_today = Game.objects.filter(
+            created_at__date=timezone.now().date()
+        ).count()
+        total_games_played = Game.objects.count()
+
+        # Lobbies com vagas
+        lobbies_with_slots = sum(1 for l in lobbies if l.player_count() < l.max_players)
+
+        # Jogadores online recentes
+        online_players = PlayerProfile.objects.filter(
+            is_online=True
+        ).exclude(id=player.id).order_by('-last_seen')[:10]
+
+        # Jogos recentes finalizados (para histórico)
+        recent_games = Game.objects.filter(
+            status='finished'
+        ).select_related('winner__player').order_by('-finished_at')[:5]
+
+        # Top commanders usados
+        from cards.models import Card
+        from django.db.models import Count as DjCount
+        top_commanders = Card.objects.filter(
+            decks_as_commander__isnull=False
+        ).annotate(
+            usage_count=DjCount('decks_as_commander')
+        ).order_by('-usage_count')[:5]
+
         return render(request, 'lobby/lobby_list.html', {
             'lobbies': lobbies,
             'player': player,
-            'player_decks': all_decks,  # Renomeado mas mantém compatibilidade com template
-            'tab_id': tab_id
+            'player_decks': all_decks,
+            'tab_id': tab_id,
+            'stats': {
+                'players_online': total_players_online,
+                'games_today': total_games_today,
+                'total_games': total_games_played,
+                'lobbies_with_slots': lobbies_with_slots,
+                'total_decks': all_decks.count(),
+            },
+            'online_players': online_players,
+            'recent_games': recent_games,
+            'top_commanders': top_commanders,
         })
 
 

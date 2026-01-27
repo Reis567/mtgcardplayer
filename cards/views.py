@@ -55,6 +55,14 @@ class CardCatalogView(ListView):
     context_object_name = 'cards'
     paginate_by = 48  # Multiplo de 6 para grid
 
+    def get_player_context(self):
+        """Helper para obter jogador atual da sessao/tab"""
+        from accounts.views import get_current_player, get_tab_id
+        return {
+            'player': get_current_player(self.request),
+            'tab_id': get_tab_id(self.request)
+        }
+
     def get_queryset(self):
         queryset = Card.objects.all()
 
@@ -176,6 +184,9 @@ class CardCatalogView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # Player context for navbar
+        context.update(self.get_player_context())
+
         # Parametros atuais para manter nos links de paginacao
         context['current_params'] = self.request.GET.copy()
         if 'page' in context['current_params']:
@@ -226,6 +237,11 @@ class CardDetailView(View):
     """Pagina de detalhes de um card individual"""
 
     def get(self, request, card_id=None, card_name=None):
+        from accounts.views import get_current_player, get_tab_id
+
+        player = get_current_player(request)
+        tab_id = get_tab_id(request)
+
         if card_id:
             card = get_object_or_404(Card, id=card_id)
         elif card_name:
@@ -268,6 +284,8 @@ class CardDetailView(View):
             'related_cards': related_cards,
             'decks_using': decks_using,
             'formats_legal': formats_legal,
+            'player': player,
+            'tab_id': tab_id,
         }
 
         return render(request, 'cards/card_detail.html', context)

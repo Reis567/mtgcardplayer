@@ -12,7 +12,7 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: #0f0f1a;
             color: #eee;
             min-height: 100vh;
         }
@@ -140,10 +140,180 @@
             font-weight: bold;
             color: white;
         }
+
+        /* ===== GLOBAL NAVBAR STYLES ===== */
+        .main-navbar {
+            background: rgba(15, 15, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .main-navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .main-navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .main-navbar-logo {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #e94560, #4ecdc4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .main-navbar-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .main-navbar-title span {
+            color: #e94560;
+        }
+
+        .main-navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-nav-link {
+            padding: 10px 18px;
+            border-radius: 10px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-nav-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .main-nav-link.active {
+            background: rgba(233, 69, 96, 0.15);
+            color: #e94560;
+        }
+
+        .main-nav-icon {
+            font-size: 1.1rem;
+        }
+
+        .main-navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .main-user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .main-user-info {
+            text-align: right;
+        }
+
+        .main-user-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .main-user-stats {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .main-btn-logout {
+            padding: 8px 15px;
+            background: rgba(233, 69, 96, 0.15);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            border-radius: 8px;
+            color: #e94560;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .main-btn-logout:hover {
+            background: rgba(233, 69, 96, 0.25);
+        }
+
+        /* Navbar for non-logged users */
+        .main-navbar-guest {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .main-btn-login {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border-radius: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .main-btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.35);
+        }
+
+        @media (max-width: 768px) {
+            .main-navbar-nav {
+                display: none;
+            }
+
+            .main-user-info {
+                display: none;
+            }
+
+            .main-navbar-title {
+                display: none;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    {% block navbar %}{% endblock %}
     <div class="container">
         {% block content %}{% endblock %}
     </div>

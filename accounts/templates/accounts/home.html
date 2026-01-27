@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTG Commander Online - Jogue Magic com seus amigos</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f1a;
+            color: #eee;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px 20px;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 80%, rgba(233, 69, 96, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(78, 205, 196, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(108, 92, 231, 0.1) 0%, transparent 60%),
+                linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            z-index: 0;
+        }
+
+        /* Floating Mana Symbols */
+        .mana-float {
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+            z-index: 1;
+        }
+
+        .mana-float:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; color: #f8f8dc; }
+        .mana-float:nth-child(2) { top: 20%; right: 10%; animation-delay: -4s; color: #0074d9; }
+        .mana-float:nth-child(3) { bottom: 30%; left: 15%; animation-delay: -8s; color: #1a1a1a; text-shadow: 0 0 20px #666; }
+        .mana-float:nth-child(4) { bottom: 20%; right: 20%; animation-delay: -12s; color: #e94560; }
+        .mana-float:nth-child(5) { top: 40%; left: 25%; animation-delay: -16s; color: #2ecc71; }
+        .mana-float:nth-child(6) { top: 60%; right: 5%; animation-delay: -3s; color: #f8f8dc; }
+        .mana-float:nth-child(7) { bottom: 10%; left: 40%; animation-delay: -7s; color: #0074d9; }
+        .mana-float:nth-child(8) { top: 15%; left: 60%; animation-delay: -11s; color: #2ecc71; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(5deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(20px) rotate(-5deg); }
+        }
+
+        /* Grid Pattern */
+        .hero-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 900px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(78, 205, 196, 0.15);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            color: #4ecdc4;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(78, 205, 196, 0); }
+        }
+
+        .hero-badge::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #e94560 50%, #4ecdc4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+
+        .hero h1 span {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 400;
+            background: none;
+            -webkit-text-fill-color: #888;
+            margin-top: 10px;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: #aaa;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 35px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: white;
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #4ecdc4;
+            color: #4ecdc4;
+        }
+
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-indicator span {
+            display: block;
+            width: 30px;
+            height: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .scroll-indicator span::before {
+            content: "";
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 10px;
+            background: #4ecdc4;
+            border-radius: 3px;
+            animation: scroll 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+
+        @keyframes scroll {
+            0% { opacity: 1; top: 8px; }
+            100% { opacity: 0; top: 25px; }
+        }
+
+        /* ===== STATS SECTION ===== */
+        .stats-section {
+            padding: 80px 20px;
+            background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(233, 69, 96, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .stat-value.highlight {
+            background: linear-gradient(135deg, #e94560, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ===== FEATURES SECTION ===== */
+        .features-section {
+            padding: 100px 20px;
+            background: #1a1a2e;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .section-header p {
+            color: #888;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card:nth-child(1) { --accent: #e94560; }
+        .feature-card:nth-child(2) { --accent: #4ecdc4; }
+        .feature-card:nth-child(3) { --accent: #6c5ce7; }
+        .feature-card:nth-child(4) { --accent: #ffc107; }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover .feature-icon {
+            background: var(--accent);
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .feature-card p {
+            color: #888;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .feature-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: gap 0.3s;
+        }
+
+        .feature-link:hover {
+            gap: 10px;
+        }
+
+        /* ===== COMMANDERS SECTION ===== */
+        .commanders-section {
+            padding: 100px 20px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+        }
+
+        .commanders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+        }
+
+        .commander-card {
+            position: relative;
+            aspect-ratio: 0.72;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+
+        .commander-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s;
+        }
+
+        .commander-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .commander-card:hover img {
+            transform: scale(1.1);
+        }
+
+        .commander-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 40px 10px 10px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .commander-card:hover .commander-overlay {
+            opacity: 1;
+        }
+
+        .commander-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .commander-decks {
+            font-size: 0.75rem;
+            color: #4ecdc4;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        /* ===== HOW TO PLAY SECTION ===== */
+        .howto-section {
+            padding: 100px 20px;
+            background: #0f0f1a;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .steps-container::before {
+            content: "";
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #e94560, #4ecdc4, #6c5ce7);
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 30px;
+            padding: 30px 0;
+            position: relative;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            min-width: 60px;
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.2), rgba(78, 205, 196, 0.2));
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
+        .step:hover .step-number {
+            background: linear-gradient(135deg, #e94560, #4ecdc4);
+            transform: scale(1.1);
+        }
+
+        .step-content h3 {
+            font-size: 1.3rem;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .step-content p {
+            color: #888;
+            line-height: 1.6;
+        }
+
+        /* ===== LOBBIES SECTION ===== */
+        .lobbies-section {
+            padding: 100px 20px;
+            background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+        }
+
+        .lobbies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .lobby-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .lobby-card:hover {
+            transform: translateY(-5px);
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.05);
+        }
+
+        .lobby-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .lobby-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .lobby-status {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .lobby-status.waiting {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+        }
+
+        .lobby-players {
+            display: flex;
+            gap: -10px;
+            margin-bottom: 15px;
+        }
+
+        .lobby-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.9rem;
+            margin-left: -10px;
+        }
+
+        .lobby-avatar:first-child {
+            margin-left: 0;
+        }
+
+        .lobby-slots {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 0.8rem;
+            margin-left: -10px;
+        }
+
+        .lobby-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .lobby-join {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .lobby-join:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .no-lobbies {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-lobbies-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        /* ===== TOP PLAYERS SECTION ===== */
+        .leaderboard-section {
+            padding: 100px 20px;
+            background: #1a1a2e;
+        }
+
+        .leaderboard {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .leaderboard-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(10px);
+        }
+
+        .leaderboard-rank {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .leaderboard-item:nth-child(1) .leaderboard-rank {
+            background: linear-gradient(135deg, #ffd700, #ffb700);
+            color: #000;
+        }
+
+        .leaderboard-item:nth-child(2) .leaderboard-rank {
+            background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
+            color: #000;
+        }
+
+        .leaderboard-item:nth-child(3) .leaderboard-rank {
+            background: linear-gradient(135deg, #cd7f32, #b87333);
+            color: #fff;
+        }
+
+        .leaderboard-item:nth-child(n+4) .leaderboard-rank {
+            background: rgba(255, 255, 255, 0.1);
+            color: #888;
+        }
+
+        .leaderboard-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .leaderboard-info {
+            flex: 1;
+        }
+
+        .leaderboard-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .leaderboard-stats {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .leaderboard-wins {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #4ecdc4;
+        }
+
+        /* ===== FEATURED CARDS SECTION ===== */
+        .featured-section {
+            padding: 100px 20px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+            overflow: hidden;
+        }
+
+        .cards-scroll {
+            display: flex;
+            gap: 20px;
+            animation: scroll-cards 30s linear infinite;
+        }
+
+        @keyframes scroll-cards {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .featured-card {
+            min-width: 200px;
+            aspect-ratio: 0.72;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .featured-card:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .featured-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ===== CTA SECTION ===== */
+        .cta-section {
+            padding: 100px 20px;
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.1), rgba(78, 205, 196, 0.1));
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            color: #888;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            padding: 40px 20px;
+            background: #0a0a12;
+            text-align: center;
+            color: #555;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .footer-links a {
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #4ecdc4;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero h1 span {
+                font-size: 1.2rem;
+            }
+
+            .hero-description {
+                font-size: 1rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+
+            .section-header h2 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .commanders-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+
+            .steps-container::before {
+                left: 20px;
+            }
+
+            .step-number {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                font-size: 1.1rem;
+            }
+
+            .cta-section h2 {
+                font-size: 2rem;
+            }
+        }
+
+        /* No Cards/Commanders Placeholder */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #555;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-grid"></div>
+
+        <!-- Floating Mana Symbols -->
+        <div class="mana-float">&#9788;</div>
+        <div class="mana-float">&#9790;</div>
+        <div class="mana-float">&#9760;</div>
+        <div class="mana-float">&#9763;</div>
+        <div class="mana-float">&#9752;</div>
+        <div class="mana-float">&#9788;</div>
+        <div class="mana-float">&#9790;</div>
+        <div class="mana-float">&#9752;</div>
+
+        <div class="hero-content">
+            <div class="hero-badge">
+                {% if stats.players_online > 0 %}{{ stats.players_online }} jogador{% if stats.players_online > 1 %}es{% endif %} online{% else %}Jogue agora{% endif %}
+            </div>
+
+            <h1>
+                MTG Commander Online
+                <span>Jogue Magic: The Gathering com seus amigos</span>
+            </h1>
+
+            <p class="hero-description">
+                Monte seu deck de Commander, entre em uma partida e desafie jogadores
+                em batalhas epicas de Magic: The Gathering. Totalmente gratuito e no navegador.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="/login/" class="btn btn-primary">
+                    Comecar a Jogar
+                </a>
+                <a href="/cards/" class="btn btn-secondary">
+                    Explorar Cartas
+                </a>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">
+            <span></span>
+        </div>
+    </section>
+
+    <!-- STATS SECTION -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">&#127183;</span>
+                    <div class="stat-value highlight">{{ stats.total_cards|default:"0" }}</div>
+                    <div class="stat-label">Cartas</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">&#128451;</span>
+                    <div class="stat-value">{{ stats.total_decks|default:"0" }}</div>
+                    <div class="stat-label">Decks</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">&#128100;</span>
+                    <div class="stat-value">{{ stats.total_players|default:"0" }}</div>
+                    <div class="stat-label">Jogadores</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">&#127942;</span>
+                    <div class="stat-value">{{ stats.games_played|default:"0" }}</div>
+                    <div class="stat-label">Partidas</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">&#128640;</span>
+                    <div class="stat-value highlight">{{ stats.active_lobbies|default:"0" }}</div>
+                    <div class="stat-label">Lobbies Ativos</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">&#127919;</span>
+                    <div class="stat-value">{{ stats.players_online|default:"0" }}</div>
+                    <div class="stat-label">Online Agora</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Tudo que voce precisa</h2>
+                <p>Construa decks, encontre partidas e jogue com amigos - tudo em um so lugar</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">&#128451;</div>
+                    <h3>Construtor de Decks</h3>
+                    <p>Importe seus decks do Moxfield, Archidekt ou cole sua lista. Validacao automatica de Commander.</p>
+                    <a href="/decks/" class="feature-link">Ver Decks &rarr;</a>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">&#127183;</div>
+                    <h3>Catalogo de Cartas</h3>
+                    <p>Navegue por milhares de cartas com filtros avancados por cor, tipo, CMC, raridade e muito mais.</p>
+                    <a href="/cards/" class="feature-link">Explorar Cartas &rarr;</a>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">&#9876;</div>
+                    <h3>Matchmaking</h3>
+                    <p>Crie salas ou entre em partidas existentes. Sistema de lobby com chat em tempo real.</p>
+                    <a href="/login/" class="feature-link">Encontrar Partida &rarr;</a>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">&#127942;</div>
+                    <h3>Multiplayer</h3>
+                    <p>Jogue partidas de 2 a 6 jogadores. Perfeito para Commander/EDH com seus amigos.</p>
+                    <a href="/login/" class="feature-link">Jogar Agora &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- COMMANDERS SECTION -->
+    {% if popular_commanders %}
+    <section class="commanders-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Commanders Populares</h2>
+                <p>Os comandantes mais jogados pela comunidade</p>
+            </div>
+
+            <div class="commanders-grid">
+                {% for commander in popular_commanders %}
+                <a href="/cards/card/{{ commander.id }}/" class="commander-card">
+                    <img src="{{ commander.image_normal }}" alt="{{ commander.name }}" loading="lazy">
+                    <div class="commander-overlay">
+                        <div class="commander-name">{{ commander.name }}</div>
+                        {% if commander.deck_count %}
+                        <div class="commander-decks">{{ commander.deck_count }} deck{% if commander.deck_count > 1 %}s{% endif %}</div>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- FEATURED CARDS SECTION -->
+    {% if featured_cards %}
+    <section class="featured-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Cartas em Destaque</h2>
+                <p>Algumas das cartas miticas mais poderosas do jogo</p>
+            </div>
+        </div>
+
+        <div class="cards-scroll">
+            {% for card in featured_cards %}
+            <a href="/cards/card/{{ card.id }}/" class="featured-card">
+                <img src="{{ card.image_normal }}" alt="{{ card.name }}" loading="lazy">
+            </a>
+            {% endfor %}
+            <!-- Duplicate for infinite scroll effect -->
+            {% for card in featured_cards %}
+            <a href="/cards/card/{{ card.id }}/" class="featured-card">
+                <img src="{{ card.image_normal }}" alt="{{ card.name }}" loading="lazy">
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- HOW TO PLAY SECTION -->
+    <section class="howto-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Como Jogar</h2>
+                <p>Comece sua jornada em apenas 4 passos</p>
+            </div>
+
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Faca Login</h3>
+                        <p>Use as credenciais compartilhadas para entrar no sistema e criar seu perfil de jogador com nickname e avatar.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Crie seu Deck</h3>
+                        <p>Importe seu deck de Commander do Moxfield, Archidekt ou cole sua lista de cartas. O sistema valida automaticamente.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Entre em um Lobby</h3>
+                        <p>Crie uma nova sala ou entre em uma existente. Selecione seu deck e marque-se como pronto quando estiver preparado.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Jogue!</h3>
+                        <p>Quando todos estiverem prontos, a partida comeca! Use a interface para jogar suas cartas e derrotar seus oponentes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RECENT LOBBIES SECTION -->
+    <section class="lobbies-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Partidas Abertas</h2>
+                <p>Entre em uma partida e comece a jogar agora</p>
+            </div>
+
+            {% if recent_lobbies %}
+            <div class="lobbies-grid">
+                {% for lobby in recent_lobbies %}
+                <div class="lobby-card">
+                    <div class="lobby-header">
+                        <span class="lobby-name">{{ lobby.name }}</span>
+                        <span class="lobby-status waiting">Aguardando</span>
+                    </div>
+                    <div class="lobby-players">
+                        {% for lp in lobby.players.all %}
+                        <div class="lobby-avatar" style="background-color: {{ lp.player.avatar_color }}">
+                            {{ lp.player.nickname|slice:":1"|upper }}
+                        </div>
+                        {% endfor %}
+                        {% with empty_slots=lobby.max_players|add:"-"|add:lobby.player_count %}
+                        {% for i in "123456"|make_list %}
+                        {% if forloop.counter <= empty_slots|add:"0" %}
+                        <div class="lobby-slots">+</div>
+                        {% endif %}
+                        {% endfor %}
+                        {% endwith %}
+                    </div>
+                    <div class="lobby-info">
+                        <span>{{ lobby.player_count }}/{{ lobby.max_players }} jogadores</span>
+                        <a href="/login/" class="lobby-join">Entrar</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-lobbies">
+                <div class="no-lobbies-icon">&#128640;</div>
+                <p>Nenhuma partida aberta no momento</p>
+                <p>Seja o primeiro a criar uma!</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- LEADERBOARD SECTION -->
+    {% if top_players %}
+    <section class="leaderboard-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Top Jogadores</h2>
+                <p>Os melhores comandantes da comunidade</p>
+            </div>
+
+            <div class="leaderboard">
+                {% for player in top_players %}
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">{{ forloop.counter }}</div>
+                    <div class="leaderboard-avatar" style="background-color: {{ player.avatar_color }}">
+                        {{ player.nickname|slice:":1"|upper }}
+                    </div>
+                    <div class="leaderboard-info">
+                        <div class="leaderboard-name">{{ player.nickname }}</div>
+                        <div class="leaderboard-stats">{{ player.games_played }} partidas jogadas</div>
+                    </div>
+                    <div class="leaderboard-wins">{{ player.games_won }} &#127942;</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- CTA SECTION -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Pronto para jogar?</h2>
+            <p>Entre agora e desafie jogadores de todo o mundo em partidas epicas de Commander</p>
+            <a href="/login/" class="btn btn-primary">Comecar Agora</a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-links">
+            <a href="/cards/">Cartas</a>
+            <a href="/decks/">Decks</a>
+            <a href="/login/">Jogar</a>
+        </div>
+        <p>MTG Commander Online &copy; 2024 - Fan Project</p>
+        <p style="margin-top: 10px; font-size: 0.85rem;">Magic: The Gathering e seus logos sao marcas registradas da Wizards of the Coast</p>
+    </footer>
+
+    <script>
+        // Animate stats on scroll
+        const observerOptions = {
+            threshold: 0.5
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.stat-card, .feature-card, .step').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Pause card scroll on hover
+        const cardsScroll = document.querySelector('.cards-scroll');
+        if (cardsScroll) {
+            cardsScroll.addEventListener('mouseenter', () => {
+                cardsScroll.style.animationPlayState = 'paused';
+            });
+            cardsScroll.addEventListener('mouseleave', () => {
+                cardsScroll.style.animationPlayState = 'running';
+            });
+        }
+    </script>
+</body>
+</html>

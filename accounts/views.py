@@ -2,13 +2,82 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.http import JsonResponse
 from django.conf import settings
+from django.db.models import Count, Q
 from .models import PlayerProfile
 import uuid
+import random
 
 
 # Credenciais globais (pode ser movido para settings.py)
 GLOBAL_USERNAME = 'mtgplayer'
 GLOBAL_PASSWORD = 'commander2024'
+
+
+class HomeView(View):
+    """Home page com estatísticas e conteúdo em destaque"""
+
+    def get(self, request):
+        from cards.models import Card
+        from decks.models import Deck
+        from lobby.models import Lobby
+        from game.models import Game
+
+        # Estatísticas
+        stats = {
+            'total_cards': Card.objects.count(),
+            'total_decks': Deck.objects.count(),
+            'total_players': PlayerProfile.objects.count(),
+            'players_online': PlayerProfile.objects.filter(is_online=True).count(),
+            'games_played': Game.objects.count(),
+            'active_lobbies': Lobby.objects.filter(status__in=['waiting', 'ready']).count(),
+        }
+
+        # Commanders populares (mais usados em decks)
+        popular_commanders = Card.objects.filter(
+            decks_as_commander__isnull=False
+        ).annotate(
+            deck_count=Count('decks_as_commander')
+        ).order_by('-deck_count')[:8]
+
+        # Se não tiver commanders populares, pegar alguns legendários aleatórios
+        if not popular_commanders.exists():
+            legendary_creatures = list(Card.objects.filter(
+                type_line__icontains='Legendary Creature',
+                image_normal__isnull=False
+            ).exclude(image_normal='')[:50])
+
+            if legendary_creatures:
+                popular_commanders = random.sample(
+                    legendary_creatures,
+                    min(8, len(legendary_creatures))
+                )
+
+        # Cartas em destaque (míticas aleatórias)
+        featured_cards = list(Card.objects.filter(
+            rarity='mythic',
+            image_normal__isnull=False
+        ).exclude(image_normal='')[:30])
+
+        if featured_cards:
+            featured_cards = random.sample(featured_cards, min(6, len(featured_cards)))
+
+        # Lobbies recentes aguardando jogadores
+        recent_lobbies = Lobby.objects.filter(
+            status='waiting'
+        ).prefetch_related('players', 'players__player', 'players__deck')[:4]
+
+        # Top jogadores (por vitórias)
+        top_players = PlayerProfile.objects.filter(
+            games_won__gt=0
+        ).order_by('-games_won')[:5]
+
+        return render(request, 'accounts/home.html', {
+            'stats': stats,
+            'popular_commanders': popular_commanders,
+            'featured_cards': featured_cards,
+            'recent_lobbies': recent_lobbies,
+            'top_players': top_players,
+        })
 
 
 class LoginView(View):

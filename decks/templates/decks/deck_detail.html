@@ -4,7 +4,36 @@
 
 {% block extra_css %}
 <style>
-    .container { max-width: 1100px; }
+    .container { display: none; }
+
+    .deck-detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .breadcrumb a {
+        color: #888;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .breadcrumb a:hover {
+        color: #e94560;
+    }
+
+    .breadcrumb-sep {
+        color: #555;
+    }
 
     /* Hero Section */
     .deck-hero {
@@ -418,9 +447,31 @@
     }
 
     .card-mana {
-        font-size: 0.85rem;
-        color: #888;
+        display: flex;
+        gap: 2px;
+        flex-shrink: 0;
     }
+
+    .mana-pip {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .mana-pip.mana-W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+    .mana-pip.mana-U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+    .mana-pip.mana-B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #ccc; border: 1px solid #444; }
+    .mana-pip.mana-R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+    .mana-pip.mana-G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+    .mana-pip.mana-C { background: linear-gradient(135deg, #888, #aaa); color: #333; }
+    .mana-pip.mana-generic { background: linear-gradient(135deg, #666, #888); color: white; }
+    .mana-pip.mana-X { background: linear-gradient(135deg, #666, #888); color: white; }
 
     /* Card Preview Tooltip */
     .card-preview {
@@ -515,8 +566,56 @@
 </style>
 {% endblock %}
 
+{% block navbar %}
+<nav class="main-navbar">
+    <div class="main-navbar-content">
+        <a href="/" class="main-navbar-brand">
+            <div class="main-navbar-logo">M</div>
+            <div class="main-navbar-title">MTG <span>Commander</span></div>
+        </a>
+
+        <div class="main-navbar-nav">
+            <a href="/lobby/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link">
+                <span class="main-nav-icon">&#127968;</span> Dashboard
+            </a>
+            <a href="/cards/" class="main-nav-link">
+                <span class="main-nav-icon">&#127183;</span> Cartas
+            </a>
+            <a href="/decks/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link active">
+                <span class="main-nav-icon">&#128451;</span> Decks
+            </a>
+        </div>
+
+        {% if player %}
+        <div class="main-navbar-user">
+            <div class="main-user-info">
+                <div class="main-user-name">{{ player.nickname }}</div>
+                <div class="main-user-stats">{{ player.games_won }} vitoria{% if player.games_won != 1 %}s{% endif %}</div>
+            </div>
+            <div class="main-user-avatar" style="background-color: {{ player.avatar_color|default:'#e94560' }}">
+                {{ player.nickname|slice:":1"|upper }}
+            </div>
+            <a href="/logout/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-btn-logout">Sair</a>
+        </div>
+        {% else %}
+        <div class="main-navbar-guest">
+            <a href="/login/" class="main-btn-login">Entrar</a>
+        </div>
+        {% endif %}
+    </div>
+</nav>
+{% endblock %}
+
 {% block content %}
-<a href="{% url 'deck_list' %}{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="back-link">&larr; Voltar para Decks</a>
+</div><!-- Close default container -->
+
+<div class="deck-detail-container">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="/decks/{% if tab_id %}?tab={{ tab_id }}{% endif %}">Decks</a>
+        <span class="breadcrumb-sep">/</span>
+        <span>{{ deck.name }}</span>
+    </div>
 
 <!-- Hero Section -->
 <div class="deck-hero">
@@ -646,7 +745,7 @@
                 <span class="card-qty">{{ dc.quantity }}x</span>
                 <span class="card-name-text">{{ dc.card.name }}</span>
                 {% if dc.card.mana_cost %}
-                <span class="card-mana">{{ dc.card.mana_cost }}</span>
+                <span class="card-mana" data-mana="{{ dc.card.mana_cost }}"></span>
                 {% endif %}
             </a>
             {% endfor %}
@@ -668,7 +767,7 @@
                 <span class="card-qty">{{ dc.quantity }}x</span>
                 <span class="card-name-text">{{ dc.card.name }}</span>
                 {% if dc.card.mana_cost %}
-                <span class="card-mana">{{ dc.card.mana_cost }}</span>
+                <span class="card-mana" data-mana="{{ dc.card.mana_cost }}"></span>
                 {% endif %}
             </a>
             {% endfor %}
@@ -723,12 +822,37 @@
     </div>
 </div>
 
+</div><!-- Close deck-detail-container -->
+
 <!-- Card Preview Tooltip -->
 <div class="card-preview" id="cardPreview">
     <img src="" alt="Card Preview">
 </div>
 
 <script>
+    // Mana cost rendering
+    function renderManaCost(manaString) {
+        if (!manaString) return '';
+        const symbols = manaString.match(/\{[^}]+\}/g) || [];
+        return symbols.map(sym => {
+            const value = sym.replace(/[{}]/g, '');
+            let cssClass = 'mana-pip ';
+            if (['W', 'U', 'B', 'R', 'G', 'C'].includes(value)) {
+                cssClass += 'mana-' + value;
+            } else if (value === 'X') {
+                cssClass += 'mana-X';
+            } else {
+                cssClass += 'mana-generic';
+            }
+            return `<span class="${cssClass}">${value}</span>`;
+        }).join('');
+    }
+
+    // Render all mana costs on page load
+    document.querySelectorAll('.card-mana[data-mana]').forEach(el => {
+        el.innerHTML = renderManaCost(el.dataset.mana);
+    });
+
     // Tabs
     function showTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));

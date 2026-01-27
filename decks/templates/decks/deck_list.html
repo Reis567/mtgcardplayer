@@ -4,9 +4,15 @@
 
 {% block extra_css %}
 <style>
-    .container { max-width: 1200px; }
+    .container { display: none; }
 
-    .header {
+    .deck-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    .page-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -15,31 +21,31 @@
         gap: 20px;
     }
 
-    .header-left h1 {
+    .page-header h1 {
+        font-size: 2rem;
+        color: #fff;
         margin-bottom: 5px;
     }
 
-    .nav-links {
-        display: flex;
-        gap: 10px;
+    .page-header .subtitle {
+        color: #888;
+        font-size: 1rem;
     }
 
-    .nav-links a {
-        padding: 10px 20px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
+    .btn-import {
+        padding: 14px 28px;
+        background: linear-gradient(135deg, #e94560, #ff6b6b);
+        border-radius: 12px;
         color: #fff;
         text-decoration: none;
-        font-size: 0.9rem;
+        font-weight: 600;
+        font-size: 1rem;
         transition: all 0.2s;
     }
 
-    .nav-links a:hover {
-        background: rgba(255, 255, 255, 0.2);
-    }
-
-    .nav-links a.primary {
-        background: linear-gradient(135deg, #e94560, #ff6b6b);
+    .btn-import:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(233, 69, 96, 0.35);
     }
 
     /* Search and Filters */
@@ -439,19 +445,52 @@
 </style>
 {% endblock %}
 
+{% block navbar %}
+<nav class="main-navbar">
+    <div class="main-navbar-content">
+        <a href="/" class="main-navbar-brand">
+            <div class="main-navbar-logo">M</div>
+            <div class="main-navbar-title">MTG <span>Commander</span></div>
+        </a>
+
+        <div class="main-navbar-nav">
+            <a href="/lobby/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link">
+                <span class="main-nav-icon">&#127968;</span> Dashboard
+            </a>
+            <a href="/cards/" class="main-nav-link">
+                <span class="main-nav-icon">&#127183;</span> Cartas
+            </a>
+            <a href="/decks/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link active">
+                <span class="main-nav-icon">&#128451;</span> Decks
+            </a>
+        </div>
+
+        <div class="main-navbar-user">
+            <div class="main-user-info">
+                <div class="main-user-name">{{ player.nickname }}</div>
+                <div class="main-user-stats">{{ player.games_won }} vitoria{% if player.games_won != 1 %}s{% endif %}</div>
+            </div>
+            <div class="main-user-avatar" style="background-color: {{ player.avatar_color|default:'#e94560' }}">
+                {{ player.nickname|slice:":1"|upper }}
+            </div>
+            <a href="/logout/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-btn-logout">Sair</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
 {% block content %}
-<div class="header">
-    <div class="header-left">
-        <h1>Decks</h1>
-        <p class="subtitle">{{ player.nickname }}</p>
+</div><!-- Close default container -->
+
+<div class="deck-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1>Meus Decks</h1>
+            <p class="subtitle">Gerencie seus decks de Commander</p>
+        </div>
+        <a href="{% url 'deck_import' %}{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="btn-import">+ Importar Deck</a>
     </div>
-    <div class="nav-links">
-        <a href="/cards/">Catalogo</a>
-        <a href="{% url 'deck_import' %}" class="primary">+ Importar Deck</a>
-        <a href="{% url 'lobby_list' %}">Lobby</a>
-        <a href="{% url 'profile' %}">Perfil</a>
-    </div>
-</div>
+
 
 <!-- Stats Bar -->
 <div class="stats-bar">
@@ -608,6 +647,8 @@
     {% endfor %}
 </div>
 {% endif %}
+
+</div><!-- Close deck-container -->
 
 <script>
     const selectedColors = new Set();
