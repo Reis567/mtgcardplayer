@@ -8,7 +8,8 @@
       "Bash(dir:*)",
       "Bash(timeout 5 python:*)",
       "Bash(python:*)",
-      "Bash(set DJANGO_SETTINGS_MODULE=mtg_cards.settings:*)"
+      "Bash(set DJANGO_SETTINGS_MODULE=mtg_cards.settings:*)",
+      "Bash(findstr:*)"
     ]
   }
 }
