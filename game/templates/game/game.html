@@ -688,7 +688,7 @@
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.9);
-            z-index: 1000;
+            z-index: 1800;
             justify-content: center;
             align-items: center;
             flex-direction: column;
@@ -3352,6 +3352,16 @@
             e.target.classList.add('dragging');
         }
 
+        function handleZoneDragStart(e, cardId, zone) {
+            // Close the zone viewer modal when starting to drag
+            closeZoneViewer();
+            // Then handle normal drag start
+            draggedCard = cardId;
+            draggedCardData = { id: cardId, zone };
+            e.dataTransfer.setData('text/plain', cardId);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
         function handleDragOver(e) {
             e.preventDefault();
             e.currentTarget.classList.add('drag-over');
@@ -3932,6 +3942,9 @@
         }
 
         function showHandZoneContextMenu(e) {
+            // Don't show zone menu if clicking on a card - let card's own context menu handle it
+            if (e.target.closest('.card')) return;
+
             const zones = gameState.zones_data[mySeat];
             const handCount = zones && zones.hand ? zones.hand.length : 0;
 
@@ -4182,11 +4195,21 @@
             const player = gameState.players.find(p => p.seat_position === seat);
             const playerName = player ? player.nickname : '';
             document.getElementById('zoneViewerTitle').textContent = `${titles[zoneName] || zoneName} - ${playerName} (${cards.length})`;
-            document.getElementById('zoneViewerCards').innerHTML = cards.map(c => `
-                <div class="card" data-id="${c.id}" onclick="showCard('${c.id}', '${c.image_normal}', '${c.name}', '${zoneName}', ${seat === mySeat})">
-                    <img src="${c.image_normal}" alt="${c.name}">
-                </div>
-            `).join('');
+
+            const isMyZone = seat === mySeat;
+            document.getElementById('zoneViewerCards').innerHTML = cards.map(c => {
+                const escapedName = (c.name || '').replace(/'/g, "\\'");
+                const escapedImage = (c.image_normal || '').replace(/'/g, "\\'");
+                const contextMenu = isMyZone ? `oncontextmenu="showZoneCardContextMenu(event, '${c.id}', '${zoneName}'); return false;"` : '';
+                const draggable = isMyZone ? `draggable="true" ondragstart="handleZoneDragStart(event, '${c.id}', '${zoneName}')"` : '';
+                return `
+                    <div class="card" data-id="${c.id}"
+                         onclick="showCard('${c.id}', '${escapedImage}', '${escapedName}', '${zoneName}', ${isMyZone})"
+                         ${contextMenu} ${draggable}>
+                        <img src="${c.image_normal}" alt="${c.name}">
+                    </div>
+                `;
+            }).join('');
 
             // Show "Exile All" button only for my own graveyard
             const exileBtn = document.getElementById('exileAllGraveyardBtn');
@@ -4198,6 +4221,73 @@
 
             currentZoneViewer = { zone: zoneName, seat: seat };
             document.getElementById('zoneViewerModal').classList.add('show');
+        }
+
+        function showZoneCardContextMenu(e, cardId, zoneName) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const items = [];
+
+            if (zoneName === 'graveyard') {
+                items.push({ label: 'Devolver para Mao', action: `moveCardFromZone('${cardId}', 'hand'); hideContextMenu();` });
+                items.push({ label: 'Reanimar (Campo)', action: `moveCardFromZone('${cardId}', 'battlefield'); hideContextMenu();` });
+                items.push({ label: 'Exilar', action: `moveCardFromZone('${cardId}', 'exile'); hideContextMenu();` });
+                items.push({ divider: true });
+                items.push({ label: 'Topo do Deck', action: `sendAction('put_top', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                items.push({ label: 'Fundo do Deck', action: `sendAction('put_bottom', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                items.push({ label: 'Embaralhar no Deck', action: `sendAction('shuffle_into', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+            } else if (zoneName === 'exile') {
+                items.push({ label: 'Devolver para Mao', action: `moveCardFromZone('${cardId}', 'hand'); hideContextMenu();` });
+                items.push({ label: 'Colocar no Campo', action: `moveCardFromZone('${cardId}', 'battlefield'); hideContextMenu();` });
+                items.push({ label: 'Enviar Cemiterio', action: `moveCardFromZone('${cardId}', 'graveyard'); hideContextMenu();` });
+                items.push({ divider: true });
+                items.push({ label: 'Topo do Deck', action: `sendAction('put_top', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                items.push({ label: 'Fundo do Deck', action: `sendAction('put_bottom', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                items.push({ label: 'Embaralhar no Deck', action: `sendAction('shuffle_into', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+            } else if (zoneName === 'command') {
+                items.push({ label: 'Lancar no Campo', action: `moveCardFromZone('${cardId}', 'battlefield'); hideContextMenu();` });
+            }
+
+            if (items.length > 0) {
+                showContextMenu(e, items, false);
+            }
+        }
+
+        function moveCardFromZone(cardId, targetZone) {
+            // Find card before sending action to use for optimistic visual update
+            const card = findCardById(cardId);
+
+            sendAction('move_card', { object_id: cardId, zone: targetZone });
+
+            // If moving to battlefield, close zone viewer and add optimistic visual
+            if (targetZone === 'battlefield') {
+                closeZoneViewer();
+                if (card && card.type_line) {
+                    const row = getCardRow(card.type_line);
+                    const cardData = {
+                        id: cardId,
+                        name: card.name,
+                        type_line: card.type_line,
+                        image_small: card.image_small || card.image_normal,
+                        image_normal: card.image_normal,
+                        is_tapped: false,
+                        counters: {},
+                        is_commander: card.is_commander || false
+                    };
+                    addCardToBattlefieldVisual(cardData, row, mySeat);
+                }
+            } else if (targetZone === 'hand') {
+                // Close zone viewer when moving to hand
+                closeZoneViewer();
+            } else {
+                // For other zones (exile, graveyard), refresh zone viewer after delay
+                setTimeout(() => {
+                    if (currentZoneViewer.zone) {
+                        showZoneViewer(currentZoneViewer.zone, currentZoneViewer.seat);
+                    }
+                }, 300);
+            }
         }
 
         function exileAllFromGraveyard() {
