@@ -722,6 +722,27 @@
             z-index: 1000;
             display: none;
         }
+
+        /* ===== CARD HOVER PREVIEW ===== */
+        .card-hover-preview {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            display: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(233, 69, 96, 0.3);
+            overflow: hidden;
+            transition: opacity 0.15s ease-out;
+        }
+        .card-hover-preview img {
+            width: 280px;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+        }
+        .card-hover-preview.show {
+            display: block;
+        }
         .card.selection-preview {
             outline: 2px solid #e94560;
             outline-offset: 2px;
@@ -2072,6 +2093,11 @@
     <!-- Selection Box -->
     <div class="selection-box" id="selectionBox"></div>
 
+    <!-- Card Hover Preview -->
+    <div class="card-hover-preview" id="cardHoverPreview">
+        <img src="" alt="Card Preview" id="cardHoverPreviewImg">
+    </div>
+
     <!-- Context Menu -->
     <div class="context-menu" id="contextMenu">
         <div id="contextMenuItems"></div>
@@ -3288,6 +3314,7 @@
             const dragEnd = isMe ? `ondragend="handleBattlefieldDragEnd(event)"` : '';
             const dropHandlers = isMe ? `ondragover="handleBattlefieldCardDragOver(event, '${card.id}')" ondragleave="handleBattlefieldCardDragLeave(event)" ondrop="handleBattlefieldCardDrop(event, '${card.id}')"` : '';
             const contextMenu = `oncontextmenu="showBattlefieldContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}, ${isMe}); return false;"`;
+            const hoverPreview = `onmouseenter="showCardHoverPreview(event, '${card.image_normal || card.image_small}')" onmousemove="updateCardHoverPosition(event)" onmouseleave="hideCardHoverPreview()"`;
 
             return `
                 <div class="card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''}"
@@ -3295,7 +3322,7 @@
                      ${dragStart} ${dragEnd} ${dropHandlers}
                      onclick="handleBattlefieldCardClick(event, '${card.id}', ${isMe})"
                      ondblclick="${isMe ? `event.stopPropagation(); toggleTap('${card.id}')` : ''}"
-                     ${contextMenu}>
+                     ${contextMenu} ${hoverPreview}>
                     <img src="${card.image_small}" alt="${card.name}" draggable="false">
                     ${countersHtml}
                 </div>
@@ -3324,6 +3351,7 @@
                 const dropHandlers = isMe && isTop ? `ondragover="handleBattlefieldCardDragOver(event, '${card.id}')" ondragleave="handleBattlefieldCardDragLeave(event)" ondrop="handleBattlefieldCardDrop(event, '${card.id}')"` : '';
                 const contextMenu = `oncontextmenu="showStackCardContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}, ${isMe}, ${stackId}); return false;"`;
                 const stackedClass = isTop ? 'stack-top' : 'stacked';
+                const hoverPreview = `onmouseenter="showCardHoverPreview(event, '${card.image_normal || card.image_small}')" onmousemove="updateCardHoverPosition(event)" onmouseleave="hideCardHoverPreview()"`;
 
                 return `
                     <div class="card ${stackedClass} ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''}"
@@ -3331,7 +3359,7 @@
                          ${dragStart} ${dragEnd} ${dropHandlers}
                          onclick="handleStackCardClick(event, '${card.id}', ${isMe}, ${stackId})"
                          ondblclick="${isMe ? `event.stopPropagation(); toggleTap('${card.id}')` : ''}"
-                         ${contextMenu}>
+                         ${contextMenu} ${hoverPreview}>
                         <img src="${card.image_small}" alt="${card.name}" draggable="false">
                         ${countersHtml}
                     </div>
@@ -3427,7 +3455,10 @@
                          ondragstart="handleDragStart(event, '${c.id}', 'command')"
                          onclick="showCard('${c.id}', '${c.image_normal}', '${c.name}', 'command', true)"
                          ondblclick="event.stopPropagation(); moveCard('${c.id}', 'battlefield')"
-                         oncontextmenu="showCommandContextMenu(event, '${c.id}'); return false;">
+                         oncontextmenu="showCommandContextMenu(event, '${c.id}'); return false;"
+                         onmouseenter="showCardHoverPreview(event, '${c.image_normal}')"
+                         onmousemove="updateCardHoverPosition(event)"
+                         onmouseleave="hideCardHoverPreview()">
                         <img src="${c.image_small}" alt="${c.name}">
                     </div>
                 `).join('');
@@ -3515,7 +3546,10 @@
                          ondragstart="handleDragStart(event, '${card.id}', 'hand')"
                          ondragend="handleHandCardDragEnd(event)"
                          onclick="showCardById('${card.id}', 'hand', true)"
-                         oncontextmenu="showHandContextMenuById(event, '${card.id}'); return false;">
+                         oncontextmenu="showHandContextMenuById(event, '${card.id}'); return false;"
+                         onmouseenter="showCardHoverPreview(event, '${escapedImage}')"
+                         onmousemove="updateCardHoverPosition(event)"
+                         onmouseleave="hideCardHoverPreview()">
                         <img src="${escapedImage}" alt="${escapedName}" draggable="false">
                     </div>
                 `;
@@ -3533,6 +3567,9 @@
             cardEl.setAttribute('ondragend', `handleHandCardDragEnd(event)`);
             cardEl.setAttribute('onclick', `showCardById('${card.id}', 'hand', true)`);
             cardEl.setAttribute('oncontextmenu', `showHandContextMenuById(event, '${card.id}'); return false;`);
+            cardEl.setAttribute('onmouseenter', `showCardHoverPreview(event, '${escapedImage}')`);
+            cardEl.setAttribute('onmousemove', `updateCardHoverPosition(event)`);
+            cardEl.setAttribute('onmouseleave', `hideCardHoverPreview()`);
             cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}" draggable="false">`;
             return cardEl;
         }
@@ -3874,6 +3911,7 @@
 
         // ===== DRAG AND DROP =====
         function handleDragStart(e, cardId, zone) {
+            hideCardHoverPreview(); // Hide preview when dragging starts
             draggedCard = cardId;
             draggedCardData = { id: cardId, zone };
             e.dataTransfer.setData('text/plain', cardId);
@@ -4250,6 +4288,77 @@
             draggedCard = null;
             draggedCardData = null;
             draggedCards.clear();
+        }
+
+        // ===== CARD HOVER PREVIEW =====
+        let hoverPreviewTimeout = null;
+
+        function showCardHoverPreview(e, imageUrl) {
+            if (!imageUrl) return;
+
+            // Clear any pending hide timeout
+            if (hoverPreviewTimeout) {
+                clearTimeout(hoverPreviewTimeout);
+                hoverPreviewTimeout = null;
+            }
+
+            const preview = document.getElementById('cardHoverPreview');
+            const img = document.getElementById('cardHoverPreviewImg');
+
+            img.src = imageUrl;
+
+            // Position the preview
+            const padding = 15;
+            let x = e.clientX + padding;
+            let y = e.clientY + padding;
+
+            // Get preview dimensions (use fixed width since image may not be loaded yet)
+            const previewWidth = 280;
+            const previewHeight = 390; // Approximate height for MTG card ratio
+
+            // Keep within viewport
+            if (x + previewWidth > window.innerWidth) {
+                x = e.clientX - previewWidth - padding;
+            }
+            if (y + previewHeight > window.innerHeight) {
+                y = window.innerHeight - previewHeight - padding;
+            }
+            if (y < padding) y = padding;
+
+            preview.style.left = x + 'px';
+            preview.style.top = y + 'px';
+            preview.classList.add('show');
+        }
+
+        function updateCardHoverPosition(e) {
+            const preview = document.getElementById('cardHoverPreview');
+            if (!preview.classList.contains('show')) return;
+
+            const padding = 15;
+            let x = e.clientX + padding;
+            let y = e.clientY + padding;
+
+            const previewWidth = 280;
+            const previewHeight = 390;
+
+            if (x + previewWidth > window.innerWidth) {
+                x = e.clientX - previewWidth - padding;
+            }
+            if (y + previewHeight > window.innerHeight) {
+                y = window.innerHeight - previewHeight - padding;
+            }
+            if (y < padding) y = padding;
+
+            preview.style.left = x + 'px';
+            preview.style.top = y + 'px';
+        }
+
+        function hideCardHoverPreview() {
+            // Small delay to prevent flickering when moving between cards
+            hoverPreviewTimeout = setTimeout(() => {
+                const preview = document.getElementById('cardHoverPreview');
+                preview.classList.remove('show');
+            }, 50);
         }
 
         // ===== CARD STACKING =====
@@ -4924,7 +5033,10 @@
 
             container.innerHTML = hand.map(card => {
                 const imageUrl = card.image_normal || '/static/images/card_back.png';
-                return `<div class="mulligan-card" data-id="${card.id}" onclick="toggleMulliganCard('${card.id}', this)">
+                return `<div class="mulligan-card" data-id="${card.id}" onclick="toggleMulliganCard('${card.id}', this)"
+                             onmouseenter="showCardHoverPreview(event, '${imageUrl}')"
+                             onmousemove="updateCardHoverPosition(event)"
+                             onmouseleave="hideCardHoverPreview()">
                             <img src="${imageUrl}" alt="${card.name || 'Card'}" draggable="false">
                         </div>`;
             }).join('');
@@ -5198,17 +5310,23 @@
             scryCardsData = cards;
             document.getElementById('scryTitle').textContent = isScry ? 'Videncia - Escolha a ordem' : 'Cartas do topo';
             const container = document.getElementById('scryCards');
-            container.innerHTML = cards.map(c => `
-                <div class="card" data-id="${c.id}" draggable="true" ondragstart="handleScryDragStart(event, '${c.id}')">
-                    <img src="${c.image_normal || c.image_small}" alt="${c.name}">
+            container.innerHTML = cards.map(c => {
+                const imageUrl = c.image_normal || c.image_small;
+                return `
+                <div class="card" data-id="${c.id}" draggable="true" ondragstart="handleScryDragStart(event, '${c.id}')"
+                     onmouseenter="showCardHoverPreview(event, '${imageUrl}')"
+                     onmousemove="updateCardHoverPosition(event)"
+                     onmouseleave="hideCardHoverPreview()">
+                    <img src="${imageUrl}" alt="${c.name}">
                 </div>
-            `).join('');
+            `}).join('');
             document.getElementById('scryTopCards').innerHTML = '';
             document.getElementById('scryBottomCards').innerHTML = '';
             document.getElementById('scryModal').classList.add('show');
         }
 
         function handleScryDragStart(e, cardId) {
+            hideCardHoverPreview();
             e.dataTransfer.setData('text/plain', cardId);
         }
 
@@ -5225,7 +5343,11 @@
             div.dataset.id = cardId;
             div.draggable = true;
             div.ondragstart = (ev) => handleScryDragStart(ev, cardId);
-            div.innerHTML = `<img src="${card.image_small || card.image_normal}" alt="${card.name}">`;
+            const imageUrl = card.image_normal || card.image_small;
+            div.onmouseenter = (ev) => showCardHoverPreview(ev, imageUrl);
+            div.onmousemove = (ev) => updateCardHoverPosition(ev);
+            div.onmouseleave = () => hideCardHoverPreview();
+            div.innerHTML = `<img src="${imageUrl}" alt="${card.name}">`;
             targetContainer.appendChild(div);
         }
 
@@ -5266,10 +5388,11 @@
                 const contextMenu = isMyZone ? `oncontextmenu="showZoneCardContextMenu(event, '${c.id}', '${zoneName}'); return false;"` : '';
                 const draggable = isMyZone ? `draggable="true" ondragstart="handleZoneViewerDragStart(event, '${c.id}', '${zoneName}')" ondragend="handleZoneViewerDragEnd(event)"` : '';
                 const clickHandler = isMyZone ? `onclick="handleZoneCardClick(event, '${c.id}', '${escapedImage}', '${escapedName}', '${zoneName}')"` : `onclick="showCard('${c.id}', '${escapedImage}', '${escapedName}', '${zoneName}', false)"`;
+                const hoverPreview = `onmouseenter="showCardHoverPreview(event, '${escapedImage}')" onmousemove="updateCardHoverPosition(event)" onmouseleave="hideCardHoverPreview()"`;
                 return `
                     <div class="card" data-id="${c.id}"
                          ${clickHandler}
-                         ${contextMenu} ${draggable}>
+                         ${contextMenu} ${draggable} ${hoverPreview}>
                         <img src="${c.image_normal}" alt="${c.name}">
                     </div>
                 `;
@@ -5550,13 +5673,19 @@
 
         function renderLibraryViewer() {
             document.getElementById('libraryViewerTitle').textContent = `Sua Biblioteca (${libraryViewerCards.length})`;
-            document.getElementById('libraryViewerCards').innerHTML = libraryViewerCards.map(c => `
-                <div class="card library-card" data-id="${c.id}"
-                     onclick="showLibraryCardActions('${c.id}', '${c.image_normal}', '${c.name}')"
-                     oncontextmenu="showLibraryCardContextMenu(event, '${c.id}', '${c.name}'); return false;">
-                    <img src="${c.image_normal || c.image_small}" alt="${c.name}">
-                </div>
-            `).join('');
+            document.getElementById('libraryViewerCards').innerHTML = libraryViewerCards.map(c => {
+                const escapedImage = (c.image_normal || c.image_small || '').replace(/'/g, "\\'");
+                return `
+                    <div class="card library-card" data-id="${c.id}"
+                         onclick="showLibraryCardActions('${c.id}', '${c.image_normal}', '${c.name}')"
+                         oncontextmenu="showLibraryCardContextMenu(event, '${c.id}', '${c.name}'); return false;"
+                         onmouseenter="showCardHoverPreview(event, '${escapedImage}')"
+                         onmousemove="updateCardHoverPosition(event)"
+                         onmouseleave="hideCardHoverPreview()">
+                        <img src="${c.image_normal || c.image_small}" alt="${c.name}">
+                    </div>
+                `;
+            }).join('');
         }
 
         function showLibraryCardActions(cardId, imageUrl, cardName) {
