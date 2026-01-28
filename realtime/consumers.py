@@ -1253,6 +1253,19 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
 
+        # Card stacking (visual organization, broadcast to all)
+        elif action == 'sync_stacks':
+            seat = content.get('data', {}).get('seat')
+            stacks = content.get('data', {}).get('stacks', [])
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'stacks_broadcast',
+                    'seat': seat,
+                    'stacks': stacks
+                }
+            )
+
         elif action in ['move_card', 'tap_card', 'change_life', 'add_counter', 'remove_counter',
                         'next_phase', 'next_turn', 'draw_card', 'shuffle_library', 'concede',
                         'scry', 'look_top', 'put_top', 'put_bottom', 'reveal_card',
@@ -1389,4 +1402,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             'type': 'arrows_update',
             **data
+        })
+
+    async def stacks_broadcast(self, event):
+        """Broadcast card stack updates to all players"""
+        await self.send_json({
+            'type': 'stacks_update',
+            'seat': event['seat'],
+            'stacks': event['stacks']
         })

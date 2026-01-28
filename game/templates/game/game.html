@@ -15,10 +15,11 @@
         }
         .game-container {
             display: grid;
-            grid-template-rows: auto auto 1fr auto auto;
+            grid-template-rows: auto auto 1fr;
             height: 100vh;
             gap: 4px;
             padding: 4px;
+            padding-right: 75px; /* Space for side zones panel */
         }
 
         /* ===== HEADER ===== */
@@ -298,9 +299,9 @@
             overflow-x: hidden;
         }
         .battlefield-row {
-            min-height: 45px;
+            min-height: 70px;
             border-radius: 4px;
-            padding: 3px 6px;
+            padding: 5px 8px;
             position: relative;
             transition: all 0.2s;
             flex-shrink: 1;
@@ -316,21 +317,25 @@
         .cards-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 4px;
-            min-height: 32px;
+            gap: 8px;
+            min-height: 60px;
             align-content: flex-start;
         }
 
-        /* ===== BOTTOM ZONES + COMMAND ===== */
+        /* ===== SIDE ZONES (Right Panel) ===== */
         .my-zones-row {
+            position: fixed;
+            right: 10px;
+            bottom: 10px;
+            z-index: 500;
             display: flex;
-            gap: 12px;
-            justify-content: center;
-            align-items: flex-end;
-            padding: 6px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 5px;
-            flex-shrink: 0;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 8px;
+            background: rgba(15, 15, 25, 0.95);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: -3px 0 15px rgba(0,0,0,0.5);
         }
         .zone-stack {
             display: flex;
@@ -402,21 +407,102 @@
         }
         .command-zone-stack .card { width: 46px; height: 64px; }
 
-        /* ===== MY HAND ===== */
-        .my-hand-container {
-            background: rgba(255,255,255,0.05);
-            border-radius: 5px 5px 0 0;
-            padding: 6px;
-            border-top: 2px solid #e94560;
-            flex-shrink: 0;
+        /* ===== MY HAND (Collapsible) ===== */
+        .hand-toggle-btn {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 600;
+            background: #e94560;
+            border: none;
+            border-radius: 20px 20px 0 0;
+            color: white;
+            padding: 6px 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            box-shadow: 0 -2px 10px rgba(233, 69, 96, 0.5);
             transition: all 0.2s;
+        }
+        .hand-toggle-btn:hover { background: #ff6b8a; }
+        .hand-toggle-btn.hand-open { display: none; }
+
+        .my-hand-container {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(100%);
+            z-index: 550;
+            background: rgba(15, 15, 25, 0.98);
+            border-radius: 10px 10px 0 0;
+            padding: 8px 15px 10px;
+            border-top: 3px solid #e94560;
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.7);
+            max-width: 95vw;
+            max-height: 45vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease-out;
+        }
+        .my-hand-container.show {
+            transform: translateX(-50%) translateY(0);
         }
         .my-hand-container.drag-over {
             background: rgba(78, 205, 196, 0.15);
             border-top-color: #4ecdc4;
             box-shadow: inset 0 0 20px rgba(78, 205, 196, 0.2);
         }
-        .my-hand-container h3 { margin-bottom: 4px; font-size: 0.8rem; }
+        .my-hand-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .my-hand-container h3 { font-size: 0.85rem; margin: 0; }
+        .hand-close-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 4px;
+            color: #888;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .hand-close-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+
+        /* Fullscreen prompt */
+        .fullscreen-prompt {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .fullscreen-prompt h2 { color: #e94560; font-size: 1.5rem; }
+        .fullscreen-prompt p { color: #aaa; font-size: 0.9rem; text-align: center; max-width: 400px; }
+        .fullscreen-prompt button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .fullscreen-prompt .btn-fullscreen {
+            background: #e94560;
+            color: white;
+        }
+        .fullscreen-prompt .btn-fullscreen:hover { background: #ff6b8a; }
+        .fullscreen-prompt .btn-skip {
+            background: transparent;
+            color: #666;
+            border: 1px solid #444;
+        }
+        .fullscreen-prompt .btn-skip:hover { color: #aaa; border-color: #666; }
         .hand-cards {
             display: flex;
             gap: 2px;
@@ -427,18 +513,36 @@
             width: 80px;
             height: 112px;
             cursor: grab;
-            transition: transform 0.2s, margin 0.2s;
+            transition: transform 0.15s ease-out, margin 0.18s ease-out, opacity 0.15s;
+            user-select: none;
         }
         .hand-cards .card:hover {
             transform: translateY(-10px) scale(1.05);
             z-index: 100;
         }
-        .hand-cards .card.dragging { opacity: 0.5; cursor: grabbing; }
-        .hand-cards .card.drag-over-left { margin-left: 30px; }
-        .hand-cards .card.drag-over-right { margin-right: 30px; }
+        .hand-cards .card.dragging {
+            opacity: 0.4;
+            cursor: grabbing;
+            transform: scale(0.95);
+            z-index: 200;
+        }
+        .hand-cards .card.drag-over-left {
+            margin-left: 45px;
+        }
+        .hand-cards .card.drag-over-right {
+            margin-right: 45px;
+        }
         .hand-cards .card.drag-placeholder {
             opacity: 0.3;
             transform: scale(0.95);
+        }
+        .hand-cards .card img {
+            pointer-events: none;
+            user-select: none;
+        }
+        /* Prevent hover effects during drag */
+        .hand-cards.dragging-active .card:not(.dragging):hover {
+            transform: none;
         }
 
         /* ===== SIDEBAR (Chat/Log) ===== */
@@ -515,9 +619,9 @@
 
         /* ===== CARDS ===== */
         .card {
-            width: 50px;
-            height: 70px;
-            border-radius: 3px;
+            width: 85px;
+            height: 119px;
+            border-radius: 5px;
             overflow: hidden;
             cursor: pointer;
             position: relative;
@@ -525,7 +629,7 @@
             border: 2px solid transparent;
         }
         .card:hover { transform: scale(1.08); z-index: 10; }
-        .card.tapped { transform: rotate(90deg); margin: 5px 9px; }
+        .card.tapped { transform: rotate(90deg); margin: 15px 20px; }
         .card.tapped:hover { transform: rotate(90deg) scale(1.08); }
         .card.selected { border-color: #e94560; box-shadow: 0 0 6px rgba(233, 69, 96, 0.5); }
         .card.commander { border-color: #ffc107; }
@@ -549,6 +653,38 @@
             padding: 1px 3px;
             border-radius: 2px;
             font-size: 0.5rem;
+        }
+
+        /* Card Stack - horizontal cascade (staircase to the left) */
+        .card-stack {
+            position: relative;
+            display: inline-flex;
+            align-items: flex-start;
+        }
+        .card-stack .card {
+            flex-shrink: 0;
+        }
+        .card-stack .card.stacked {
+            margin-right: -68px; /* Show ~17px of each card's left edge */
+        }
+        .card-stack .card.stack-top {
+            position: relative;
+            z-index: 10;
+        }
+        .card.stack-drop-target {
+            outline: 3px dashed #4ecdc4;
+            outline-offset: 2px;
+        }
+        /* Tapped cards in stack */
+        .card-stack .card.stacked.tapped {
+            transform: rotate(90deg);
+            margin-right: -68px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        .card-stack .card.stack-top.tapped {
+            transform: rotate(90deg);
+            margin: 10px 15px;
         }
 
         /* ===== ARROWS ===== */
@@ -658,7 +794,126 @@
             gap: 6px;
             justify-content: center;
         }
-        .modal-cards .card { width: 85px; height: 119px; }
+        .modal-cards .card { width: 85px; height: 119px; cursor: pointer; }
+        .modal-cards .card.selected {
+            border: 3px solid #e94560;
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.6);
+        }
+        .modal-cards .card.dragging { opacity: 0.5; }
+        .zone-viewer-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .zone-viewer-actions button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            background: #e94560;
+            color: white;
+        }
+        .zone-viewer-actions button:hover { background: #ff6b8a; }
+        .zone-viewer-actions button:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+        .zone-viewer-actions .selection-count {
+            color: #4ecdc4;
+            font-size: 0.8rem;
+            align-self: center;
+        }
+
+        /* Mulligan Modal */
+        .mulligan-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+        }
+        .mulligan-modal.show { display: flex; }
+        .mulligan-modal h3 {
+            color: #e94560;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+        .mulligan-modal p {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        .mulligan-modal .mulligan-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            max-width: 90vw;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .mulligan-card {
+            width: 100px;
+            height: 140px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            border: 3px solid transparent;
+            border-radius: 6px;
+            background-color: #2a2a3e;
+            overflow: hidden;
+            position: relative;
+        }
+        .mulligan-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        .mulligan-card:hover {
+            transform: scale(1.05);
+        }
+        .mulligan-card.selected {
+            border-color: #e94560;
+            box-shadow: 0 0 15px rgba(233, 69, 96, 0.7);
+        }
+        .mulligan-modal .mulligan-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .mulligan-modal .mulligan-count {
+            color: #4ecdc4;
+            font-size: 1rem;
+        }
+        .mulligan-modal button {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .mulligan-modal button.confirm {
+            background: #4ecdc4;
+            color: #1a1a2e;
+        }
+        .mulligan-modal button.confirm:hover { background: #5fded5; }
+        .mulligan-modal button.confirm:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
 
         /* Library Viewer */
         .library-viewer-cards {
@@ -1512,21 +1767,22 @@
             .generic-counter { width: 17px; height: 17px; font-size: 0.6rem; }
             .mini-zone { font-size: 0.6rem; padding: 2px 4px; }
 
-            .battlefield-row { min-height: 35px; padding: 2px 4px; }
-            .cards-container { gap: 2px; min-height: 26px; }
+            .battlefield-row { min-height: 55px; padding: 4px 6px; }
+            .cards-container { gap: 5px; min-height: 45px; }
 
-            .card { width: 42px; height: 59px; }
-            .card.tapped { margin: 4px 8px; }
+            .card { width: 72px; height: 100px; }
+            .card.tapped { margin: 10px 14px; }
             .card .counters { font-size: 0.45rem; }
 
-            .my-zones-row { gap: 8px; padding: 4px; }
-            .stack-visual { width: 40px; height: 56px; }
-            .card-back { width: 40px; height: 56px; }
-            .zone-count { font-size: 0.85rem; }
-            .zone-label { font-size: 0.55rem; }
-            .graveyard-zone .top-card, .exile-zone .top-card { width: 40px; height: 56px; }
-            .command-zone-stack { min-height: 60px; padding: 3px; min-width: 48px; }
-            .command-zone-stack .card { width: 40px; height: 56px; }
+            .game-container { padding-right: 65px; }
+            .my-zones-row { gap: 6px; padding: 8px 6px; right: 5px; }
+            .stack-visual { width: 38px; height: 53px; }
+            .card-back { width: 38px; height: 53px; }
+            .zone-count { font-size: 0.8rem; }
+            .zone-label { font-size: 0.5rem; }
+            .graveyard-zone .top-card, .exile-zone .top-card { width: 38px; height: 53px; }
+            .command-zone-stack { min-height: 55px; padding: 3px; min-width: 44px; }
+            .command-zone-stack .card { width: 38px; height: 53px; }
 
             .my-hand-container { padding: 5px; }
             .my-hand-container h3 { font-size: 0.7rem; margin-bottom: 3px; }
@@ -1561,23 +1817,24 @@
             .mini-zone { font-size: 0.55rem; padding: 2px 3px; }
             .player-zones-mini { gap: 3px; }
 
-            .battlefield-row { min-height: 30px; padding: 1px 4px; }
-            .cards-container { gap: 2px; min-height: 22px; }
+            .battlefield-row { min-height: 45px; padding: 3px 5px; }
+            .cards-container { gap: 4px; min-height: 38px; }
 
-            .card { width: 36px; height: 50px; border-radius: 2px; }
-            .card.tapped { margin: 3px 7px; }
+            .card { width: 62px; height: 87px; border-radius: 4px; }
+            .card.tapped { margin: 8px 12px; }
             .card .counters { font-size: 0.4rem; padding: 1px 2px; }
 
-            .my-zones-row { gap: 5px; padding: 3px; }
-            .stack-visual { width: 34px; height: 48px; }
-            .card-back { width: 34px; height: 48px; }
+            .game-container { padding-right: 55px; }
+            .my-zones-row { gap: 5px; padding: 6px 5px; right: 3px; }
+            .stack-visual { width: 32px; height: 45px; }
+            .card-back { width: 32px; height: 45px; }
             .card-back.offset-1 { top: 1px; left: 1px; }
             .card-back.offset-2 { top: 2px; left: 2px; }
-            .zone-count { font-size: 0.75rem; }
-            .zone-label { font-size: 0.5rem; margin-top: 1px; }
-            .graveyard-zone .top-card, .exile-zone .top-card { width: 34px; height: 48px; }
-            .command-zone-stack { min-height: 52px; min-width: 42px; }
-            .command-zone-stack .card { width: 34px; height: 48px; }
+            .zone-count { font-size: 0.7rem; }
+            .zone-label { font-size: 0.45rem; margin-top: 1px; }
+            .graveyard-zone .top-card, .exile-zone .top-card { width: 32px; height: 45px; }
+            .command-zone-stack { min-height: 48px; min-width: 38px; }
+            .command-zone-stack .card { width: 32px; height: 45px; }
 
             .my-hand-container { padding: 4px; border-top-width: 2px; }
             .my-hand-container h3 { font-size: 0.65rem; }
@@ -1608,20 +1865,21 @@
             .generic-counter { width: 13px; height: 13px; font-size: 0.5rem; }
             .mini-zone { font-size: 0.5rem; }
 
-            .battlefield-row { min-height: 25px; padding: 1px 3px; border-radius: 2px; }
-            .cards-container { min-height: 20px; }
+            .battlefield-row { min-height: 38px; padding: 2px 4px; border-radius: 3px; }
+            .cards-container { min-height: 32px; }
 
-            .card { width: 30px; height: 42px; }
-            .card.tapped { margin: 3px 6px; }
+            .card { width: 52px; height: 73px; }
+            .card.tapped { margin: 6px 10px; }
             .card .counters { font-size: 0.35rem; }
 
-            .my-zones-row { gap: 4px; padding: 2px; border-radius: 3px; }
+            .game-container { padding-right: 48px; }
+            .my-zones-row { gap: 4px; padding: 5px 4px; border-radius: 4px; right: 2px; }
             .stack-visual { width: 28px; height: 39px; }
             .card-back { width: 28px; height: 39px; border-width: 1px; }
-            .zone-count { font-size: 0.65rem; }
-            .zone-label { font-size: 0.45rem; }
+            .zone-count { font-size: 0.6rem; }
+            .zone-label { font-size: 0.4rem; }
             .graveyard-zone .top-card, .exile-zone .top-card { width: 28px; height: 39px; }
-            .command-zone-stack { min-height: 45px; min-width: 36px; border-width: 1px; }
+            .command-zone-stack { min-height: 42px; min-width: 34px; border-width: 1px; }
             .command-zone-stack .card { width: 28px; height: 39px; }
 
             .my-hand-container { padding: 3px; border-radius: 3px 3px 0 0; }
@@ -1648,8 +1906,8 @@
 
         /* Compact mode for both small height AND width */
         @media (max-height: 700px) and (max-width: 1200px) {
-            .card { width: 32px; height: 45px; }
-            .card.tapped { margin: 3px 6px; }
+            .card { width: 54px; height: 76px; }
+            .card.tapped { margin: 6px 10px; }
             .hand-cards .card { width: 52px; height: 73px; }
         }
     </style>
@@ -1701,6 +1959,7 @@
                 <button onclick="nextTurn()" class="primary" title="P">Passar Turno</button>
                 <button onclick="showStartSelection()" title="Sortear inicio">🎯</button>
                 <button onclick="openDiceModal()" title="Dados (R)">🎲</button>
+                <button onclick="toggleFullscreen()" title="Tela cheia (F11)" id="fullscreenBtn">⛶</button>
                 <button onclick="if(confirm('Conceder?')) sendAction('concede')" style="background:#c0392b;">Conceder</button>
             </div>
         </div>
@@ -1780,14 +2039,34 @@
             </div>
         </div>
 
-        <!-- My Hand -->
-        <div class="my-hand-container" id="myHandContainer"
-             ondragover="handleHandDragOver(event)" ondragleave="handleHandDragLeave(event)"
-             ondrop="handleDropToHand(event)"
-             oncontextmenu="showHandZoneContextMenu(event); return false;">
+    </div>
+
+    <!-- Hand Toggle Button -->
+    <button class="hand-toggle-btn" id="handToggleBtn" onclick="toggleHand()"
+            ondragover="handleToggleBtnDragOver(event)"
+            ondragleave="handleToggleBtnDragLeave(event)"
+            ondrop="handleDropToHand(event)">
+        Mao (<span id="handCountToggle">0</span>) ▲
+    </button>
+
+    <!-- My Hand (Floating) -->
+    <div class="my-hand-container" id="myHandContainer"
+         ondragover="handleHandDragOver(event)" ondragleave="handleHandDragLeave(event)"
+         ondrop="handleDropToHand(event)"
+         oncontextmenu="showHandZoneContextMenu(event); return false;">
+        <div class="my-hand-header">
             <h3>Sua Mao (<span id="handCount">0</span>)</h3>
-            <div class="hand-cards" id="myHand"></div>
+            <button class="hand-close-btn" onclick="toggleHand()">Fechar ▼</button>
         </div>
+        <div class="hand-cards" id="myHand"></div>
+    </div>
+
+    <!-- Fullscreen Prompt -->
+    <div class="fullscreen-prompt" id="fullscreenPrompt" style="display: none;">
+        <h2>Modo Tela Cheia</h2>
+        <p>Para uma melhor experiencia de jogo, recomendamos usar o modo tela cheia. Isso permite ver mais cartas no campo de batalha.</p>
+        <button class="btn-fullscreen" onclick="enterFullscreen()">Entrar em Tela Cheia</button>
+        <button class="btn-skip" onclick="skipFullscreen()">Continuar assim</button>
     </div>
 
     <!-- Selection Box -->
@@ -1808,7 +2087,25 @@
                     <button onclick="closeZoneViewer()">Fechar</button>
                 </div>
             </div>
+            <p style="font-size: 0.7rem; color: #888; text-align: center; margin-bottom: 8px;">Shift+clique para selecionar | Arraste para mover</p>
             <div class="modal-cards" id="zoneViewerCards"></div>
+            <div class="zone-viewer-actions" id="zoneViewerActions" style="display: none;">
+                <span class="selection-count" id="zoneSelectionCount">0 selecionadas</span>
+                <button onclick="moveZoneSelectionTo('hand')">Mover para Mão</button>
+                <button onclick="moveZoneSelectionTo('battlefield')">Mover para Campo</button>
+                <button onclick="clearZoneSelection()">Limpar Seleção</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mulligan Modal -->
+    <div class="mulligan-modal" id="mulliganModal">
+        <h3>Mulligan</h3>
+        <p id="mulliganInstructions">Selecione as cartas para devolver ao topo da biblioteca</p>
+        <div class="mulligan-cards" id="mulliganCards"></div>
+        <div class="mulligan-info">
+            <span class="mulligan-count" id="mulliganSelectionCount">0 / 1 selecionadas</span>
+            <button class="confirm" id="mulliganConfirmBtn" onclick="confirmMulligan()" disabled>Confirmar</button>
         </div>
     </div>
 
@@ -2158,6 +2455,7 @@
         const maxReconnectAttempts = 5;
         let draggedCard = null;
         let draggedCardData = null;
+        let draggedCards = new Set(); // Multiple cards being dragged
         let handCardOrder = []; // Local order of cards in hand (client-side only)
         let handDragTarget = null; // Target card during hand reorder drag
         let scryCardsData = [];
@@ -2181,6 +2479,37 @@
 
         // Player counters (local state for generic counters)
         let playerCounters = {}; // seat -> {red: 0, blue: 0, green: 0, yellow: 0, purple: 0}
+
+        // Mulligan state
+        let mulliganCount = 0;
+        let mulliganPending = 0; // Cards to put back after mulligan
+
+        // Card stacking (synced via WebSocket for visual organization)
+        // seatStacks[seat] = { cardStacks: Map<stackId, {cards, topCardId}>, cardToStack: Map<cardId, stackId> }
+        let seatStacks = {}; // seat -> { cardStacks, cardToStack, nextStackId }
+        // Helper to get/create stack data for a seat
+        function getSeatStackData(seat) {
+            if (!seatStacks[seat]) {
+                seatStacks[seat] = {
+                    cardStacks: new Map(),
+                    cardToStack: new Map(),
+                    nextStackId: 1
+                };
+            }
+            return seatStacks[seat];
+        }
+        // Shortcut for local player's stacks
+        function getMyStackData() {
+            return getSeatStackData(mySeat);
+        }
+        // Legacy compatibility - these reference my seat's data
+        let cardStacks, cardToStack, nextStackId;
+        function updateLocalStackRefs() {
+            const data = getMyStackData();
+            cardStacks = data.cardStacks;
+            cardToStack = data.cardToStack;
+            nextStackId = data.nextStackId;
+        }
 
         // ===== WEBSOCKET =====
         function connectWebSocket() {
@@ -2268,6 +2597,12 @@
                     // Another player created/removed arrows
                     handleArrowsUpdate(data);
                     break;
+                case 'stacks_update':
+                    // Another player updated their card stacks
+                    if (data.seat !== mySeat) {
+                        applyRemoteStacks(data.seat, data.stacks);
+                    }
+                    break;
             }
         }
 
@@ -2308,6 +2643,80 @@
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // ===== FULLSCREEN =====
+        let fullscreenPromptShown = false;
+
+        function showFullscreenPrompt() {
+            if (fullscreenPromptShown) return;
+            if (document.fullscreenElement) return; // Already in fullscreen
+            fullscreenPromptShown = true;
+            document.getElementById('fullscreenPrompt').style.display = 'flex';
+        }
+
+        function enterFullscreen() {
+            document.getElementById('fullscreenPrompt').style.display = 'none';
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        function skipFullscreen() {
+            document.getElementById('fullscreenPrompt').style.display = 'none';
+        }
+
+        function toggleFullscreen() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+            }
+        }
+
+        // Update fullscreen button icon on change
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.getElementById('fullscreenBtn');
+            if (btn) {
+                btn.textContent = document.fullscreenElement ? '⛶' : '⛶';
+                btn.title = document.fullscreenElement ? 'Sair da tela cheia' : 'Tela cheia (F11)';
+            }
+        });
+
+        // ===== HAND TOGGLE =====
+        let handOpen = false;
+
+        function toggleHand() {
+            handOpen = !handOpen;
+            const container = document.getElementById('myHandContainer');
+            const toggleBtn = document.getElementById('handToggleBtn');
+
+            if (handOpen) {
+                container.classList.add('show');
+                toggleBtn.classList.add('hand-open');
+            } else {
+                container.classList.remove('show');
+                toggleBtn.classList.remove('hand-open');
+            }
+        }
+
+        function updateHandToggleCount(count) {
+            const toggleCount = document.getElementById('handCountToggle');
+            if (toggleCount) {
+                toggleCount.textContent = count;
+            }
         }
 
         // ===== PHASE SYSTEM =====
@@ -2409,6 +2818,11 @@
             if (!gameState) return;
             document.getElementById('loadingOverlay').classList.add('hidden');
             document.getElementById('gameContainer').style.display = 'grid';
+
+            // Show fullscreen prompt on first load
+            if (!fullscreenPromptShown) {
+                setTimeout(showFullscreenPrompt, 500);
+            }
 
             document.getElementById('turnNumber').textContent = `Turno ${gameState.turn_number}`;
             document.getElementById('activePlayer').textContent = `Vez de: ${gameState.active_player_name || '-'}`;
@@ -2640,6 +3054,7 @@
             if (isMe) {
                 cardEl.draggable = true;
                 cardEl.setAttribute('ondragstart', `handleDragStart(event, '${card.id}', 'battlefield')`);
+                cardEl.setAttribute('ondragend', `handleBattlefieldDragEnd(event)`);
             }
             cardEl.setAttribute('onclick', `handleBattlefieldCardClick(event, '${card.id}', ${isMe})`);
             if (isMe) {
@@ -2754,17 +3169,17 @@
                         <div class="battlefield-row creatures-row" data-row="creatures" data-seat="${player.seat_position}"
                              ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
                              ondrop="handleRowDrop(event, ${player.seat_position}, 'creatures')">
-                            <div class="cards-container">${renderBattlefieldCards(creatures, isMe)}</div>
+                            <div class="cards-container">${renderBattlefieldCards(creatures, isMe, player.seat_position)}</div>
                         </div>
                         <div class="battlefield-row enchantments-row" data-row="enchantments" data-seat="${player.seat_position}"
                              ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
                              ondrop="handleRowDrop(event, ${player.seat_position}, 'enchantments')">
-                            <div class="cards-container">${renderBattlefieldCards(enchantments, isMe)}</div>
+                            <div class="cards-container">${renderBattlefieldCards(enchantments, isMe, player.seat_position)}</div>
                         </div>
                         <div class="battlefield-row lands-row" data-row="lands" data-seat="${player.seat_position}"
                              ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
                              ondrop="handleRowDrop(event, ${player.seat_position}, 'lands')">
-                            <div class="cards-container">${renderBattlefieldCards(lands, isMe)}</div>
+                            <div class="cards-container">${renderBattlefieldCards(lands, isMe, player.seat_position)}</div>
                         </div>
                     </div>
                 </div>
@@ -2817,9 +3232,82 @@
             return null;
         }
 
-        function renderBattlefieldCards(cards, isMe) {
+        function renderBattlefieldCards(cards, isMe, seat) {
             if (!cards.length) return '';
-            return cards.map(card => {
+
+            // Get stack data for this seat
+            const seatData = getSeatStackData(seat);
+
+            // Group cards: stacked cards together, single cards separate
+            const rendered = new Set();
+            const result = [];
+
+            cards.forEach(card => {
+                if (rendered.has(card.id)) return;
+
+                const stackId = seatData.cardToStack.get(card.id);
+                const stack = stackId ? seatData.cardStacks.get(stackId) : null;
+
+                if (stack) {
+                    // This card is part of a stack
+                    // Only render stack once (when we encounter the first card of it)
+                    if (stack.cards.some(cid => rendered.has(cid))) return;
+
+                    // Get all cards in this stack that are in this row
+                    const stackCards = stack.cards
+                        .map(cid => cards.find(c => c.id === cid))
+                        .filter(c => c != null);
+
+                    if (stackCards.length > 0) {
+                        result.push(renderCardStack(stackCards, stack, isMe, stackId, seat));
+                        stackCards.forEach(c => rendered.add(c.id));
+                    }
+                } else {
+                    // Single card, not in a stack
+                    result.push(renderSingleBattlefieldCard(card, isMe));
+                    rendered.add(card.id);
+                }
+            });
+
+            return result.join('');
+        }
+
+        function renderSingleBattlefieldCard(card, isMe) {
+            let countersHtml = '';
+            if (card.counters && Object.keys(card.counters).length > 0) {
+                const text = Object.entries(card.counters).filter(([k,v]) => v > 0).map(([k,v]) => `${k}:${v}`).join(' ');
+                if (text) countersHtml = `<div class="counters">${text}</div>`;
+            }
+            const isSelected = selectedCards.has(card.id);
+            const isArrowSource = arrowSourceCards.has(card.id);
+            const hasArrowFrom = arrows.some(a => a.sourceCardId === card.id);
+            const hasArrowTo = arrows.some(a => a.targetType === 'card' && a.targetId === card.id);
+            const hasArrow = hasArrowFrom || hasArrowTo;
+            const draggable = isMe ? 'draggable="true"' : '';
+            const dragStart = isMe ? `ondragstart="handleDragStart(event, '${card.id}', 'battlefield')"` : '';
+            const dragEnd = isMe ? `ondragend="handleBattlefieldDragEnd(event)"` : '';
+            const dropHandlers = isMe ? `ondragover="handleBattlefieldCardDragOver(event, '${card.id}')" ondragleave="handleBattlefieldCardDragLeave(event)" ondrop="handleBattlefieldCardDrop(event, '${card.id}')"` : '';
+            const contextMenu = `oncontextmenu="showBattlefieldContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}, ${isMe}); return false;"`;
+
+            return `
+                <div class="card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''}"
+                     data-id="${card.id}" ${draggable}
+                     ${dragStart} ${dragEnd} ${dropHandlers}
+                     onclick="handleBattlefieldCardClick(event, '${card.id}', ${isMe})"
+                     ondblclick="${isMe ? `event.stopPropagation(); toggleTap('${card.id}')` : ''}"
+                     ${contextMenu}>
+                    <img src="${card.image_small}" alt="${card.name}" draggable="false">
+                    ${countersHtml}
+                </div>
+            `;
+        }
+
+        function renderCardStack(stackCards, stack, isMe, stackId, seat) {
+            const topCard = stackCards[stackCards.length - 1];
+
+            // Render stack container with all cards
+            let cardsHtml = stackCards.map((card, index) => {
+                const isTop = index === stackCards.length - 1;
                 let countersHtml = '';
                 if (card.counters && Object.keys(card.counters).length > 0) {
                     const text = Object.entries(card.counters).filter(([k,v]) => v > 0).map(([k,v]) => `${k}:${v}`).join(' ');
@@ -2831,22 +3319,68 @@
                 const hasArrowTo = arrows.some(a => a.targetType === 'card' && a.targetId === card.id);
                 const hasArrow = hasArrowFrom || hasArrowTo;
                 const draggable = isMe ? 'draggable="true"' : '';
-                const dragStart = isMe ? `ondragstart="handleDragStart(event, '${card.id}', 'battlefield')"` : '';
-                // Context menu for all battlefield cards (own cards have more options)
-                const contextMenu = `oncontextmenu="showBattlefieldContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}, ${isMe}); return false;"`;
+                const dragStart = isMe ? `ondragstart="handleStackCardDragStart(event, '${card.id}', 'battlefield')"` : '';
+                const dragEnd = isMe ? `ondragend="handleBattlefieldDragEnd(event)"` : '';
+                const dropHandlers = isMe && isTop ? `ondragover="handleBattlefieldCardDragOver(event, '${card.id}')" ondragleave="handleBattlefieldCardDragLeave(event)" ondrop="handleBattlefieldCardDrop(event, '${card.id}')"` : '';
+                const contextMenu = `oncontextmenu="showStackCardContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}, ${isMe}, ${stackId}); return false;"`;
+                const stackedClass = isTop ? 'stack-top' : 'stacked';
 
                 return `
-                    <div class="card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''}"
+                    <div class="card ${stackedClass} ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''}"
                          data-id="${card.id}" ${draggable}
-                         ${dragStart}
-                         onclick="handleBattlefieldCardClick(event, '${card.id}', ${isMe})"
+                         ${dragStart} ${dragEnd} ${dropHandlers}
+                         onclick="handleStackCardClick(event, '${card.id}', ${isMe}, ${stackId})"
                          ondblclick="${isMe ? `event.stopPropagation(); toggleTap('${card.id}')` : ''}"
                          ${contextMenu}>
-                        <img src="${card.image_small}" alt="${card.name}">
+                        <img src="${card.image_small}" alt="${card.name}" draggable="false">
                         ${countersHtml}
                     </div>
                 `;
             }).join('');
+
+            // Check if any card in stack is tapped
+            const hasTapped = stackCards.some(c => c.is_tapped);
+
+            return `
+                <div class="card-stack ${hasTapped ? 'has-tapped' : ''}" data-stack-id="${stackId}">
+                    ${cardsHtml}
+                </div>
+            `;
+        }
+
+        function handleStackCardDragStart(e, cardId, zone) {
+            // When dragging from a stack, unstack the card first
+            unstackCard(cardId);
+            handleDragStart(e, cardId, zone);
+        }
+
+        function handleStackCardClick(e, cardId, isMe, stackId) {
+            e.stopPropagation();
+            // Normal click behavior - show card or select
+            handleBattlefieldCardClick(e, cardId, isMe);
+        }
+
+        function showStackCardContextMenu(e, card, isMe, stackId) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (isMe) {
+                const items = [
+                    { label: 'Ver carta', action: `showCardModal('${card.id}', '${card.image_normal}', '${card.name.replace(/'/g, "\\'")}', 'battlefield', true); hideContextMenu();` },
+                    { divider: true },
+                    { label: card.is_tapped ? 'Desvirar' : 'Virar', action: `toggleTap('${card.id}'); hideContextMenu();` },
+                    { divider: true },
+                    { label: 'Remover da pilha', action: `unstackCard('${card.id}'); renderPlayersGrid(true); hideContextMenu();` },
+                    { label: 'Desempilhar todas', action: `unstackAll(${stackId}); hideContextMenu();` },
+                    { divider: true },
+                    { label: 'Mover para mao', action: `sendAction('move_card', {object_id: '${card.id}', zone: 'hand'}); unstackCard('${card.id}'); hideContextMenu();` },
+                    { label: 'Mover para cemiterio', action: `sendAction('move_card', {object_id: '${card.id}', zone: 'graveyard'}); unstackCard('${card.id}'); hideContextMenu();` },
+                    { label: 'Exilar', action: `sendAction('move_card', {object_id: '${card.id}', zone: 'exile'}); unstackCard('${card.id}'); hideContextMenu();` },
+                ];
+                showContextMenu(e, items);
+            } else {
+                showBattlefieldContextMenu(e, card, isMe);
+            }
         }
 
         // Track last state for my zones to avoid unnecessary re-renders
@@ -2909,6 +3443,7 @@
             const zones = gameState.zones_data[mySeat];
             const handCards = zones ? zones.hand : [];
             document.getElementById('handCount').textContent = handCards.length;
+            updateHandToggleCount(handCards.length);
 
             const container = document.getElementById('myHand');
             const newIds = handCards.map(c => c.id);
@@ -2978,13 +3513,10 @@
                 return `
                     <div class="card" data-id="${card.id}" draggable="true"
                          ondragstart="handleDragStart(event, '${card.id}', 'hand')"
-                         ondragover="handleHandCardDragOver(event, '${card.id}')"
-                         ondragleave="handleHandCardDragLeave(event)"
-                         ondrop="handleHandCardDrop(event, '${card.id}')"
                          ondragend="handleHandCardDragEnd(event)"
                          onclick="showCardById('${card.id}', 'hand', true)"
                          oncontextmenu="showHandContextMenuById(event, '${card.id}'); return false;">
-                        <img src="${escapedImage}" alt="${escapedName}">
+                        <img src="${escapedImage}" alt="${escapedName}" draggable="false">
                     </div>
                 `;
             }).join('');
@@ -2998,13 +3530,10 @@
             cardEl.dataset.id = card.id;
             cardEl.draggable = true;
             cardEl.setAttribute('ondragstart', `handleDragStart(event, '${card.id}', 'hand')`);
-            cardEl.setAttribute('ondragover', `handleHandCardDragOver(event, '${card.id}')`);
-            cardEl.setAttribute('ondragleave', `handleHandCardDragLeave(event)`);
-            cardEl.setAttribute('ondrop', `handleHandCardDrop(event, '${card.id}')`);
             cardEl.setAttribute('ondragend', `handleHandCardDragEnd(event)`);
             cardEl.setAttribute('onclick', `showCardById('${card.id}', 'hand', true)`);
             cardEl.setAttribute('oncontextmenu', `showHandContextMenuById(event, '${card.id}'); return false;`);
-            cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}">`;
+            cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}" draggable="false">`;
             return cardEl;
         }
 
@@ -3350,6 +3879,25 @@
             e.dataTransfer.setData('text/plain', cardId);
             e.dataTransfer.effectAllowed = 'move';
             e.target.classList.add('dragging');
+
+            // If dragging from hand, mark container as active
+            if (zone === 'hand') {
+                const handContainer = document.getElementById('myHand');
+                if (handContainer) handContainer.classList.add('dragging-active');
+            }
+
+            // If dragging a selected card from battlefield, include all selected cards
+            if (zone === 'battlefield' && selectedCards.has(cardId) && selectedCards.size > 1) {
+                draggedCards = new Set(selectedCards);
+                // Add visual feedback to all dragged cards
+                draggedCards.forEach(id => {
+                    const el = document.querySelector(`.card[data-id="${id}"]`);
+                    if (el) el.classList.add('dragging');
+                });
+            } else {
+                draggedCards.clear();
+                draggedCards.add(cardId);
+            }
         }
 
         function handleZoneDragStart(e, cardId, zone) {
@@ -3390,13 +3938,26 @@
                 document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
                 draggedCard = null;
                 draggedCardData = null;
+                draggedCards.clear();
                 return;
             }
             document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
             if (!draggedCard) return;
-            sendAction('move_card', { object_id: draggedCard, zone: 'battlefield', target_seat: targetSeat });
+
+            // Move all dragged cards (single or multiple) to target player
+            const cardsToMove = draggedCards.size > 0 ? [...draggedCards] : [draggedCard];
+
+            cardsToMove.forEach(cardId => {
+                sendAction('move_card', { object_id: cardId, zone: 'battlefield', target_seat: targetSeat });
+            });
+
+            // Clear selection after moving
+            selectedCards.clear();
+            updateCardSelectionVisual();
+
             draggedCard = null;
             draggedCardData = null;
+            draggedCards.clear();
         }
 
         function handleRowDragOver(e) {
@@ -3417,14 +3978,24 @@
             document.querySelectorAll('.drag-over-player').forEach(el => el.classList.remove('drag-over-player'));
             if (!draggedCard) return;
 
-            // Optimistic visual update - move card element to new row immediately
-            if (moveCardToRowVisual(draggedCard, targetSeat, row)) {
-                pendingRowChanges.set(draggedCard, row);
-            }
+            // Move all dragged cards (single or multiple)
+            const cardsToMove = draggedCards.size > 0 ? [...draggedCards] : [draggedCard];
 
-            sendAction('move_card', { object_id: draggedCard, zone: 'battlefield', target_seat: targetSeat, row: row });
+            cardsToMove.forEach(cardId => {
+                // Optimistic visual update - move card element to new row immediately
+                if (moveCardToRowVisual(cardId, targetSeat, row)) {
+                    pendingRowChanges.set(cardId, row);
+                }
+                sendAction('move_card', { object_id: cardId, zone: 'battlefield', target_seat: targetSeat, row: row });
+            });
+
+            // Clear selection after moving
+            selectedCards.clear();
+            updateCardSelectionVisual();
+
             draggedCard = null;
             draggedCardData = null;
+            draggedCards.clear();
         }
 
         function handleDropToMyZone(e, zone) {
@@ -3432,9 +4003,21 @@
             e.currentTarget.classList.remove('drag-over');
             document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
             if (!draggedCard) return;
-            sendAction('move_card', { object_id: draggedCard, zone });
+
+            // Move all dragged cards (single or multiple)
+            const cardsToMove = draggedCards.size > 0 ? [...draggedCards] : [draggedCard];
+
+            cardsToMove.forEach(cardId => {
+                sendAction('move_card', { object_id: cardId, zone });
+            });
+
+            // Clear selection after moving
+            selectedCards.clear();
+            updateCardSelectionVisual();
+
             draggedCard = null;
             draggedCardData = null;
+            draggedCards.clear();
         }
 
         // Hand drop handlers
@@ -3447,76 +4030,161 @@
             e.currentTarget.classList.remove('drag-over');
         }
 
+        function handleToggleBtnDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.style.background = '#4ecdc4';
+            e.currentTarget.style.transform = 'translateX(-50%) scale(1.1)';
+            // Auto-open hand when hovering with dragged card
+            if (!handOpen && draggedCard) {
+                toggleHand();
+            }
+        }
+
+        function handleToggleBtnDragLeave(e) {
+            e.currentTarget.style.background = '';
+            e.currentTarget.style.transform = '';
+        }
+
         function handleDropToHand(e) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
+            e.currentTarget.style.background = '';
+            e.currentTarget.style.transform = '';
             document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
             if (!draggedCard) return;
-            // If dropping from hand to hand (reordering), ignore - handled by card-level drop
+
+            // If dropping from hand to hand (reordering)
             if (draggedCardData && draggedCardData.zone === 'hand') {
+                // If we have a target from hovering over a card, perform reorder
+                if (handDragTarget) {
+                    reorderHandCard(draggedCard, handDragTarget.cardId, handDragTarget.position);
+                }
                 clearHandDragIndicators();
                 draggedCard = null;
                 draggedCardData = null;
+                handDragTarget = null;
+                draggedCards.clear();
                 return;
             }
-            sendAction('move_card', { object_id: draggedCard, zone: 'hand' });
+
+            // Move all dragged cards to hand (single or multiple)
+            const cardsToMove = draggedCards.size > 0 ? [...draggedCards] : [draggedCard];
+
+            cardsToMove.forEach(cardId => {
+                sendAction('move_card', { object_id: cardId, zone: 'hand' });
+            });
+
+            // Clear selection after moving
+            selectedCards.clear();
+            updateCardSelectionVisual();
+
             draggedCard = null;
             draggedCardData = null;
+            draggedCards.clear();
         }
 
-        // ===== HAND CARD REORDERING =====
-        function handleHandCardDragOver(e, cardId) {
+        // ===== HAND CARD REORDERING (Event Delegation) =====
+        // Setup event delegation on the hand cards container
+        document.addEventListener('DOMContentLoaded', () => {
+            const handCardsContainer = document.getElementById('myHand');
+            if (handCardsContainer) {
+                handCardsContainer.addEventListener('dragover', handleMyHandDragOver);
+                handCardsContainer.addEventListener('drop', handleMyHandDrop);
+                handCardsContainer.addEventListener('dragleave', handleMyHandDragLeave);
+            }
+        });
+
+        function handleMyHandDragOver(e) {
+            e.preventDefault();
+
+            if (!draggedCard) return;
+
+            // Find the card element under the cursor
+            const cardEl = e.target.closest('.card');
+
+            if (cardEl && draggedCardData && draggedCardData.zone === 'hand') {
+                const cardId = cardEl.dataset.id;
+                if (draggedCard === cardId) return;
+
+                const rect = cardEl.getBoundingClientRect();
+                const midX = rect.left + rect.width / 2;
+                const isLeft = e.clientX < midX;
+
+                // Clear previous indicators
+                clearHandDragIndicators();
+
+                // Show indicator on this card
+                cardEl.classList.add(isLeft ? 'drag-over-left' : 'drag-over-right');
+                handDragTarget = { cardId, position: isLeft ? 'before' : 'after' };
+            }
+        }
+
+        function handleMyHandDragLeave(e) {
+            // Only clear if leaving the container entirely
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+                clearHandDragIndicators();
+            }
+        }
+
+        function handleMyHandDrop(e) {
             e.preventDefault();
             e.stopPropagation();
 
-            // Only handle reordering within hand
-            if (!draggedCardData || draggedCardData.zone !== 'hand') return;
-            if (draggedCard === cardId) return;
+            if (!draggedCard) return;
 
-            const cardEl = e.currentTarget;
-            const rect = cardEl.getBoundingClientRect();
-            const midX = rect.left + rect.width / 2;
-            const isLeft = e.clientX < midX;
+            // If dropping from hand (reordering)
+            if (draggedCardData && draggedCardData.zone === 'hand') {
+                if (handDragTarget) {
+                    reorderHandCard(draggedCard, handDragTarget.cardId, handDragTarget.position);
+                }
+                clearHandDragIndicators();
+                document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+                draggedCard = null;
+                draggedCardData = null;
+                handDragTarget = null;
+                draggedCards.clear();
+                return;
+            }
 
-            // Clear previous indicators
-            clearHandDragIndicators();
+            // If dropping from other zones (battlefield, exile, graveyard, etc.)
+            const cardsToMove = draggedCards.size > 0 ? [...draggedCards] : [draggedCard];
+            cardsToMove.forEach(cid => {
+                sendAction('move_card', { object_id: cid, zone: 'hand' });
+            });
 
-            // Show indicator on this card
-            cardEl.classList.add(isLeft ? 'drag-over-left' : 'drag-over-right');
-            handDragTarget = { cardId, position: isLeft ? 'before' : 'after' };
+            // Clear state
+            selectedCards.clear();
+            updateCardSelectionVisual();
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+            draggedCard = null;
+            draggedCardData = null;
+            draggedCards.clear();
+        }
+
+        // Keep old functions for backwards compatibility (in case they're called from HTML)
+        function handleHandCardDragOver(e, cardId) {
+            e.preventDefault();
         }
 
         function handleHandCardDragLeave(e) {
-            // Don't clear if moving to child element
-            if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget)) return;
-            e.currentTarget.classList.remove('drag-over-left', 'drag-over-right');
+            // Handled by container
         }
 
         function handleHandCardDrop(e, cardId) {
             e.preventDefault();
             e.stopPropagation();
-
-            // Only handle reordering within hand
-            if (!draggedCardData || draggedCardData.zone !== 'hand') return;
-            if (!handDragTarget || draggedCard === cardId) {
-                clearHandDragIndicators();
-                return;
-            }
-
-            // Perform the reorder
-            reorderHandCard(draggedCard, handDragTarget.cardId, handDragTarget.position);
-
-            clearHandDragIndicators();
-            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
-            draggedCard = null;
-            draggedCardData = null;
-            handDragTarget = null;
+            // Let container handle it
+            handleMyHandDrop(e);
         }
 
         function clearHandDragIndicators() {
             document.querySelectorAll('.hand-cards .card').forEach(el => {
                 el.classList.remove('drag-over-left', 'drag-over-right');
             });
+
+            // Also remove dragging-active class
+            const handContainer = document.getElementById('myHand');
+            if (handContainer) handContainer.classList.remove('dragging-active');
         }
 
         function reorderHandCard(movedCardId, targetCardId, position) {
@@ -3544,14 +4212,257 @@
 
             handCardOrder.splice(targetIndex, 0, movedCardId);
 
-            // Update visual order
-            renderMyHand(true);
+            // Direct DOM manipulation instead of full re-render
+            const container = document.getElementById('myHand');
+            const movedEl = container.querySelector(`.card[data-id="${movedCardId}"]`);
+            const targetEl = container.querySelector(`.card[data-id="${targetCardId}"]`);
+
+            if (movedEl && targetEl) {
+                if (position === 'before') {
+                    container.insertBefore(movedEl, targetEl);
+                } else {
+                    container.insertBefore(movedEl, targetEl.nextSibling);
+                }
+                // Update hash to prevent re-render on next game state update
+                lastHandHash = handCardOrder.join(',');
+            } else {
+                // Fallback to full re-render if elements not found
+                renderMyHand(true);
+            }
         }
 
         function handleHandCardDragEnd(e) {
             clearHandDragIndicators();
             e.currentTarget.classList.remove('dragging');
+            draggedCard = null;
+            draggedCardData = null;
             handDragTarget = null;
+            draggedCards.clear();
+
+            // Remove dragging-active from hand container
+            const handContainer = document.getElementById('myHand');
+            if (handContainer) handContainer.classList.remove('dragging-active');
+        }
+
+        function handleBattlefieldDragEnd(e) {
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+            document.querySelectorAll('.stack-drop-target').forEach(el => el.classList.remove('stack-drop-target'));
+            draggedCard = null;
+            draggedCardData = null;
+            draggedCards.clear();
+        }
+
+        // ===== CARD STACKING =====
+        function stackCards(bottomCardId, topCardId) {
+            updateLocalStackRefs();
+
+            // Check if bottom card is already in a stack
+            const existingStackId = cardToStack.get(bottomCardId);
+
+            if (existingStackId) {
+                // Add to existing stack
+                const stack = cardStacks.get(existingStackId);
+                if (stack && !stack.cards.includes(topCardId)) {
+                    // Remove topCard from any existing stack
+                    unstackCard(topCardId);
+                    stack.cards.push(topCardId);
+                    stack.topCardId = topCardId;
+                    cardToStack.set(topCardId, existingStackId);
+                }
+            } else {
+                // Create new stack
+                // Remove topCard from any existing stack first
+                unstackCard(topCardId);
+                const data = getMyStackData();
+                const stackId = data.nextStackId++;
+                cardStacks.set(stackId, {
+                    cards: [bottomCardId, topCardId],
+                    topCardId: topCardId
+                });
+                cardToStack.set(bottomCardId, stackId);
+                cardToStack.set(topCardId, stackId);
+            }
+
+            // Sync stacks to other players
+            syncStacksToServer();
+
+            // Re-render to show stack
+            renderPlayersGrid(true);
+        }
+
+        function unstackCard(cardId) {
+            updateLocalStackRefs();
+            const stackId = cardToStack.get(cardId);
+            if (!stackId) return false;
+
+            const stack = cardStacks.get(stackId);
+            if (!stack) return false;
+
+            // Remove card from stack
+            const index = stack.cards.indexOf(cardId);
+            if (index > -1) {
+                stack.cards.splice(index, 1);
+            }
+            cardToStack.delete(cardId);
+
+            // If stack has only 1 card left, dissolve it
+            if (stack.cards.length <= 1) {
+                if (stack.cards.length === 1) {
+                    cardToStack.delete(stack.cards[0]);
+                }
+                cardStacks.delete(stackId);
+            } else {
+                // Update top card
+                stack.topCardId = stack.cards[stack.cards.length - 1];
+            }
+
+            // Sync stacks to other players
+            syncStacksToServer();
+
+            return true;
+        }
+
+        function unstackAll(stackId) {
+            updateLocalStackRefs();
+            const stack = cardStacks.get(stackId);
+            if (!stack) return;
+
+            stack.cards.forEach(cardId => {
+                cardToStack.delete(cardId);
+            });
+            cardStacks.delete(stackId);
+
+            // Sync stacks to other players
+            syncStacksToServer();
+
+            renderPlayersGrid(true);
+        }
+
+        function getStackForCard(cardId, seat = null) {
+            // If seat specified, use that seat's stacks
+            const data = seat !== null ? getSeatStackData(seat) : getMyStackData();
+            const stackId = data.cardToStack.get(cardId);
+            if (!stackId) return null;
+            return { stackId, stack: data.cardStacks.get(stackId) };
+        }
+
+        function getStackForCardAnySeat(cardId) {
+            // Search all seats for this card's stack
+            for (const seat in seatStacks) {
+                const data = seatStacks[seat];
+                const stackId = data.cardToStack.get(cardId);
+                if (stackId) {
+                    return { stackId, stack: data.cardStacks.get(stackId), seat: parseInt(seat) };
+                }
+            }
+            return null;
+        }
+
+        function isCardTopOfStack(cardId) {
+            const stackInfo = getStackForCardAnySeat(cardId);
+            return stackInfo && stackInfo.stack.topCardId === cardId;
+        }
+
+        // Sync my stacks to server (broadcasts to other players)
+        function syncStacksToServer() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+            updateLocalStackRefs();
+            // Convert Map to array for JSON serialization
+            const stacksArray = [];
+            cardStacks.forEach((stack, stackId) => {
+                stacksArray.push({
+                    id: stackId,
+                    cards: stack.cards,
+                    topCardId: stack.topCardId
+                });
+            });
+
+            socket.send(JSON.stringify({
+                action: 'sync_stacks',
+                data: {
+                    seat: mySeat,
+                    stacks: stacksArray
+                }
+            }));
+        }
+
+        // Apply stack data received from another player
+        function applyRemoteStacks(seat, stacksArray) {
+            const data = getSeatStackData(seat);
+            data.cardStacks.clear();
+            data.cardToStack.clear();
+
+            stacksArray.forEach(stackData => {
+                data.cardStacks.set(stackData.id, {
+                    cards: stackData.cards,
+                    topCardId: stackData.topCardId
+                });
+                stackData.cards.forEach(cardId => {
+                    data.cardToStack.set(cardId, stackData.id);
+                });
+                // Update nextStackId if needed
+                if (stackData.id >= data.nextStackId) {
+                    data.nextStackId = stackData.id + 1;
+                }
+            });
+
+            // Re-render to show updated stacks
+            renderPlayersGrid(true);
+        }
+
+        function isCardInStack(cardId) {
+            return cardToStack.has(cardId);
+        }
+
+        // Clean up stacks when cards leave battlefield
+        function cleanupStacksForMissingCards(battlefieldCardIds) {
+            const battlefieldSet = new Set(battlefieldCardIds);
+            cardToStack.forEach((stackId, cardId) => {
+                if (!battlefieldSet.has(cardId)) {
+                    unstackCard(cardId);
+                }
+            });
+        }
+
+        // Handle drop on a battlefield card (for stacking)
+        function handleBattlefieldCardDrop(e, targetCardId) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            document.querySelectorAll('.stack-drop-target').forEach(el => el.classList.remove('stack-drop-target'));
+
+            if (!draggedCard || draggedCard === targetCardId) return;
+
+            // Only allow stacking from battlefield to battlefield
+            if (!draggedCardData || draggedCardData.zone !== 'battlefield') return;
+
+            // Stack the dragged card on top of the target
+            stackCards(targetCardId, draggedCard);
+
+            // Clear drag state
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+            selectedCards.clear();
+            updateCardSelectionVisual();
+            draggedCard = null;
+            draggedCardData = null;
+            draggedCards.clear();
+        }
+
+        function handleBattlefieldCardDragOver(e, cardId) {
+            if (!draggedCard || draggedCard === cardId) return;
+            if (!draggedCardData || draggedCardData.zone !== 'battlefield') return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Show drop indicator
+            document.querySelectorAll('.stack-drop-target').forEach(el => el.classList.remove('stack-drop-target'));
+            e.currentTarget.classList.add('stack-drop-target');
+        }
+
+        function handleBattlefieldCardDragLeave(e) {
+            e.currentTarget.classList.remove('stack-drop-target');
         }
 
         // ===== CARD INTERACTIONS =====
@@ -3671,6 +4582,7 @@
             if (isMe) {
                 cardEl.draggable = true;
                 cardEl.setAttribute('ondragstart', `handleDragStart(event, '${card.id}', 'battlefield')`);
+                cardEl.setAttribute('ondragend', `handleBattlefieldDragEnd(event)`);
             }
             cardEl.setAttribute('onclick', `handleBattlefieldCardClick(event, '${card.id}', ${isMe})`);
             if (isMe) {
@@ -3902,16 +4814,20 @@
 
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.context-menu')) hideContextMenu();
-            // Finalize arrows when clicking anywhere (not on cards/players/context menu)
+            // Finalize arrows when clicking anywhere (not on cards/players/context menu/mulligan modal)
             if (arrowMode && arrowSourceCards.size > 0) {
-                // Don't finalize if clicking on a card, context menu, or modal
-                if (!e.target.closest('.card') && !e.target.closest('.context-menu') && !e.target.closest('.modal')) {
+                // Don't finalize if clicking on a card, context menu, modal, or mulligan modal
+                if (!e.target.closest('.card') && !e.target.closest('.context-menu') && !e.target.closest('.modal') && !e.target.closest('.mulligan-modal')) {
                     finalizeArrows(e);
                 }
             }
         });
 
         function showLibraryContextMenu(e) {
+            const mulliganLabel = mulliganCount === 0
+                ? 'Mulligan (compra 7, devolve 1)'
+                : `Mulligan (compra 7, devolve ${mulliganCount + 1})`;
+
             showContextMenu(e, [
                 { label: 'Comprar carta', action: "sendAction('draw_card'); hideContextMenu();" },
                 { label: 'Comprar cartas...', action: "promptDrawCards(); hideContextMenu();" },
@@ -3922,6 +4838,8 @@
                 { divider: true },
                 { label: 'Ver toda biblioteca', action: "sendAction('view_library'); hideContextMenu();" },
                 { label: 'Embaralhar', action: "sendAction('shuffle_library'); animateShuffle(); hideContextMenu();" },
+                { divider: true },
+                { label: mulliganLabel, action: "performMulligan(); hideContextMenu();" },
             ]);
         }
 
@@ -3940,6 +4858,123 @@
                 }
             }
         }
+
+        // ===== MULLIGAN SYSTEM =====
+        let mulliganSelection = new Set(); // Cards selected to return in mulligan
+
+        function performMulligan() {
+            // Step 1: Return all hand cards to library
+            const zones = gameState.zones_data[mySeat];
+            if (zones && zones.hand) {
+                zones.hand.forEach(card => {
+                    sendAction('move_card', { object_id: card.id, zone: 'library' });
+                });
+            }
+
+            // Step 2: Shuffle library
+            sendAction('shuffle_library');
+            animateShuffle();
+
+            // Step 3: Draw 7 cards
+            for (let i = 0; i < 7; i++) {
+                sendAction('draw_card');
+            }
+
+            // Step 4: Increment mulligan count and set pending cards to return
+            mulliganCount++;
+            mulliganPending = mulliganCount;
+
+            // Wait for cards to appear in hand, then show modal
+            waitForHandCards(7, () => {
+                showMulliganModal();
+            });
+        }
+
+        function waitForHandCards(expectedCount, callback, maxAttempts = 20) {
+            let attempts = 0;
+            const check = () => {
+                attempts++;
+                const zones = gameState.zones_data[mySeat];
+                const handCount = zones && zones.hand ? zones.hand.length : 0;
+
+                if (handCount >= expectedCount) {
+                    callback();
+                } else if (attempts < maxAttempts) {
+                    setTimeout(check, 300);
+                } else {
+                    // Fallback: show modal anyway after max attempts
+                    callback();
+                }
+            };
+            setTimeout(check, 500);
+        }
+
+        function showMulliganModal() {
+            const modal = document.getElementById('mulliganModal');
+            const container = document.getElementById('mulliganCards');
+            const instructions = document.getElementById('mulliganInstructions');
+
+            mulliganSelection.clear();
+
+            instructions.textContent = `Selecione ${mulliganPending} carta${mulliganPending > 1 ? 's' : ''} para devolver ao topo da biblioteca`;
+
+            // Get current hand
+            const zones = gameState.zones_data[mySeat];
+            const hand = zones && zones.hand ? zones.hand : [];
+
+            container.innerHTML = hand.map(card => {
+                const imageUrl = card.image_normal || '/static/images/card_back.png';
+                return `<div class="mulligan-card" data-id="${card.id}" onclick="toggleMulliganCard('${card.id}', this)">
+                            <img src="${imageUrl}" alt="${card.name || 'Card'}" draggable="false">
+                        </div>`;
+            }).join('');
+
+            updateMulliganUI();
+            modal.classList.add('show');
+        }
+
+        function toggleMulliganCard(cardId, element) {
+            if (mulliganSelection.has(cardId)) {
+                mulliganSelection.delete(cardId);
+                element.classList.remove('selected');
+            } else {
+                // Only add if we haven't reached the limit
+                if (mulliganSelection.size < mulliganPending) {
+                    mulliganSelection.add(cardId);
+                    element.classList.add('selected');
+                }
+            }
+            updateMulliganUI();
+        }
+
+        function updateMulliganUI() {
+            const countEl = document.getElementById('mulliganSelectionCount');
+            const btn = document.getElementById('mulliganConfirmBtn');
+
+            countEl.textContent = `${mulliganSelection.size} / ${mulliganPending} selecionadas`;
+
+            // Enable confirm button only when exact count is selected
+            btn.disabled = mulliganSelection.size !== mulliganPending;
+        }
+
+        function confirmMulligan() {
+            if (mulliganSelection.size !== mulliganPending) return;
+
+            // Move selected cards to top of library
+            mulliganSelection.forEach(cardId => {
+                sendAction('move_card', { object_id: cardId, zone: 'library', to_top: true });
+            });
+
+            // Close modal
+            closeMulliganModal();
+        }
+
+        function closeMulliganModal() {
+            mulliganSelection.clear();
+            document.getElementById('mulliganModal').classList.remove('show');
+        }
+
+        // Mulligan modal cannot be closed by clicking outside - user MUST select cards
 
         function showHandZoneContextMenu(e) {
             // Don't show zone menu if clicking on a card - let card's own context menu handle it
@@ -4080,8 +5115,31 @@
                     items.push({ label: 'Adicionar +1/+1', action: `addCounter('${card.id}'); hideContextMenu();` });
                     items.push({ label: 'Remover +1/+1', action: `removeCounter('${card.id}'); hideContextMenu();` });
                 }
+
+                // Stack actions
+                items.push({ divider: true });
+                const stackInfo = getStackForCard(card.id);
+                if (isMultiSelect && selectedCards.size >= 2) {
+                    items.push({ label: `Empilhar selecionadas${countLabel}`, action: `stackSelectedCards(); hideContextMenu();` });
+                }
+                if (stackInfo) {
+                    items.push({ label: 'Remover da pilha', action: `unstackCard('${card.id}'); renderPlayersGrid(true); hideContextMenu();` });
+                    items.push({ label: 'Desempilhar todas', action: `unstackAll(${stackInfo.stackId}); hideContextMenu();` });
+                }
             }
             showContextMenu(e, items);
+        }
+
+        function stackSelectedCards() {
+            if (selectedCards.size < 2) return;
+            const cardIds = [...selectedCards];
+            // Stack all cards onto the first one
+            const bottomCard = cardIds[0];
+            for (let i = 1; i < cardIds.length; i++) {
+                stackCards(bottomCard, cardIds[i]);
+            }
+            selectedCards.clear();
+            updateCardSelectionVisual();
         }
 
         function showCommandContextMenu(e, cardId) {
@@ -4186,6 +5244,7 @@
         }
 
         let currentZoneViewer = { zone: null, seat: null };
+        let zoneViewerSelection = new Set(); // Selected cards in zone viewer
 
         function showZoneViewer(zoneName, seat = mySeat) {
             const zones = gameState.zones_data[seat];
@@ -4196,15 +5255,20 @@
             const playerName = player ? player.nickname : '';
             document.getElementById('zoneViewerTitle').textContent = `${titles[zoneName] || zoneName} - ${playerName} (${cards.length})`;
 
+            // Clear previous selection
+            zoneViewerSelection.clear();
+            updateZoneViewerActions();
+
             const isMyZone = seat === mySeat;
             document.getElementById('zoneViewerCards').innerHTML = cards.map(c => {
                 const escapedName = (c.name || '').replace(/'/g, "\\'");
                 const escapedImage = (c.image_normal || '').replace(/'/g, "\\'");
                 const contextMenu = isMyZone ? `oncontextmenu="showZoneCardContextMenu(event, '${c.id}', '${zoneName}'); return false;"` : '';
-                const draggable = isMyZone ? `draggable="true" ondragstart="handleZoneDragStart(event, '${c.id}', '${zoneName}')"` : '';
+                const draggable = isMyZone ? `draggable="true" ondragstart="handleZoneViewerDragStart(event, '${c.id}', '${zoneName}')" ondragend="handleZoneViewerDragEnd(event)"` : '';
+                const clickHandler = isMyZone ? `onclick="handleZoneCardClick(event, '${c.id}', '${escapedImage}', '${escapedName}', '${zoneName}')"` : `onclick="showCard('${c.id}', '${escapedImage}', '${escapedName}', '${zoneName}', false)"`;
                 return `
                     <div class="card" data-id="${c.id}"
-                         onclick="showCard('${c.id}', '${escapedImage}', '${escapedName}', '${zoneName}', ${isMyZone})"
+                         ${clickHandler}
                          ${contextMenu} ${draggable}>
                         <img src="${c.image_normal}" alt="${c.name}">
                     </div>
@@ -4219,32 +5283,157 @@
                 exileBtn.style.display = 'none';
             }
 
+            // Show/hide actions based on zone ownership
+            document.getElementById('zoneViewerActions').style.display = isMyZone ? 'flex' : 'none';
+
             currentZoneViewer = { zone: zoneName, seat: seat };
             document.getElementById('zoneViewerModal').classList.add('show');
+        }
+
+        function handleZoneCardClick(e, cardId, imageUrl, cardName, zoneName) {
+            e.stopPropagation();
+
+            // Shift+click for multi-select
+            if (e.shiftKey) {
+                if (zoneViewerSelection.has(cardId)) {
+                    zoneViewerSelection.delete(cardId);
+                    e.currentTarget.classList.remove('selected');
+                } else {
+                    zoneViewerSelection.add(cardId);
+                    e.currentTarget.classList.add('selected');
+                }
+                updateZoneViewerActions();
+                return;
+            }
+
+            // Regular click - show card modal
+            showCard(cardId, imageUrl, cardName, zoneName, true);
+        }
+
+        function updateZoneViewerActions() {
+            const count = zoneViewerSelection.size;
+            const countEl = document.getElementById('zoneSelectionCount');
+            const actionsEl = document.getElementById('zoneViewerActions');
+
+            if (countEl) {
+                countEl.textContent = count === 0 ? 'Nenhuma selecionada' : `${count} selecionada${count > 1 ? 's' : ''}`;
+            }
+
+            // Enable/disable buttons based on selection
+            const buttons = actionsEl?.querySelectorAll('button');
+            buttons?.forEach(btn => {
+                if (!btn.textContent.includes('Limpar')) {
+                    btn.disabled = count === 0;
+                }
+            });
+        }
+
+        function clearZoneSelection() {
+            zoneViewerSelection.clear();
+            document.querySelectorAll('#zoneViewerCards .card.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            updateZoneViewerActions();
+        }
+
+        function moveZoneSelectionTo(targetZone) {
+            if (zoneViewerSelection.size === 0) return;
+
+            const cardsToMove = [...zoneViewerSelection];
+            cardsToMove.forEach(cardId => {
+                if (targetZone === 'battlefield') {
+                    const card = findCardById(cardId);
+                    if (card && card.type_line) {
+                        const row = getCardRow(card.type_line);
+                        sendAction('move_card', { object_id: cardId, zone: targetZone, row: row });
+                    } else {
+                        sendAction('move_card', { object_id: cardId, zone: targetZone });
+                    }
+                } else {
+                    sendAction('move_card', { object_id: cardId, zone: targetZone });
+                }
+            });
+
+            zoneViewerSelection.clear();
+            closeZoneViewer();
+        }
+
+        function handleZoneViewerDragStart(e, cardId, zoneName) {
+            // If dragging a selected card, include all selected cards
+            if (zoneViewerSelection.has(cardId) && zoneViewerSelection.size > 1) {
+                draggedCards = new Set(zoneViewerSelection);
+            } else {
+                draggedCards.clear();
+                draggedCards.add(cardId);
+            }
+
+            draggedCard = cardId;
+            draggedCardData = { id: cardId, zone: zoneName };
+            e.dataTransfer.setData('text/plain', cardId);
+            e.dataTransfer.effectAllowed = 'move';
+            e.target.classList.add('dragging');
+
+            // Add visual feedback to all dragged cards
+            draggedCards.forEach(id => {
+                const el = document.querySelector(`#zoneViewerCards .card[data-id="${id}"]`);
+                if (el) el.classList.add('dragging');
+            });
+
+            // Close zone viewer after a short delay to allow drag to start
+            setTimeout(() => {
+                closeZoneViewer();
+                // Auto-open hand for dropping
+                if (!handOpen) {
+                    toggleHand();
+                }
+            }, 100);
+        }
+
+        function handleZoneViewerDragEnd(e) {
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+            draggedCard = null;
+            draggedCardData = null;
+            draggedCards.clear();
         }
 
         function showZoneCardContextMenu(e, cardId, zoneName) {
             e.preventDefault();
             e.stopPropagation();
 
+            // Check if this card is part of a selection
+            const isMultiSelect = zoneViewerSelection.has(cardId) && zoneViewerSelection.size > 1;
+            const countLabel = isMultiSelect ? ` (${zoneViewerSelection.size})` : '';
+
             const items = [];
 
             if (zoneName === 'graveyard') {
-                items.push({ label: 'Devolver para Mao', action: `moveCardFromZone('${cardId}', 'hand'); hideContextMenu();` });
-                items.push({ label: 'Reanimar (Campo)', action: `moveCardFromZone('${cardId}', 'battlefield'); hideContextMenu();` });
-                items.push({ label: 'Exilar', action: `moveCardFromZone('${cardId}', 'exile'); hideContextMenu();` });
-                items.push({ divider: true });
-                items.push({ label: 'Topo do Deck', action: `sendAction('put_top', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
-                items.push({ label: 'Fundo do Deck', action: `sendAction('put_bottom', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
-                items.push({ label: 'Embaralhar no Deck', action: `sendAction('shuffle_into', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                if (isMultiSelect) {
+                    items.push({ label: `Mover para Mao${countLabel}`, action: `moveZoneSelectionTo('hand'); hideContextMenu();` });
+                    items.push({ label: `Reanimar (Campo)${countLabel}`, action: `moveZoneSelectionTo('battlefield'); hideContextMenu();` });
+                    items.push({ label: `Exilar${countLabel}`, action: `moveMultipleFromZone('exile'); hideContextMenu();` });
+                } else {
+                    items.push({ label: 'Devolver para Mao', action: `moveCardFromZone('${cardId}', 'hand'); hideContextMenu();` });
+                    items.push({ label: 'Reanimar (Campo)', action: `moveCardFromZone('${cardId}', 'battlefield'); hideContextMenu();` });
+                    items.push({ label: 'Exilar', action: `moveCardFromZone('${cardId}', 'exile'); hideContextMenu();` });
+                    items.push({ divider: true });
+                    items.push({ label: 'Topo do Deck', action: `sendAction('put_top', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                    items.push({ label: 'Fundo do Deck', action: `sendAction('put_bottom', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                    items.push({ label: 'Embaralhar no Deck', action: `sendAction('shuffle_into', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                }
             } else if (zoneName === 'exile') {
-                items.push({ label: 'Devolver para Mao', action: `moveCardFromZone('${cardId}', 'hand'); hideContextMenu();` });
-                items.push({ label: 'Colocar no Campo', action: `moveCardFromZone('${cardId}', 'battlefield'); hideContextMenu();` });
-                items.push({ label: 'Enviar Cemiterio', action: `moveCardFromZone('${cardId}', 'graveyard'); hideContextMenu();` });
-                items.push({ divider: true });
-                items.push({ label: 'Topo do Deck', action: `sendAction('put_top', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
-                items.push({ label: 'Fundo do Deck', action: `sendAction('put_bottom', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
-                items.push({ label: 'Embaralhar no Deck', action: `sendAction('shuffle_into', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                if (isMultiSelect) {
+                    items.push({ label: `Mover para Mao${countLabel}`, action: `moveZoneSelectionTo('hand'); hideContextMenu();` });
+                    items.push({ label: `Mover para Campo${countLabel}`, action: `moveZoneSelectionTo('battlefield'); hideContextMenu();` });
+                    items.push({ label: `Enviar Cemiterio${countLabel}`, action: `moveMultipleFromZone('graveyard'); hideContextMenu();` });
+                } else {
+                    items.push({ label: 'Devolver para Mao', action: `moveCardFromZone('${cardId}', 'hand'); hideContextMenu();` });
+                    items.push({ label: 'Colocar no Campo', action: `moveCardFromZone('${cardId}', 'battlefield'); hideContextMenu();` });
+                    items.push({ label: 'Enviar Cemiterio', action: `moveCardFromZone('${cardId}', 'graveyard'); hideContextMenu();` });
+                    items.push({ divider: true });
+                    items.push({ label: 'Topo do Deck', action: `sendAction('put_top', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                    items.push({ label: 'Fundo do Deck', action: `sendAction('put_bottom', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                    items.push({ label: 'Embaralhar no Deck', action: `sendAction('shuffle_into', {object_id: '${cardId}'}); closeZoneViewer(); hideContextMenu();` });
+                }
             } else if (zoneName === 'command') {
                 items.push({ label: 'Lancar no Campo', action: `moveCardFromZone('${cardId}', 'battlefield'); hideContextMenu();` });
             }
@@ -4252,6 +5441,23 @@
             if (items.length > 0) {
                 showContextMenu(e, items, false);
             }
+        }
+
+        function moveMultipleFromZone(targetZone) {
+            if (zoneViewerSelection.size === 0) return;
+
+            const cardsToMove = [...zoneViewerSelection];
+            cardsToMove.forEach(cardId => {
+                sendAction('move_card', { object_id: cardId, zone: targetZone });
+            });
+
+            zoneViewerSelection.clear();
+            // Refresh the zone viewer
+            setTimeout(() => {
+                if (currentZoneViewer.zone) {
+                    showZoneViewer(currentZoneViewer.zone, currentZoneViewer.seat);
+                }
+            }, 300);
         }
 
         function moveCardFromZone(cardId, targetZone) {
@@ -5603,6 +6809,9 @@
         document.getElementById('autopayModal').addEventListener('click', function(e) {
             if (e.target === this) closeAutopayModal();
         });
+
+        // Initialize local stack references
+        updateLocalStackRefs();
 
         connectWebSocket();
     </script>
