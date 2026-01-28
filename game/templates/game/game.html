@@ -30,21 +30,21 @@
             padding: 5px 10px;
             border-radius: 5px;
         }
-        .turn-info { display: flex; gap: 10px; align-items: center; font-size: 0.85rem; }
+        .turn-info { display: flex; gap: 10px; align-items: center; font-size: 0.9rem; }
         .turn-info .turn { color: #e94560; font-weight: bold; }
         .turn-info .active { color: #ffc107; }
-        .connection-status { display: flex; align-items: center; gap: 5px; font-size: 0.7rem; }
+        .connection-status { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; }
         .connection-dot { width: 7px; height: 7px; border-radius: 50%; background: #c0392b; }
         .connection-dot.connected { background: #27ae60; }
         .game-controls button {
-            padding: 4px 8px;
+            padding: 5px 10px;
             margin-left: 5px;
             background: rgba(255,255,255,0.1);
             border: none;
             border-radius: 4px;
             color: white;
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             transition: all 0.2s;
         }
         .game-controls button:hover { background: rgba(255,255,255,0.2); }
@@ -76,13 +76,13 @@
             padding: 2px;
         }
         .phase-btn {
-            padding: 4px 6px;
+            padding: 5px 7px;
             border: none;
             border-radius: 3px;
             background: rgba(255,255,255,0.05);
             color: #888;
             cursor: pointer;
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             transition: all 0.2s;
             white-space: nowrap;
         }
@@ -103,13 +103,13 @@
             margin: 0 4px;
         }
         .phase-next-btn {
-            padding: 4px 10px;
+            padding: 5px 12px;
             background: #4ecdc4;
             border: none;
             border-radius: 3px;
             color: #000;
             cursor: pointer;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: bold;
             margin-left: 8px;
         }
@@ -189,23 +189,23 @@
             flex-shrink: 0;
         }
         .player-avatar {
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             cursor: pointer;
             position: relative;
         }
         .player-avatar:hover { opacity: 0.8; }
         .player-info { flex: 1; min-width: 0; }
-        .player-info .name { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .player-info .stats { display: flex; gap: 6px; font-size: 0.65rem; color: #888; }
+        .player-info .name { font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-info .stats { display: flex; gap: 6px; font-size: 0.7rem; color: #888; }
         .commander-link {
-            font-size: 0.6rem;
+            font-size: 0.65rem;
             color: #ffc107;
             cursor: pointer;
             white-space: nowrap;
@@ -229,21 +229,21 @@
             gap: 2px;
         }
         .player-life .life {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: bold;
             color: #4ecdc4;
-            min-width: 28px;
+            min-width: 30px;
             text-align: center;
         }
         .player-life button {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             border: none;
             background: rgba(255,255,255,0.1);
             color: white;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             line-height: 1;
         }
         .player-life button:hover { background: rgba(255,255,255,0.2); }
@@ -254,13 +254,13 @@
             gap: 3px;
         }
         .generic-counter {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.6rem;
+            font-size: 0.65rem;
             font-weight: bold;
             cursor: pointer;
             border: 1px solid rgba(255,255,255,0.2);
@@ -275,13 +275,13 @@
 
         .player-zones-mini {
             display: flex;
-            gap: 3px;
-            font-size: 0.6rem;
+            gap: 4px;
+            font-size: 0.65rem;
             margin-left: auto;
         }
         .mini-zone {
             background: rgba(0,0,0,0.3);
-            padding: 2px 4px;
+            padding: 3px 5px;
             border-radius: 3px;
             cursor: pointer;
         }
@@ -298,9 +298,9 @@
             overflow-x: hidden;
         }
         .battlefield-row {
-            min-height: 40px;
+            min-height: 45px;
             border-radius: 4px;
-            padding: 2px 5px;
+            padding: 3px 6px;
             position: relative;
             transition: all 0.2s;
             flex-shrink: 1;
@@ -316,18 +316,18 @@
         .cards-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 3px;
-            min-height: 28px;
+            gap: 4px;
+            min-height: 32px;
             align-content: flex-start;
         }
 
         /* ===== BOTTOM ZONES + COMMAND ===== */
         .my-zones-row {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
             align-items: flex-end;
-            padding: 5px;
+            padding: 6px;
             background: rgba(255,255,255,0.02);
             border-radius: 5px;
             flex-shrink: 0;
@@ -343,13 +343,13 @@
         .zone-stack:hover { transform: translateY(-2px); }
         .stack-visual {
             position: relative;
-            width: 42px;
-            height: 59px;
+            width: 46px;
+            height: 64px;
         }
         .card-back {
             position: absolute;
-            width: 42px;
-            height: 59px;
+            width: 46px;
+            height: 64px;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border: 2px solid #333;
             border-radius: 3px;
@@ -361,20 +361,20 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: bold;
             color: #fff;
             text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
         .zone-label {
             margin-top: 2px;
-            font-size: 0.55rem;
+            font-size: 0.6rem;
             color: #777;
         }
         .graveyard-zone .top-card,
         .exile-zone .top-card {
-            width: 42px;
-            height: 59px;
+            width: 46px;
+            height: 64px;
             border-radius: 3px;
             overflow: hidden;
         }
@@ -386,10 +386,10 @@
         }
         .command-zone-stack {
             border: 2px dashed #e94560;
-            padding: 3px;
+            padding: 4px;
             border-radius: 4px;
-            min-width: 50px;
-            min-height: 65px;
+            min-width: 54px;
+            min-height: 70px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -400,7 +400,7 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-        .command-zone-stack .card { width: 42px; height: 59px; }
+        .command-zone-stack .card { width: 46px; height: 64px; }
 
         /* ===== MY HAND ===== */
         .my-hand-container {
@@ -416,7 +416,7 @@
             border-top-color: #4ecdc4;
             box-shadow: inset 0 0 20px rgba(78, 205, 196, 0.2);
         }
-        .my-hand-container h3 { margin-bottom: 4px; font-size: 0.75rem; }
+        .my-hand-container h3 { margin-bottom: 4px; font-size: 0.8rem; }
         .hand-cards {
             display: flex;
             gap: 2px;
@@ -424,8 +424,8 @@
             justify-content: center;
         }
         .hand-cards .card {
-            width: 75px;
-            height: 105px;
+            width: 80px;
+            height: 112px;
             cursor: grab;
             transition: transform 0.2s, margin 0.2s;
         }
@@ -451,9 +451,9 @@
             border: none;
             border-radius: 4px;
             color: white;
-            padding: 5px 8px;
+            padding: 6px 10px;
             cursor: pointer;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
         }
         .sidebar {
             position: fixed;
@@ -515,8 +515,8 @@
 
         /* ===== CARDS ===== */
         .card {
-            width: 46px;
-            height: 64px;
+            width: 50px;
+            height: 70px;
             border-radius: 3px;
             overflow: hidden;
             cursor: pointer;
@@ -546,9 +546,9 @@
             bottom: 1px;
             right: 1px;
             background: rgba(0,0,0,0.85);
-            padding: 1px 2px;
+            padding: 1px 3px;
             border-radius: 2px;
-            font-size: 0.45rem;
+            font-size: 0.5rem;
         }
 
         /* ===== ARROWS ===== */
@@ -1492,141 +1492,141 @@
         /* Medium screens (laptops, smaller monitors) */
         @media (max-height: 800px) {
             .game-container { gap: 2px; padding: 2px; }
-            .game-header { padding: 3px 8px; }
-            .turn-info { font-size: 0.75rem; gap: 6px; }
-            .game-controls button { padding: 2px 6px; font-size: 0.7rem; }
+            .game-header { padding: 4px 8px; }
+            .turn-info { font-size: 0.8rem; gap: 6px; }
+            .game-controls button { padding: 3px 7px; font-size: 0.75rem; }
 
-            .phase-tracker { padding: 2px 6px; }
-            .phase-btn { padding: 2px 4px; font-size: 0.6rem; }
-            .phase-next-btn { padding: 2px 8px; font-size: 0.65rem; }
-            .phase-separator { height: 14px; }
+            .phase-tracker { padding: 3px 6px; }
+            .phase-btn { padding: 3px 5px; font-size: 0.65rem; }
+            .phase-next-btn { padding: 3px 10px; font-size: 0.7rem; }
+            .phase-separator { height: 16px; }
 
-            .player-area { padding: 3px; }
-            .player-header { gap: 4px; padding-bottom: 2px; margin-bottom: 2px; }
-            .player-avatar { width: 22px; height: 22px; font-size: 0.7rem; }
-            .player-info .name { font-size: 0.7rem; }
-            .player-info .stats { font-size: 0.6rem; gap: 4px; }
-            .commander-link { font-size: 0.55rem; max-width: 120px; }
-            .player-life .life { font-size: 0.85rem; min-width: 24px; }
-            .player-life button { width: 16px; height: 16px; font-size: 0.7rem; }
-            .generic-counter { width: 15px; height: 15px; font-size: 0.55rem; }
-            .mini-zone { font-size: 0.55rem; padding: 1px 3px; }
+            .player-area { padding: 4px; }
+            .player-header { gap: 5px; padding-bottom: 2px; margin-bottom: 2px; }
+            .player-avatar { width: 24px; height: 24px; font-size: 0.75rem; }
+            .player-info .name { font-size: 0.75rem; }
+            .player-info .stats { font-size: 0.65rem; gap: 5px; }
+            .commander-link { font-size: 0.6rem; max-width: 130px; }
+            .player-life .life { font-size: 0.95rem; min-width: 26px; }
+            .player-life button { width: 17px; height: 17px; font-size: 0.75rem; }
+            .generic-counter { width: 17px; height: 17px; font-size: 0.6rem; }
+            .mini-zone { font-size: 0.6rem; padding: 2px 4px; }
 
-            .battlefield-row { min-height: 32px; padding: 1px 4px; }
-            .cards-container { gap: 2px; min-height: 24px; }
+            .battlefield-row { min-height: 35px; padding: 2px 4px; }
+            .cards-container { gap: 2px; min-height: 26px; }
 
-            .card { width: 38px; height: 53px; }
-            .card.tapped { margin: 4px 7px; }
-            .card .counters { font-size: 0.4rem; }
+            .card { width: 42px; height: 59px; }
+            .card.tapped { margin: 4px 8px; }
+            .card .counters { font-size: 0.45rem; }
 
-            .my-zones-row { gap: 6px; padding: 3px; }
-            .stack-visual { width: 36px; height: 50px; }
-            .card-back { width: 36px; height: 50px; }
-            .zone-count { font-size: 0.8rem; }
-            .zone-label { font-size: 0.5rem; }
-            .graveyard-zone .top-card, .exile-zone .top-card { width: 36px; height: 50px; }
-            .command-zone-stack { min-height: 55px; padding: 2px; min-width: 44px; }
-            .command-zone-stack .card { width: 36px; height: 50px; }
+            .my-zones-row { gap: 8px; padding: 4px; }
+            .stack-visual { width: 40px; height: 56px; }
+            .card-back { width: 40px; height: 56px; }
+            .zone-count { font-size: 0.85rem; }
+            .zone-label { font-size: 0.55rem; }
+            .graveyard-zone .top-card, .exile-zone .top-card { width: 40px; height: 56px; }
+            .command-zone-stack { min-height: 60px; padding: 3px; min-width: 48px; }
+            .command-zone-stack .card { width: 40px; height: 56px; }
 
-            .my-hand-container { padding: 4px; }
-            .my-hand-container h3 { font-size: 0.65rem; margin-bottom: 2px; }
-            .hand-cards .card { width: 60px; height: 84px; }
+            .my-hand-container { padding: 5px; }
+            .my-hand-container h3 { font-size: 0.7rem; margin-bottom: 3px; }
+            .hand-cards .card { width: 68px; height: 95px; }
             .hand-cards .card:hover { transform: translateY(-6px) scale(1.03); }
         }
 
         /* Small screens (small laptops, tablets) */
         @media (max-height: 700px) {
-            .game-header { padding: 2px 6px; }
-            .turn-info { font-size: 0.65rem; }
-            .connection-status { font-size: 0.6rem; }
-            .connection-dot { width: 5px; height: 5px; }
+            .game-header { padding: 3px 6px; }
+            .turn-info { font-size: 0.7rem; }
+            .connection-status { font-size: 0.65rem; }
+            .connection-dot { width: 6px; height: 6px; }
 
-            .phase-tracker { padding: 1px 4px; gap: 1px; }
-            .phase-btn { padding: 2px 3px; font-size: 0.55rem; }
+            .phase-tracker { padding: 2px 5px; gap: 1px; }
+            .phase-btn { padding: 2px 4px; font-size: 0.6rem; }
             .phase-group-label { font-size: 0.5rem; }
-            .phase-next-btn { padding: 2px 6px; font-size: 0.6rem; margin-left: 4px; }
-            .phase-separator { height: 12px; margin: 0 2px; }
+            .phase-next-btn { padding: 3px 8px; font-size: 0.65rem; margin-left: 5px; }
+            .phase-separator { height: 14px; margin: 0 3px; }
 
-            .player-area { padding: 2px; border-radius: 4px; }
-            .player-header { gap: 3px; padding-bottom: 1px; margin-bottom: 1px; }
-            .player-avatar { width: 18px; height: 18px; font-size: 0.6rem; }
-            .player-info .name { font-size: 0.6rem; }
-            .player-info .stats { font-size: 0.5rem; gap: 3px; }
-            .commander-link { font-size: 0.5rem; max-width: 100px; }
-            .player-life .life { font-size: 0.75rem; min-width: 20px; }
-            .player-life button { width: 14px; height: 14px; font-size: 0.6rem; }
+            .player-area { padding: 3px; border-radius: 4px; }
+            .player-header { gap: 4px; padding-bottom: 2px; margin-bottom: 2px; }
+            .player-avatar { width: 20px; height: 20px; font-size: 0.65rem; }
+            .player-info .name { font-size: 0.65rem; }
+            .player-info .stats { font-size: 0.55rem; gap: 4px; }
+            .commander-link { font-size: 0.55rem; max-width: 110px; }
+            .player-life .life { font-size: 0.85rem; min-width: 22px; }
+            .player-life button { width: 15px; height: 15px; font-size: 0.65rem; }
             .player-life-counters { gap: 4px; }
             .generic-counters { gap: 2px; }
-            .generic-counter { width: 13px; height: 13px; font-size: 0.5rem; }
-            .mini-zone { font-size: 0.5rem; padding: 1px 2px; }
-            .player-zones-mini { gap: 2px; }
+            .generic-counter { width: 15px; height: 15px; font-size: 0.55rem; }
+            .mini-zone { font-size: 0.55rem; padding: 2px 3px; }
+            .player-zones-mini { gap: 3px; }
 
-            .battlefield-row { min-height: 26px; padding: 1px 3px; }
-            .cards-container { gap: 1px; min-height: 20px; }
+            .battlefield-row { min-height: 30px; padding: 1px 4px; }
+            .cards-container { gap: 2px; min-height: 22px; }
 
-            .card { width: 32px; height: 45px; border-radius: 2px; }
-            .card.tapped { margin: 3px 6px; }
-            .card .counters { font-size: 0.35rem; padding: 0 1px; }
+            .card { width: 36px; height: 50px; border-radius: 2px; }
+            .card.tapped { margin: 3px 7px; }
+            .card .counters { font-size: 0.4rem; padding: 1px 2px; }
 
-            .my-zones-row { gap: 4px; padding: 2px; }
-            .stack-visual { width: 30px; height: 42px; }
-            .card-back { width: 30px; height: 42px; }
+            .my-zones-row { gap: 5px; padding: 3px; }
+            .stack-visual { width: 34px; height: 48px; }
+            .card-back { width: 34px; height: 48px; }
             .card-back.offset-1 { top: 1px; left: 1px; }
             .card-back.offset-2 { top: 2px; left: 2px; }
-            .zone-count { font-size: 0.7rem; }
-            .zone-label { font-size: 0.45rem; margin-top: 1px; }
-            .graveyard-zone .top-card, .exile-zone .top-card { width: 30px; height: 42px; }
-            .command-zone-stack { min-height: 48px; min-width: 38px; }
-            .command-zone-stack .card { width: 30px; height: 42px; }
+            .zone-count { font-size: 0.75rem; }
+            .zone-label { font-size: 0.5rem; margin-top: 1px; }
+            .graveyard-zone .top-card, .exile-zone .top-card { width: 34px; height: 48px; }
+            .command-zone-stack { min-height: 52px; min-width: 42px; }
+            .command-zone-stack .card { width: 34px; height: 48px; }
 
-            .my-hand-container { padding: 3px; border-top-width: 1px; }
-            .my-hand-container h3 { font-size: 0.6rem; }
-            .hand-cards { gap: 1px; }
-            .hand-cards .card { width: 50px; height: 70px; }
-            .hand-cards .card:hover { transform: translateY(-4px) scale(1.02); }
+            .my-hand-container { padding: 4px; border-top-width: 2px; }
+            .my-hand-container h3 { font-size: 0.65rem; }
+            .hand-cards { gap: 2px; }
+            .hand-cards .card { width: 56px; height: 78px; }
+            .hand-cards .card:hover { transform: translateY(-5px) scale(1.02); }
         }
 
         /* Very small screens */
         @media (max-height: 600px) {
             .game-container { gap: 1px; padding: 1px; }
-            .game-header { padding: 1px 4px; border-radius: 3px; }
-            .turn-info { font-size: 0.55rem; }
-            .game-controls button { padding: 1px 4px; font-size: 0.6rem; }
+            .game-header { padding: 2px 5px; border-radius: 3px; }
+            .turn-info { font-size: 0.6rem; }
+            .game-controls button { padding: 2px 5px; font-size: 0.65rem; }
 
             .phase-tracker { border-radius: 3px; }
-            .phase-btn { padding: 1px 2px; font-size: 0.5rem; border-radius: 2px; }
-            .phase-next-btn { padding: 1px 4px; font-size: 0.55rem; }
+            .phase-btn { padding: 2px 3px; font-size: 0.55rem; border-radius: 2px; }
+            .phase-next-btn { padding: 2px 6px; font-size: 0.6rem; }
 
             .player-area { border-radius: 3px; border-width: 1px; }
             .player-header { border-bottom: none; }
-            .player-avatar { width: 16px; height: 16px; font-size: 0.55rem; }
-            .player-info .name { font-size: 0.55rem; }
-            .player-info .stats { font-size: 0.45rem; }
+            .player-avatar { width: 18px; height: 18px; font-size: 0.6rem; }
+            .player-info .name { font-size: 0.6rem; }
+            .player-info .stats { font-size: 0.5rem; }
             .commander-link { display: none; }
-            .player-life .life { font-size: 0.65rem; min-width: 18px; }
-            .player-life button { width: 12px; height: 12px; font-size: 0.5rem; }
-            .generic-counter { width: 11px; height: 11px; font-size: 0.45rem; }
-            .mini-zone { font-size: 0.45rem; }
+            .player-life .life { font-size: 0.75rem; min-width: 20px; }
+            .player-life button { width: 14px; height: 14px; font-size: 0.55rem; }
+            .generic-counter { width: 13px; height: 13px; font-size: 0.5rem; }
+            .mini-zone { font-size: 0.5rem; }
 
-            .battlefield-row { min-height: 22px; padding: 0 2px; border-radius: 2px; }
-            .cards-container { min-height: 18px; }
+            .battlefield-row { min-height: 25px; padding: 1px 3px; border-radius: 2px; }
+            .cards-container { min-height: 20px; }
 
-            .card { width: 26px; height: 36px; }
-            .card.tapped { margin: 2px 5px; }
-            .card .counters { font-size: 0.3rem; }
+            .card { width: 30px; height: 42px; }
+            .card.tapped { margin: 3px 6px; }
+            .card .counters { font-size: 0.35rem; }
 
-            .my-zones-row { gap: 3px; padding: 1px; border-radius: 3px; }
-            .stack-visual { width: 24px; height: 34px; }
-            .card-back { width: 24px; height: 34px; border-width: 1px; }
-            .zone-count { font-size: 0.6rem; }
-            .zone-label { font-size: 0.4rem; }
-            .graveyard-zone .top-card, .exile-zone .top-card { width: 24px; height: 34px; }
-            .command-zone-stack { min-height: 40px; min-width: 32px; border-width: 1px; }
-            .command-zone-stack .card { width: 24px; height: 34px; }
+            .my-zones-row { gap: 4px; padding: 2px; border-radius: 3px; }
+            .stack-visual { width: 28px; height: 39px; }
+            .card-back { width: 28px; height: 39px; border-width: 1px; }
+            .zone-count { font-size: 0.65rem; }
+            .zone-label { font-size: 0.45rem; }
+            .graveyard-zone .top-card, .exile-zone .top-card { width: 28px; height: 39px; }
+            .command-zone-stack { min-height: 45px; min-width: 36px; border-width: 1px; }
+            .command-zone-stack .card { width: 28px; height: 39px; }
 
-            .my-hand-container { padding: 2px; border-radius: 3px 3px 0 0; }
-            .my-hand-container h3 { font-size: 0.55rem; }
-            .hand-cards .card { width: 42px; height: 59px; }
+            .my-hand-container { padding: 3px; border-radius: 3px 3px 0 0; }
+            .my-hand-container h3 { font-size: 0.6rem; }
+            .hand-cards .card { width: 48px; height: 67px; }
             .hand-cards .card:hover { transform: translateY(-3px); }
         }
 
@@ -1648,9 +1648,9 @@
 
         /* Compact mode for both small height AND width */
         @media (max-height: 700px) and (max-width: 1200px) {
-            .card { width: 28px; height: 39px; }
-            .card.tapped { margin: 2px 5px; }
-            .hand-cards .card { width: 45px; height: 63px; }
+            .card { width: 32px; height: 45px; }
+            .card.tapped { margin: 3px 6px; }
+            .hand-cards .card { width: 52px; height: 73px; }
         }
     </style>
 </head>
@@ -1783,7 +1783,8 @@
         <!-- My Hand -->
         <div class="my-hand-container" id="myHandContainer"
              ondragover="handleHandDragOver(event)" ondragleave="handleHandDragLeave(event)"
-             ondrop="handleDropToHand(event)">
+             ondrop="handleDropToHand(event)"
+             oncontextmenu="showHandZoneContextMenu(event); return false;">
             <h3>Sua Mao (<span id="handCount">0</span>)</h3>
             <div class="hand-cards" id="myHand"></div>
         </div>
@@ -3903,6 +3904,7 @@
         function showLibraryContextMenu(e) {
             showContextMenu(e, [
                 { label: 'Comprar carta', action: "sendAction('draw_card'); hideContextMenu();" },
+                { label: 'Comprar cartas...', action: "promptDrawCards(); hideContextMenu();" },
                 { divider: true },
                 { label: 'Ver topo (1)', action: "sendAction('look_top', {count: 1}); hideContextMenu();" },
                 { label: 'Ver topo (3)', action: "sendAction('look_top', {count: 3}); hideContextMenu();" },
@@ -3915,6 +3917,50 @@
 
         function showLibraryMenu() {
             showLibraryContextMenu({ clientX: window.innerWidth / 2, clientY: window.innerHeight / 2, preventDefault: () => {} });
+        }
+
+        function promptDrawCards() {
+            const count = prompt('Quantas cartas deseja comprar?', '1');
+            if (count !== null) {
+                const num = parseInt(count);
+                if (!isNaN(num) && num > 0) {
+                    for (let i = 0; i < num; i++) {
+                        sendAction('draw_card');
+                    }
+                }
+            }
+        }
+
+        function showHandZoneContextMenu(e) {
+            const zones = gameState.zones_data[mySeat];
+            const handCount = zones && zones.hand ? zones.hand.length : 0;
+
+            if (handCount === 0) return;
+
+            showContextMenu(e, [
+                { label: `Descartar mao (${handCount})`, action: "discardHand(); hideContextMenu();" },
+                { label: `Exilar mao (${handCount})`, action: "exileHand(); hideContextMenu();" },
+            ], true);
+        }
+
+        function discardHand() {
+            const zones = gameState.zones_data[mySeat];
+            if (!zones || !zones.hand || zones.hand.length === 0) return;
+
+            const cardIds = zones.hand.map(c => c.id);
+            cardIds.forEach(cardId => {
+                sendAction('move_card', { object_id: cardId, zone: 'graveyard' });
+            });
+        }
+
+        function exileHand() {
+            const zones = gameState.zones_data[mySeat];
+            if (!zones || !zones.hand || zones.hand.length === 0) return;
+
+            const cardIds = zones.hand.map(c => c.id);
+            cardIds.forEach(cardId => {
+                sendAction('move_card', { object_id: cardId, zone: 'exile' });
+            });
         }
 
         // Helper to find card by ID from hand
@@ -4246,7 +4292,30 @@
 
         function moveFromLibrary(cardId, zone) {
             closeModal();
-            sendAction('move_card', { object_id: cardId, zone: zone });
+
+            // Find the card in libraryViewerCards to get its type
+            const card = libraryViewerCards.find(c => c.id === cardId);
+            const data = { object_id: cardId, zone: zone };
+
+            // When moving to battlefield, determine the row based on card type
+            if (zone === 'battlefield' && card && card.type_line) {
+                data.row = getCardRow(card.type_line);
+
+                // Optimistic visual update - add card to battlefield immediately
+                const cardData = {
+                    id: cardId,
+                    name: card.name,
+                    type_line: card.type_line,
+                    image_small: card.image_small || card.image_normal,
+                    image_normal: card.image_normal,
+                    is_tapped: false,
+                    counters: {},
+                    is_commander: false
+                };
+                addCardToBattlefieldVisual(cardData, data.row, mySeat);
+            }
+
+            sendAction('move_card', data);
             removeFromLibraryViewer(cardId);
         }
 
