@@ -434,6 +434,12 @@
             z-index: 100;
         }
         .hand-cards .card.dragging { opacity: 0.5; cursor: grabbing; }
+        .hand-cards .card.drag-over-left { margin-left: 30px; }
+        .hand-cards .card.drag-over-right { margin-right: 30px; }
+        .hand-cards .card.drag-placeholder {
+            opacity: 0.3;
+            transform: scale(0.95);
+        }
 
         /* ===== SIDEBAR (Chat/Log) ===== */
         .sidebar-toggle {
@@ -1796,7 +1802,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="zoneViewerTitle">Zona</h3>
-                <button onclick="closeZoneViewer()">Fechar</button>
+                <div style="display: flex; gap: 8px;">
+                    <button id="exileAllGraveyardBtn" onclick="exileAllFromGraveyard()" style="background: #9b59b6; display: none;">Exilar Tudo</button>
+                    <button onclick="closeZoneViewer()">Fechar</button>
+                </div>
             </div>
             <div class="modal-cards" id="zoneViewerCards"></div>
         </div>
@@ -2148,6 +2157,8 @@
         const maxReconnectAttempts = 5;
         let draggedCard = null;
         let draggedCardData = null;
+        let handCardOrder = []; // Local order of cards in hand (client-side only)
+        let handDragTarget = null; // Target card during hand reorder drag
         let scryCardsData = [];
         let isSelecting = false;
         let selectionStart = { x: 0, y: 0 };
@@ -2900,33 +2911,39 @@
 
             const container = document.getElementById('myHand');
             const newIds = handCards.map(c => c.id);
+            const newIdsSet = new Set(newIds);
+
+            // Sync handCardOrder with actual hand cards
+            // Remove cards that are no longer in hand
+            handCardOrder = handCardOrder.filter(id => newIdsSet.has(id));
+            // Add new cards that aren't in order yet (to the end)
+            newIds.forEach(id => {
+                if (!handCardOrder.includes(id)) {
+                    handCardOrder.push(id);
+                }
+            });
+
+            // Sort cards according to handCardOrder
+            const orderedCards = handCardOrder
+                .map(id => handCards.find(c => c.id === id))
+                .filter(c => c != null);
+
             const oldIds = lastHandHash ? lastHandHash.split(',') : [];
             const oldIdsSet = new Set(oldIds);
-            const newIdsSet = new Set(newIds);
 
             // Check if only new cards were added (drawing) - order independent
             const addedIds = newIds.filter(id => !oldIdsSet.has(id));
             const removedIds = oldIds.filter(id => !newIdsSet.has(id));
 
-            // Case 1: Only cards added (drawing)
+            // Case 1: Only cards added (drawing) - append to container
             if (!forceRender && oldIds.length > 0 && addedIds.length > 0 && removedIds.length === 0) {
-                // Just add the new cards
                 addedIds.forEach(cardId => {
                     const card = handCards.find(c => c.id === cardId);
                     if (!card) return;
-                    const escapedName = (card.name || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-                    const escapedImage = (card.image_normal || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-                    const cardEl = document.createElement('div');
-                    cardEl.className = 'card';
-                    cardEl.dataset.id = card.id;
-                    cardEl.draggable = true;
-                    cardEl.setAttribute('ondragstart', `handleDragStart(event, '${card.id}', 'hand')`);
-                    cardEl.setAttribute('onclick', `showCardById('${card.id}', 'hand', true)`);
-                    cardEl.setAttribute('oncontextmenu', `showHandContextMenuById(event, '${card.id}'); return false;`);
-                    cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}">`;
+                    const cardEl = createHandCardElement(card);
                     container.appendChild(cardEl);
                 });
-                lastHandHash = newIds.join(',');
+                lastHandHash = handCardOrder.join(',');
                 return;
             }
 
@@ -2936,36 +2953,58 @@
                     const cardEl = container.querySelector(`.card[data-id="${id}"]`);
                     if (cardEl) cardEl.remove();
                 });
-                lastHandHash = newIds.join(',');
+                lastHandHash = handCardOrder.join(',');
                 return;
             }
 
-            // Case 3: No change
-            const handHash = newIds.join(',');
+            // Case 3: No change (check using ordered hash)
+            const handHash = handCardOrder.join(',');
             if (!forceRender && handHash === lastHandHash) {
                 return;
             }
 
-            // Case 4: Full re-render (complex changes, first render, etc.)
+            // Case 4: Full re-render (complex changes, first render, reorder, etc.)
             lastHandHash = handHash;
 
-            if (!handCards.length) {
+            if (!orderedCards.length) {
                 container.innerHTML = '<div style="color:#555;font-size:0.75rem;">Mao vazia</div>';
                 return;
             }
 
-            container.innerHTML = handCards.map(card => {
+            container.innerHTML = orderedCards.map(card => {
                 const escapedName = (card.name || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
                 const escapedImage = (card.image_normal || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
                 return `
                     <div class="card" data-id="${card.id}" draggable="true"
                          ondragstart="handleDragStart(event, '${card.id}', 'hand')"
+                         ondragover="handleHandCardDragOver(event, '${card.id}')"
+                         ondragleave="handleHandCardDragLeave(event)"
+                         ondrop="handleHandCardDrop(event, '${card.id}')"
+                         ondragend="handleHandCardDragEnd(event)"
                          onclick="showCardById('${card.id}', 'hand', true)"
                          oncontextmenu="showHandContextMenuById(event, '${card.id}'); return false;">
                         <img src="${escapedImage}" alt="${escapedName}">
                     </div>
                 `;
             }).join('');
+        }
+
+        function createHandCardElement(card) {
+            const escapedName = (card.name || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+            const escapedImage = (card.image_normal || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+            const cardEl = document.createElement('div');
+            cardEl.className = 'card';
+            cardEl.dataset.id = card.id;
+            cardEl.draggable = true;
+            cardEl.setAttribute('ondragstart', `handleDragStart(event, '${card.id}', 'hand')`);
+            cardEl.setAttribute('ondragover', `handleHandCardDragOver(event, '${card.id}')`);
+            cardEl.setAttribute('ondragleave', `handleHandCardDragLeave(event)`);
+            cardEl.setAttribute('ondrop', `handleHandCardDrop(event, '${card.id}')`);
+            cardEl.setAttribute('ondragend', `handleHandCardDragEnd(event)`);
+            cardEl.setAttribute('onclick', `showCardById('${card.id}', 'hand', true)`);
+            cardEl.setAttribute('oncontextmenu', `showHandContextMenuById(event, '${card.id}'); return false;`);
+            cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}">`;
+            return cardEl;
         }
 
         function renderActionLog() {
@@ -3333,7 +3372,15 @@
         function handlePlayerDrop(e, targetSeat) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over-player');
+            // Ignore drops on battlefield rows (handled by row-specific handler)
             if (e.target.closest('.battlefield-row')) return;
+            // Ignore drops on the battlefield area itself (empty space between rows)
+            if (e.target.closest('.player-battlefield')) {
+                document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+                draggedCard = null;
+                draggedCardData = null;
+                return;
+            }
             document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
             if (!draggedCard) return;
             sendAction('move_card', { object_id: draggedCard, zone: 'battlefield', target_seat: targetSeat });
@@ -3394,9 +3441,106 @@
             e.currentTarget.classList.remove('drag-over');
             document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
             if (!draggedCard) return;
+            // If dropping from hand to hand (reordering), ignore - handled by card-level drop
+            if (draggedCardData && draggedCardData.zone === 'hand') {
+                clearHandDragIndicators();
+                draggedCard = null;
+                draggedCardData = null;
+                return;
+            }
             sendAction('move_card', { object_id: draggedCard, zone: 'hand' });
             draggedCard = null;
             draggedCardData = null;
+        }
+
+        // ===== HAND CARD REORDERING =====
+        function handleHandCardDragOver(e, cardId) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Only handle reordering within hand
+            if (!draggedCardData || draggedCardData.zone !== 'hand') return;
+            if (draggedCard === cardId) return;
+
+            const cardEl = e.currentTarget;
+            const rect = cardEl.getBoundingClientRect();
+            const midX = rect.left + rect.width / 2;
+            const isLeft = e.clientX < midX;
+
+            // Clear previous indicators
+            clearHandDragIndicators();
+
+            // Show indicator on this card
+            cardEl.classList.add(isLeft ? 'drag-over-left' : 'drag-over-right');
+            handDragTarget = { cardId, position: isLeft ? 'before' : 'after' };
+        }
+
+        function handleHandCardDragLeave(e) {
+            // Don't clear if moving to child element
+            if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget)) return;
+            e.currentTarget.classList.remove('drag-over-left', 'drag-over-right');
+        }
+
+        function handleHandCardDrop(e, cardId) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Only handle reordering within hand
+            if (!draggedCardData || draggedCardData.zone !== 'hand') return;
+            if (!handDragTarget || draggedCard === cardId) {
+                clearHandDragIndicators();
+                return;
+            }
+
+            // Perform the reorder
+            reorderHandCard(draggedCard, handDragTarget.cardId, handDragTarget.position);
+
+            clearHandDragIndicators();
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+            draggedCard = null;
+            draggedCardData = null;
+            handDragTarget = null;
+        }
+
+        function clearHandDragIndicators() {
+            document.querySelectorAll('.hand-cards .card').forEach(el => {
+                el.classList.remove('drag-over-left', 'drag-over-right');
+            });
+        }
+
+        function reorderHandCard(movedCardId, targetCardId, position) {
+            // Get current hand order
+            const zones = gameState.zones_data[mySeat];
+            const handCards = zones ? zones.hand : [];
+
+            // Initialize handCardOrder if needed
+            if (handCardOrder.length === 0 || !handCards.every(c => handCardOrder.includes(c.id))) {
+                handCardOrder = handCards.map(c => c.id);
+            }
+
+            // Remove moved card from current position
+            const movedIndex = handCardOrder.indexOf(movedCardId);
+            if (movedIndex === -1) return;
+            handCardOrder.splice(movedIndex, 1);
+
+            // Find target position and insert
+            let targetIndex = handCardOrder.indexOf(targetCardId);
+            if (targetIndex === -1) return;
+
+            if (position === 'after') {
+                targetIndex++;
+            }
+
+            handCardOrder.splice(targetIndex, 0, movedCardId);
+
+            // Update visual order
+            renderMyHand(true);
+        }
+
+        function handleHandCardDragEnd(e) {
+            clearHandDragIndicators();
+            e.currentTarget.classList.remove('dragging');
+            handDragTarget = null;
         }
 
         // ===== CARD INTERACTIONS =====
@@ -3982,11 +4126,13 @@
             scryCardsData = [];
         }
 
+        let currentZoneViewer = { zone: null, seat: null };
+
         function showZoneViewer(zoneName, seat = mySeat) {
             const zones = gameState.zones_data[seat];
             if (!zones) return;
             const cards = zones[zoneName] || [];
-            const titles = { graveyard: 'Cemiterio', exile: 'Exilio', hand: 'Mao' };
+            const titles = { graveyard: 'Cemiterio', exile: 'Exilio', hand: 'Mao', command: 'Comando' };
             const player = gameState.players.find(p => p.seat_position === seat);
             const playerName = player ? player.nickname : '';
             document.getElementById('zoneViewerTitle').textContent = `${titles[zoneName] || zoneName} - ${playerName} (${cards.length})`;
@@ -3995,7 +4141,35 @@
                     <img src="${c.image_normal}" alt="${c.name}">
                 </div>
             `).join('');
+
+            // Show "Exile All" button only for my own graveyard
+            const exileBtn = document.getElementById('exileAllGraveyardBtn');
+            if (zoneName === 'graveyard' && seat === mySeat && cards.length > 0) {
+                exileBtn.style.display = 'block';
+            } else {
+                exileBtn.style.display = 'none';
+            }
+
+            currentZoneViewer = { zone: zoneName, seat: seat };
             document.getElementById('zoneViewerModal').classList.add('show');
+        }
+
+        function exileAllFromGraveyard() {
+            if (currentZoneViewer.zone !== 'graveyard' || currentZoneViewer.seat !== mySeat) return;
+
+            const zones = gameState.zones_data[mySeat];
+            if (!zones || !zones.graveyard || zones.graveyard.length === 0) {
+                closeZoneViewer();
+                return;
+            }
+
+            // Move each card from graveyard to exile
+            const cardIds = zones.graveyard.map(c => c.id);
+            cardIds.forEach(cardId => {
+                sendAction('move_card', { object_id: cardId, zone: 'exile' });
+            });
+
+            closeZoneViewer();
         }
 
         function showOpponentZone(seat, zoneName) {
