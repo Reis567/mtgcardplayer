@@ -455,25 +455,50 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 if obj.zone == 'library':
                     zones_data[seat]['library_count'] += 1
                 elif obj.zone in zones_data[seat]:
-                    obj_data = {
-                        'id': str(obj.id),
-                        'card_id': str(obj.card.id),
-                        'name': obj.card.name,
-                        'type_line': obj.card.type_line or '',
-                        'mana_cost': obj.card.mana_cost or '',
-                        'oracle_text': obj.card.oracle_text or '',
-                        'power': obj.card.power,
-                        'toughness': obj.card.toughness,
-                        'image_small': obj.card.image_small or '',
-                        'image_normal': obj.card.image_normal or '',
-                        'is_tapped': obj.is_tapped,
-                        'counters': obj.counters or {},
-                        'is_commander': obj.is_commander,
-                        'zone': obj.zone,
-                        'battlefield_row': obj.battlefield_row,
-                        'owner_seat': obj.owner.seat_position,
-                        'controller_seat': obj.controller.seat_position
-                    }
+                    # Handle tokens vs regular cards
+                    if obj.is_token:
+                        obj_data = {
+                            'id': str(obj.id),
+                            'card_id': None,
+                            'name': obj.token_name,
+                            'type_line': obj.token_type or '',
+                            'mana_cost': '',
+                            'oracle_text': obj.token_abilities or '',
+                            'power': obj.token_power,
+                            'toughness': obj.token_toughness,
+                            'image_small': '',
+                            'image_normal': '',
+                            'is_tapped': obj.is_tapped,
+                            'counters': obj.counters or {},
+                            'is_commander': False,
+                            'zone': obj.zone,
+                            'battlefield_row': obj.battlefield_row,
+                            'owner_seat': obj.owner.seat_position,
+                            'controller_seat': obj.controller.seat_position,
+                            'is_token': True,
+                            'token_colors': obj.token_colors
+                        }
+                    else:
+                        obj_data = {
+                            'id': str(obj.id),
+                            'card_id': str(obj.card.id) if obj.card else None,
+                            'name': obj.card.name if obj.card else 'Unknown',
+                            'type_line': (obj.card.type_line or '') if obj.card else '',
+                            'mana_cost': (obj.card.mana_cost or '') if obj.card else '',
+                            'oracle_text': (obj.card.oracle_text or '') if obj.card else '',
+                            'power': obj.card.power if obj.card else None,
+                            'toughness': obj.card.toughness if obj.card else None,
+                            'image_small': (obj.card.image_small or '') if obj.card else '',
+                            'image_normal': (obj.card.image_normal or '') if obj.card else '',
+                            'is_tapped': obj.is_tapped,
+                            'counters': obj.counters or {},
+                            'is_commander': obj.is_commander,
+                            'zone': obj.zone,
+                            'battlefield_row': obj.battlefield_row,
+                            'owner_seat': obj.owner.seat_position,
+                            'controller_seat': obj.controller.seat_position,
+                            'is_token': False
+                        }
                     zones_data[seat][obj.zone].append(obj_data)
 
             # Ações recentes
@@ -559,6 +584,32 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
                 old_zone = obj.zone
                 old_controller = obj.controller
+
+                # Get card/token name for logging
+                card_name = obj.token_name if obj.is_token else (obj.card.name if obj.card else 'Unknown')
+
+                # Tokens cease to exist when they leave the battlefield (per MTG rules)
+                # Exception: tokens can move to exile or return to battlefield
+                if obj.is_token and old_zone == 'battlefield' and new_zone not in ['battlefield', 'exile']:
+                    # Token goes to graveyard/hand/library = ceases to exist
+                    obj.delete()
+
+                    GameAction.objects.create(
+                        game=game,
+                        action_type='zone_change',
+                        player=game_player,
+                        data={
+                            'card': card_name,
+                            'from': old_zone,
+                            'to': new_zone,
+                            'is_token': True
+                        },
+                        display_text=f"{game_player.player.nickname} destruiu token {card_name}",
+                        turn_number=game.turn_number,
+                        phase=game.current_phase
+                    )
+                    return {'success': True, 'token_destroyed': True}
+
                 obj.zone = new_zone
                 obj.is_tapped = False
 
@@ -572,8 +623,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 if new_zone == 'battlefield' and row:
                     obj.battlefield_row = row
                 elif new_zone == 'battlefield' and not obj.battlefield_row:
-                    # Auto-detect row based on card type
-                    type_line = (obj.card.type_line or '').lower()
+                    # Auto-detect row based on card/token type
+                    if obj.is_token:
+                        type_line = (obj.token_type or '').lower()
+                    else:
+                        type_line = (obj.card.type_line or '').lower() if obj.card else ''
                     if 'creature' in type_line:
                         obj.battlefield_row = 'creatures'
                     elif 'land' in type_line:
@@ -585,16 +639,16 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
                 # Build display text
                 if target_seat is not None and obj.controller != old_controller:
-                    display_text = f"{game_player.player.nickname} moveu {obj.card.name} para o campo de {obj.controller.player.nickname}"
+                    display_text = f"{game_player.player.nickname} moveu {card_name} para o campo de {obj.controller.player.nickname}"
                 else:
-                    display_text = f"{game_player.player.nickname} moveu {obj.card.name} de {old_zone} para {new_zone}"
+                    display_text = f"{game_player.player.nickname} moveu {card_name} de {old_zone} para {new_zone}"
 
                 GameAction.objects.create(
                     game=game,
                     action_type='zone_change',
                     player=game_player,
                     data={
-                        'card': obj.card.name,
+                        'card': card_name,
                         'from': old_zone,
                         'to': new_zone,
                         'target_seat': target_seat,
@@ -615,13 +669,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 obj.is_tapped = not obj.is_tapped
                 obj.save()
 
+                card_name = obj.token_name if obj.is_token else (obj.card.name if obj.card else 'Unknown')
                 action_text = 'virou' if obj.is_tapped else 'desvirou'
                 GameAction.objects.create(
                     game=game,
                     action_type='tap' if obj.is_tapped else 'untap',
                     player=game_player,
-                    data={'card': obj.card.name},
-                    display_text=f"{game_player.player.nickname} {action_text} {obj.card.name}",
+                    data={'card': card_name},
+                    display_text=f"{game_player.player.nickname} {action_text} {card_name}",
                     turn_number=game.turn_number,
                     phase=game.current_phase
                 )
@@ -667,12 +722,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 obj.counters = counters
                 obj.save()
 
+                card_name = obj.token_name if obj.is_token else (obj.card.name if obj.card else 'Unknown')
                 GameAction.objects.create(
                     game=game,
                     action_type='counter_change',
                     player=game_player,
-                    data={'card': obj.card.name, 'counter': counter_type, 'add': True},
-                    display_text=f"{game_player.player.nickname} adicionou {counter_type} em {obj.card.name}",
+                    data={'card': card_name, 'counter': counter_type, 'add': True},
+                    display_text=f"{game_player.player.nickname} adicionou {counter_type} em {card_name}",
                     turn_number=game.turn_number,
                     phase=game.current_phase
                 )
@@ -690,12 +746,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 obj.counters = counters
                 obj.save()
 
+                card_name = obj.token_name if obj.is_token else (obj.card.name if obj.card else 'Unknown')
                 GameAction.objects.create(
                     game=game,
                     action_type='counter_change',
                     player=game_player,
-                    data={'card': obj.card.name, 'counter': counter_type, 'add': False},
-                    display_text=f"{game_player.player.nickname} removeu {counter_type} de {obj.card.name}",
+                    data={'card': card_name, 'counter': counter_type, 'add': False},
+                    display_text=f"{game_player.player.nickname} removeu {counter_type} de {card_name}",
                     turn_number=game.turn_number,
                     phase=game.current_phase
                 )
@@ -882,8 +939,23 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 if not obj:
                     return {'success': False, 'error': 'Object not found'}
 
+                # Tokens can't go to library - they cease to exist
+                if obj.is_token:
+                    card_name = obj.token_name
+                    obj.delete()
+                    GameAction.objects.create(
+                        game=game,
+                        action_type='zone_change',
+                        player=game_player,
+                        data={'card': card_name, 'is_token': True},
+                        display_text=f"{game_player.player.nickname} destruiu token {card_name}",
+                        turn_number=game.turn_number,
+                        phase=game.current_phase
+                    )
+                    return {'success': True, 'token_destroyed': True}
+
                 old_zone = obj.zone
-                card_name = obj.card.name
+                card_name = obj.card.name if obj.card else 'Unknown'
 
                 # Shift all library cards down by 1 to make room at position 0
                 library_cards = GameObject.objects.filter(
@@ -920,7 +992,23 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 if not obj:
                     return {'success': False, 'error': 'Object not found'}
 
+                # Tokens can't go to library - they cease to exist
+                if obj.is_token:
+                    card_name = obj.token_name
+                    obj.delete()
+                    GameAction.objects.create(
+                        game=game,
+                        action_type='zone_change',
+                        player=game_player,
+                        data={'card': card_name, 'is_token': True},
+                        display_text=f"{game_player.player.nickname} destruiu token {card_name}",
+                        turn_number=game.turn_number,
+                        phase=game.current_phase
+                    )
+                    return {'success': True, 'token_destroyed': True}
+
                 old_zone = obj.zone
+                card_name = obj.card.name if obj.card else 'Unknown'
                 # Get maximum position (bottom of library)
                 max_pos = GameObject.objects.filter(
                     game=game,
@@ -937,8 +1025,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     game=game,
                     action_type='put_bottom',
                     player=game_player,
-                    data={'card': obj.card.name, 'from': old_zone},
-                    display_text=f"{game_player.player.nickname} colocou {obj.card.name} no fundo da biblioteca",
+                    data={'card': card_name, 'from': old_zone},
+                    display_text=f"{game_player.player.nickname} colocou {card_name} no fundo da biblioteca",
                     turn_number=game.turn_number,
                     phase=game.current_phase
                 )
@@ -954,12 +1042,15 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 obj.is_revealed = True
                 obj.save()
 
+                card_name = obj.token_name if obj.is_token else (obj.card.name if obj.card else 'Unknown')
+                card_image = '' if obj.is_token else (obj.card.image_normal or '' if obj.card else '')
+
                 GameAction.objects.create(
                     game=game,
                     action_type='reveal',
                     player=game_player,
-                    data={'card': obj.card.name, 'zone': obj.zone},
-                    display_text=f"{game_player.player.nickname} revelou {obj.card.name}",
+                    data={'card': card_name, 'zone': obj.zone},
+                    display_text=f"{game_player.player.nickname} revelou {card_name}",
                     turn_number=game.turn_number,
                     phase=game.current_phase
                 )
@@ -969,9 +1060,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     'broadcast_reveal': True,
                     'revealed_card': {
                         'id': str(obj.id),
-                        'name': obj.card.name,
-                        'image_normal': obj.card.image_normal or '',
-                        'player': game_player.player.nickname
+                        'name': card_name,
+                        'image_normal': card_image,
+                        'player': game_player.player.nickname,
+                        'is_token': obj.is_token
                     }
                 }
 
@@ -982,8 +1074,23 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 if not obj:
                     return {'success': False, 'error': 'Object not found'}
 
+                # Tokens can't go to library - they cease to exist
+                if obj.is_token:
+                    card_name = obj.token_name
+                    obj.delete()
+                    GameAction.objects.create(
+                        game=game,
+                        action_type='zone_change',
+                        player=game_player,
+                        data={'card': card_name, 'is_token': True},
+                        display_text=f"{game_player.player.nickname} destruiu token {card_name}",
+                        turn_number=game.turn_number,
+                        phase=game.current_phase
+                    )
+                    return {'success': True, 'token_destroyed': True}
+
                 old_zone = obj.zone
-                card_name = obj.card.name
+                card_name = obj.card.name if obj.card else 'Unknown'
 
                 # Move to library
                 obj.zone = 'library'
@@ -1178,6 +1285,51 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     'roll': roll
                 }
 
+            elif action == 'create_token':
+                # Create token(s) on the battlefield
+                token_name = data.get('token_name', 'Token')
+                token_type = data.get('token_type', 'Creature Token')
+                token_power = data.get('token_power', '')
+                token_toughness = data.get('token_toughness', '')
+                token_colors = data.get('token_colors', '')
+                token_abilities = data.get('token_abilities', '')
+                count = data.get('count', 1)
+                is_tapped = data.get('is_tapped', False)
+                row = data.get('row', 'creatures')
+
+                created_tokens = []
+                for _ in range(count):
+                    token = GameObject.objects.create(
+                        game=game,
+                        card=None,
+                        is_token=True,
+                        token_name=token_name,
+                        token_type=token_type,
+                        token_power=token_power,
+                        token_toughness=token_toughness,
+                        token_colors=token_colors,
+                        token_abilities=token_abilities,
+                        owner=game_player,
+                        controller=game_player,
+                        zone='battlefield',
+                        battlefield_row=row,
+                        is_tapped=is_tapped
+                    )
+                    created_tokens.append(str(token.id))
+
+                count_text = f"{count}x " if count > 1 else ""
+                GameAction.objects.create(
+                    game=game,
+                    action_type='create_token',
+                    player=game_player,
+                    data={'token_name': token_name, 'count': count},
+                    display_text=f"{game_player.player.nickname} criou {count_text}{token_name}",
+                    turn_number=game.turn_number,
+                    phase=game.current_phase
+                )
+
+                return {'success': True, 'token_ids': created_tokens}
+
             return {'success': False, 'error': 'Unknown action'}
 
         except Exception as e:
@@ -1270,7 +1422,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         'next_phase', 'next_turn', 'draw_card', 'shuffle_library', 'concede',
                         'scry', 'look_top', 'put_top', 'put_bottom', 'reveal_card',
                         'shuffle_into', 'reorder_scry', 'set_battlefield_row',
-                        'go_to_phase', 'view_library', 'roll_dice', 'set_starting_player']:
+                        'go_to_phase', 'view_library', 'roll_dice', 'set_starting_player',
+                        'create_token']:
             result = await self.execute_game_action(action, content.get('data', {}))
 
             # Send action result to the sender

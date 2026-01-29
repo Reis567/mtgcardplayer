@@ -636,6 +636,56 @@
         .card.dragging { opacity: 0.4; }
         .card.arrow-source { box-shadow: 0 0 10px #e94560; }
         .card.has-arrow { box-shadow: 0 0 8px 2px #ffc107; }
+        .card.token {
+            background: linear-gradient(135deg, #2a2a4e, #1a1a3e);
+            border: 2px solid #4a4a6e;
+        }
+        .card.token .token-visual {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3px;
+            text-align: center;
+        }
+        .card.token .token-name {
+            font-size: 0.5rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 2px;
+            line-height: 1.1;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .card.token .token-type-line {
+            font-size: 0.35rem;
+            color: #888;
+            margin-bottom: 3px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .card.token .token-pt {
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: #e94560;
+        }
+        .card.token .token-abilities-text {
+            font-size: 0.3rem;
+            color: #aaa;
+            margin-top: 2px;
+            max-height: 20px;
+            overflow: hidden;
+            line-height: 1.2;
+        }
+        .card.token.color-W { border-color: #f8f8c8; background: linear-gradient(135deg, #f8f8e8, #c8c898); }
+        .card.token.color-W .token-name, .card.token.color-W .token-pt { color: #333; }
+        .card.token.color-U { border-color: #4488cc; background: linear-gradient(135deg, #446699, #223366); }
+        .card.token.color-B { border-color: #666; background: linear-gradient(135deg, #333, #111); }
+        .card.token.color-R { border-color: #cc4444; background: linear-gradient(135deg, #883333, #442222); }
+        .card.token.color-G { border-color: #44aa44; background: linear-gradient(135deg, #336633, #224422); }
         .card.arrow-target-card {
             outline: 2px dashed #4ecdc4;
             outline-offset: 2px;
@@ -649,11 +699,29 @@
             position: absolute;
             bottom: 1px;
             right: 1px;
-            background: rgba(0,0,0,0.85);
-            padding: 1px 3px;
-            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 1px;
             font-size: 0.5rem;
         }
+        .card .counter-badge {
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+            white-space: nowrap;
+        }
+        .card .counter-badge.plus { background: linear-gradient(135deg, #27ae60, #1e8449); color: #fff; }
+        .card .counter-badge.minus { background: linear-gradient(135deg, #c0392b, #922b21); color: #fff; }
+        .card .counter-badge.generic { background: linear-gradient(135deg, #3498db, #2980b9); color: #fff; }
+        .card .counter-badge.marker-red { background: #e74c3c; color: #fff; }
+        .card .counter-badge.marker-blue { background: #3498db; color: #fff; }
+        .card .counter-badge.marker-green { background: #27ae60; color: #fff; }
+        .card .counter-badge.marker-yellow { background: #f1c40f; color: #333; }
+        .card .counter-badge.marker-purple { background: #9b59b6; color: #fff; }
+        .card .counter-badge.marker-white { background: #ecf0f1; color: #333; }
+        .card .counter-badge.marker-black { background: #2c3e50; color: #fff; }
 
         /* Card Stack - horizontal cascade (staircase to the left) */
         .card-stack {
@@ -982,6 +1050,49 @@
         }
         .card-modal .close { background: #333; color: white; }
         .card-modal .action-btn { background: #e94560; color: white; }
+        .modal-token-display {
+            width: 250px;
+            height: 350px;
+            background: linear-gradient(135deg, #2a2a4e, #1a1a3e);
+            border: 3px solid #4a4a6e;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .modal-token-display.color-W { border-color: #f8f8c8; background: linear-gradient(135deg, #f8f8e8, #c8c898); }
+        .modal-token-display.color-W .modal-token-name, .modal-token-display.color-W .modal-token-pt { color: #333; }
+        .modal-token-display.color-U { border-color: #4488cc; background: linear-gradient(135deg, #446699, #223366); }
+        .modal-token-display.color-B { border-color: #666; background: linear-gradient(135deg, #333, #111); }
+        .modal-token-display.color-R { border-color: #cc4444; background: linear-gradient(135deg, #883333, #442222); }
+        .modal-token-display.color-G { border-color: #44aa44; background: linear-gradient(135deg, #336633, #224422); }
+        .modal-token-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .modal-token-type {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+        .modal-token-pt {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e94560;
+            margin-bottom: 15px;
+        }
+        .modal-token-abilities {
+            font-size: 0.8rem;
+            color: #ccc;
+            line-height: 1.4;
+            max-height: 100px;
+            overflow-y: auto;
+        }
 
         /* Scry Modal */
         .scry-modal {
@@ -1037,6 +1148,173 @@
             margin-top: 6px;
         }
         .scry-content .btn.primary { background: #e94560; color: white; }
+
+        /* Token Creation Modal */
+        .token-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 2100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .token-modal.show { display: flex; }
+        .token-content {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+            min-width: 400px;
+            max-width: 500px;
+        }
+        .token-content h3 {
+            margin: 0 0 15px 0;
+            font-size: 1rem;
+            color: #e94560;
+        }
+        .token-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+        .token-preset {
+            padding: 6px 10px;
+            background: #2a2a3e;
+            border: 1px solid #444;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: #ccc;
+            transition: all 0.2s;
+        }
+        .token-preset:hover {
+            background: #3a3a4e;
+            border-color: #e94560;
+        }
+        .token-preset.selected {
+            background: #e94560;
+            border-color: #e94560;
+            color: white;
+        }
+        .token-form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .token-form-group {
+            flex: 1;
+        }
+        .token-form-group.small {
+            flex: 0 0 60px;
+        }
+        .token-form-group label {
+            display: block;
+            font-size: 0.7rem;
+            color: #888;
+            margin-bottom: 3px;
+        }
+        .token-form-group input,
+        .token-form-group select {
+            width: 100%;
+            padding: 6px 8px;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.8rem;
+        }
+        .token-form-group textarea {
+            width: 100%;
+            padding: 6px 8px;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.8rem;
+            resize: vertical;
+            min-height: 50px;
+        }
+        .token-colors {
+            display: flex;
+            gap: 8px;
+        }
+        .token-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .token-color:hover { transform: scale(1.1); }
+        .token-color.selected { border-color: white; box-shadow: 0 0 8px rgba(255,255,255,0.5); }
+        .token-color.white { background: linear-gradient(135deg, #f8f8e8, #d4d4a8); }
+        .token-color.blue { background: linear-gradient(135deg, #4488cc, #224488); }
+        .token-color.black { background: linear-gradient(135deg, #444444, #1a1a1a); }
+        .token-color.red { background: linear-gradient(135deg, #cc4444, #882222); }
+        .token-color.green { background: linear-gradient(135deg, #44aa44, #226622); }
+        .token-color.colorless { background: linear-gradient(135deg, #888888, #444444); }
+        .token-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .token-actions button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .token-actions .cancel { background: #333; color: white; }
+        .token-actions .create { background: #e94560; color: white; }
+        .token-preview {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .token-preview-card {
+            width: 120px;
+            height: 168px;
+            background: linear-gradient(135deg, #2a2a4e, #1a1a3e);
+            border: 2px solid #444;
+            border-radius: 8px;
+            margin: 0 auto 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+        }
+        .token-preview-card .token-preview-name {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .token-preview-card .token-preview-type {
+            font-size: 0.65rem;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .token-preview-card .token-preview-pt {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #e94560;
+        }
+        .token-preview-card .token-preview-abilities {
+            font-size: 0.6rem;
+            color: #aaa;
+            margin-top: 6px;
+            text-align: center;
+            max-height: 40px;
+            overflow: hidden;
+        }
 
         /* Auto-Pay Mana Modal */
         .autopay-modal {
@@ -2022,7 +2300,7 @@
         </div>
 
         <!-- Dynamic Players Grid -->
-        <div class="players-grid" id="playersGrid"></div>
+        <div class="players-grid" id="playersGrid" onclick="clearSelectionIfOutside(event)"></div>
 
         <!-- Bottom Zones Row -->
         <div class="my-zones-row">
@@ -2171,6 +2449,91 @@
         </div>
     </div>
 
+    <!-- Token Creation Modal -->
+    <div class="token-modal" id="tokenModal">
+        <div class="token-content">
+            <h3>Criar Token</h3>
+            <div class="token-presets">
+                <div class="token-preset" onclick="selectTokenPreset('treasure')">Treasure</div>
+                <div class="token-preset" onclick="selectTokenPreset('map')">Map</div>
+                <div class="token-preset" onclick="selectTokenPreset('food')">Food</div>
+                <div class="token-preset" onclick="selectTokenPreset('clue')">Clue</div>
+                <div class="token-preset" onclick="selectTokenPreset('blood')">Blood</div>
+                <div class="token-preset" onclick="selectTokenPreset('gnome')">Gnome 1/1</div>
+                <div class="token-preset" onclick="selectTokenPreset('soldier')">Soldier 1/1</div>
+                <div class="token-preset" onclick="selectTokenPreset('zombie')">Zombie 2/2</div>
+                <div class="token-preset" onclick="selectTokenPreset('spirit')">Spirit 1/1</div>
+                <div class="token-preset" onclick="selectTokenPreset('saproling')">Saproling 1/1</div>
+                <div class="token-preset" onclick="selectTokenPreset('beast')">Beast 3/3</div>
+                <div class="token-preset" onclick="selectTokenPreset('angel')">Angel 4/4</div>
+                <div class="token-preset" onclick="selectTokenPreset('custom')">Custom...</div>
+            </div>
+            <div class="token-form-row">
+                <div class="token-form-group">
+                    <label>Nome do Token</label>
+                    <input type="text" id="tokenName" placeholder="Ex: Gnome" oninput="updateTokenPreview()">
+                </div>
+                <div class="token-form-group small">
+                    <label>Qtd</label>
+                    <input type="number" id="tokenCount" value="1" min="1" max="20">
+                </div>
+            </div>
+            <div class="token-form-row">
+                <div class="token-form-group">
+                    <label>Tipo</label>
+                    <input type="text" id="tokenType" placeholder="Ex: Artifact Creature — Gnome" oninput="updateTokenPreview()">
+                </div>
+            </div>
+            <div class="token-form-row">
+                <div class="token-form-group small">
+                    <label>Poder</label>
+                    <input type="text" id="tokenPower" placeholder="1" oninput="updateTokenPreview()">
+                </div>
+                <div class="token-form-group small">
+                    <label>Resist.</label>
+                    <input type="text" id="tokenToughness" placeholder="1" oninput="updateTokenPreview()">
+                </div>
+                <div class="token-form-group">
+                    <label>Cores</label>
+                    <div class="token-colors">
+                        <div class="token-color white" data-color="W" onclick="toggleTokenColor(this)"></div>
+                        <div class="token-color blue" data-color="U" onclick="toggleTokenColor(this)"></div>
+                        <div class="token-color black" data-color="B" onclick="toggleTokenColor(this)"></div>
+                        <div class="token-color red" data-color="R" onclick="toggleTokenColor(this)"></div>
+                        <div class="token-color green" data-color="G" onclick="toggleTokenColor(this)"></div>
+                        <div class="token-color colorless" data-color="C" onclick="toggleTokenColor(this)"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="token-form-row">
+                <div class="token-form-group">
+                    <label>Habilidades (opcional)</label>
+                    <textarea id="tokenAbilities" placeholder="Ex: Flying, Haste" oninput="updateTokenPreview()"></textarea>
+                </div>
+            </div>
+            <div class="token-form-row">
+                <div class="token-form-group">
+                    <label style="display:flex;align-items:center;gap:6px;">
+                        <input type="checkbox" id="tokenTapped" style="width:auto;">
+                        Entra virado (tapped)
+                    </label>
+                </div>
+            </div>
+            <div class="token-preview">
+                <div class="token-preview-card">
+                    <div class="token-preview-name" id="previewName">Token</div>
+                    <div class="token-preview-type" id="previewType">Creature Token</div>
+                    <div class="token-preview-pt" id="previewPT"></div>
+                    <div class="token-preview-abilities" id="previewAbilities"></div>
+                </div>
+            </div>
+            <div class="token-actions">
+                <button class="cancel" onclick="closeTokenModal()">Cancelar</button>
+                <button class="create" onclick="createToken()">Criar Token</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Reveal Overlay -->
     <div class="reveal-overlay" id="revealOverlay">
         <img id="revealedCardImage" src="" alt="">
@@ -2180,6 +2543,12 @@
     <!-- Card Modal -->
     <div class="card-modal" id="cardModal">
         <img id="modalImage" src="" alt="">
+        <div id="modalTokenDisplay" class="modal-token-display" style="display:none;">
+            <div class="modal-token-name" id="modalTokenName"></div>
+            <div class="modal-token-type" id="modalTokenType"></div>
+            <div class="modal-token-pt" id="modalTokenPT"></div>
+            <div class="modal-token-abilities" id="modalTokenAbilities"></div>
+        </div>
         <div class="actions" id="modalActions"></div>
     </div>
 
@@ -2889,16 +3258,17 @@
                 const battlefieldCards = [];
 
                 // Add cards from game state (excluding pending removals)
+                const serverCardIds = new Set();
                 (zones.battlefield || []).forEach(card => {
                     if (pendingRemovals.has(card.id)) return;
-                    if (pendingAdditions.has(card.id)) return; // Skip, will be added from pendingAdditions
+                    serverCardIds.add(card.id);
                     const countersStr = card.counters ? Object.entries(card.counters).map(([k,v]) => `${k}${v}`).join('') : '';
                     battlefieldCards.push({ id: card.id, hash: `bf:${seat}:${card.id}:${countersStr}` });
                 });
 
-                // Add pending additions for this player
+                // Add pending additions for this player (only if not already in server state)
                 pendingAdditions.forEach((data, cardId) => {
-                    if (data.seat === seat) {
+                    if (data.seat === seat && !serverCardIds.has(cardId)) {
                         battlefieldCards.push({ id: cardId, hash: `bf:${seat}:${cardId}:` });
                     }
                 });
@@ -3015,18 +3385,19 @@
                 const zones = gameState.zones_data[seat];
                 if (!zones) return;
 
-                // Get cards that should be on battlefield (excluding pending removals, including pending additions)
+                // Get cards that should be on battlefield (excluding pending removals)
                 const shouldBeOnBattlefield = new Map();
+                const serverCardMap = new Map();
                 (zones.battlefield || []).forEach(card => {
                     if (pendingRemovals.has(card.id)) return;
-                    if (pendingAdditions.has(card.id)) return; // Will be added from pendingAdditions
+                    serverCardMap.set(card.id, card);
                     const row = card.battlefield_row || getCardRow(card.type_line);
                     shouldBeOnBattlefield.set(card.id, { card, row });
                 });
 
-                // Add pending additions for this player
+                // Add pending additions for this player (only if not already in server state)
                 pendingAdditions.forEach((data, cardId) => {
-                    if (data.seat === seat) {
+                    if (data.seat === seat && !serverCardMap.has(cardId)) {
                         const row = data.row || getCardRow(data.card.type_line);
                         shouldBeOnBattlefield.set(cardId, { card: data.card, row });
                     }
@@ -3074,13 +3445,25 @@
             const isArrowSource = arrowSourceCards.has(card.id);
             const hasArrow = arrows.some(a => a.sourceCardId === card.id);
 
+            // Check if this is a token
+            const isToken = card.is_token;
+            let tokenColorClass = '';
+            if (isToken && card.token_colors) {
+                const firstColor = card.token_colors[0];
+                if (firstColor) tokenColorClass = `color-${firstColor}`;
+            }
+
             const cardEl = document.createElement('div');
-            cardEl.className = `card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''}`;
+            cardEl.className = `card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''} ${isToken ? 'token' : ''} ${tokenColorClass}`;
             cardEl.dataset.id = card.id;
             if (isMe) {
                 cardEl.draggable = true;
                 cardEl.setAttribute('ondragstart', `handleDragStart(event, '${card.id}', 'battlefield')`);
                 cardEl.setAttribute('ondragend', `handleBattlefieldDragEnd(event)`);
+                // Drop handlers for stacking
+                cardEl.setAttribute('ondragover', `handleBattlefieldCardDragOver(event, '${card.id}')`);
+                cardEl.setAttribute('ondragleave', `handleBattlefieldCardDragLeave(event)`);
+                cardEl.setAttribute('ondrop', `handleBattlefieldCardDrop(event, '${card.id}')`);
             }
             cardEl.setAttribute('onclick', `handleBattlefieldCardClick(event, '${card.id}', ${isMe})`);
             if (isMe) {
@@ -3091,14 +3474,24 @@
             }
 
             // Build innerHTML with counters
-            let countersHtml = '';
-            if (card.counters && Object.keys(card.counters).length > 0) {
-                countersHtml = '<div class="card-counters">' +
-                    Object.entries(card.counters).map(([type, count]) =>
-                        `<span class="counter ${type}">${count}</span>`
-                    ).join('') + '</div>';
+            const countersHtml = formatCountersHtml(card.counters);
+
+            // Token vs regular card content
+            if (isToken) {
+                const ptDisplay = card.power && card.toughness ? `${card.power}/${card.toughness}` : '';
+                const abilitiesShort = (card.oracle_text || '').substring(0, 50);
+                cardEl.innerHTML = `
+                    <div class="token-visual">
+                        <div class="token-name">${escapedName}</div>
+                        <div class="token-type-line">${(card.type_line || '').replace('Token', '').trim()}</div>
+                        ${ptDisplay ? `<div class="token-pt">${ptDisplay}</div>` : ''}
+                        ${abilitiesShort ? `<div class="token-abilities-text">${abilitiesShort}</div>` : ''}
+                    </div>
+                    ${countersHtml}
+                `;
+            } else {
+                cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}">${countersHtml}`;
             }
-            cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}">${countersHtml}`;
 
             return cardEl;
         }
@@ -3116,15 +3509,10 @@
             cardEl.classList.toggle('has-arrow', arrows.some(a => a.sourceCardId === card.id));
 
             // Update counters
-            const existingCounters = cardEl.querySelector('.card-counters');
-            const hasCounters = card.counters && Object.keys(card.counters).length > 0;
+            const existingCounters = cardEl.querySelector('.counters');
+            const countersHtml = formatCountersHtml(card.counters);
 
-            if (hasCounters) {
-                const countersHtml = '<div class="card-counters">' +
-                    Object.entries(card.counters).map(([type, count]) =>
-                        `<span class="counter ${type}">${count}</span>`
-                    ).join('') + '</div>';
-
+            if (countersHtml) {
                 if (existingCounters) {
                     existingCounters.outerHTML = countersHtml;
                 } else {
@@ -3191,21 +3579,27 @@
                             <span class="mini-zone" title="Exilio" onclick="event.stopPropagation(); showOpponentZone(${player.seat_position}, 'exile')">${zones.exile.length}</span>
                         </div>
                     </div>
-                    <div class="player-battlefield">
+                    <div class="player-battlefield" onclick="clearSelectionIfOutside(event)">
                         <div class="battlefield-row creatures-row" data-row="creatures" data-seat="${player.seat_position}"
                              ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
-                             ondrop="handleRowDrop(event, ${player.seat_position}, 'creatures')">
-                            <div class="cards-container">${renderBattlefieldCards(creatures, isMe, player.seat_position)}</div>
+                             ondrop="handleRowDrop(event, ${player.seat_position}, 'creatures')"
+                             onclick="clearSelectionIfOutside(event)"
+                             ${isMe ? `oncontextmenu="showBattlefieldRowContextMenu(event); return false;"` : ''}>
+                            <div class="cards-container" onclick="clearSelectionIfOutside(event)">${renderBattlefieldCards(creatures, isMe, player.seat_position)}</div>
                         </div>
                         <div class="battlefield-row enchantments-row" data-row="enchantments" data-seat="${player.seat_position}"
                              ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
-                             ondrop="handleRowDrop(event, ${player.seat_position}, 'enchantments')">
-                            <div class="cards-container">${renderBattlefieldCards(enchantments, isMe, player.seat_position)}</div>
+                             ondrop="handleRowDrop(event, ${player.seat_position}, 'enchantments')"
+                             onclick="clearSelectionIfOutside(event)"
+                             ${isMe ? `oncontextmenu="showBattlefieldRowContextMenu(event); return false;"` : ''}>
+                            <div class="cards-container" onclick="clearSelectionIfOutside(event)">${renderBattlefieldCards(enchantments, isMe, player.seat_position)}</div>
                         </div>
                         <div class="battlefield-row lands-row" data-row="lands" data-seat="${player.seat_position}"
                              ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)"
-                             ondrop="handleRowDrop(event, ${player.seat_position}, 'lands')">
-                            <div class="cards-container">${renderBattlefieldCards(lands, isMe, player.seat_position)}</div>
+                             ondrop="handleRowDrop(event, ${player.seat_position}, 'lands')"
+                             onclick="clearSelectionIfOutside(event)"
+                             ${isMe ? `oncontextmenu="showBattlefieldRowContextMenu(event); return false;"` : ''}>
+                            <div class="cards-container" onclick="clearSelectionIfOutside(event)">${renderBattlefieldCards(lands, isMe, player.seat_position)}</div>
                         </div>
                     </div>
                 </div>
@@ -3299,11 +3693,7 @@
         }
 
         function renderSingleBattlefieldCard(card, isMe) {
-            let countersHtml = '';
-            if (card.counters && Object.keys(card.counters).length > 0) {
-                const text = Object.entries(card.counters).filter(([k,v]) => v > 0).map(([k,v]) => `${k}:${v}`).join(' ');
-                if (text) countersHtml = `<div class="counters">${text}</div>`;
-            }
+            const countersHtml = formatCountersHtml(card.counters);
             const isSelected = selectedCards.has(card.id);
             const isArrowSource = arrowSourceCards.has(card.id);
             const hasArrowFrom = arrows.some(a => a.sourceCardId === card.id);
@@ -3314,17 +3704,48 @@
             const dragEnd = isMe ? `ondragend="handleBattlefieldDragEnd(event)"` : '';
             const dropHandlers = isMe ? `ondragover="handleBattlefieldCardDragOver(event, '${card.id}')" ondragleave="handleBattlefieldCardDragLeave(event)" ondrop="handleBattlefieldCardDrop(event, '${card.id}')"` : '';
             const contextMenu = `oncontextmenu="showBattlefieldContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}, ${isMe}); return false;"`;
-            const hoverPreview = `onmouseenter="showCardHoverPreview(event, '${card.image_normal || card.image_small}')" onmousemove="updateCardHoverPosition(event)" onmouseleave="hideCardHoverPreview()"`;
+
+            // Check if this is a token
+            const isToken = card.is_token;
+            let tokenColorClass = '';
+            if (isToken && card.token_colors) {
+                const firstColor = card.token_colors[0];
+                if (firstColor) tokenColorClass = `color-${firstColor}`;
+            }
+
+            let cardContent;
+            if (isToken) {
+                // Render token visual
+                const ptDisplay = card.power && card.toughness ? `${card.power}/${card.toughness}` : '';
+                const abilitiesShort = (card.oracle_text || '').substring(0, 50);
+                cardContent = `
+                    <div class="token-visual">
+                        <div class="token-name">${card.name}</div>
+                        <div class="token-type-line">${(card.type_line || '').replace('Token', '').trim()}</div>
+                        ${ptDisplay ? `<div class="token-pt">${ptDisplay}</div>` : ''}
+                        ${abilitiesShort ? `<div class="token-abilities-text">${abilitiesShort}</div>` : ''}
+                    </div>
+                    ${countersHtml}
+                `;
+            } else {
+                // Regular card with image
+                const hoverPreview = `onmouseenter="showCardHoverPreview(event, '${card.image_normal || card.image_small}')" onmousemove="updateCardHoverPosition(event)" onmouseleave="hideCardHoverPreview()"`;
+                cardContent = `
+                    <img src="${card.image_small}" alt="${card.name}" draggable="false">
+                    ${countersHtml}
+                `;
+            }
+
+            const hoverPreview = !isToken ? `onmouseenter="showCardHoverPreview(event, '${card.image_normal || card.image_small}')" onmousemove="updateCardHoverPosition(event)" onmouseleave="hideCardHoverPreview()"` : '';
 
             return `
-                <div class="card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''}"
+                <div class="card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''} ${isToken ? 'token' : ''} ${tokenColorClass}"
                      data-id="${card.id}" ${draggable}
                      ${dragStart} ${dragEnd} ${dropHandlers}
                      onclick="handleBattlefieldCardClick(event, '${card.id}', ${isMe})"
                      ondblclick="${isMe ? `event.stopPropagation(); toggleTap('${card.id}')` : ''}"
                      ${contextMenu} ${hoverPreview}>
-                    <img src="${card.image_small}" alt="${card.name}" draggable="false">
-                    ${countersHtml}
+                    ${cardContent}
                 </div>
             `;
         }
@@ -3335,11 +3756,7 @@
             // Render stack container with all cards
             let cardsHtml = stackCards.map((card, index) => {
                 const isTop = index === stackCards.length - 1;
-                let countersHtml = '';
-                if (card.counters && Object.keys(card.counters).length > 0) {
-                    const text = Object.entries(card.counters).filter(([k,v]) => v > 0).map(([k,v]) => `${k}:${v}`).join(' ');
-                    if (text) countersHtml = `<div class="counters">${text}</div>`;
-                }
+                const countersHtml = formatCountersHtml(card.counters);
                 const isSelected = selectedCards.has(card.id);
                 const isArrowSource = arrowSourceCards.has(card.id);
                 const hasArrowFrom = arrows.some(a => a.sourceCardId === card.id);
@@ -3351,17 +3768,43 @@
                 const dropHandlers = isMe && isTop ? `ondragover="handleBattlefieldCardDragOver(event, '${card.id}')" ondragleave="handleBattlefieldCardDragLeave(event)" ondrop="handleBattlefieldCardDrop(event, '${card.id}')"` : '';
                 const contextMenu = `oncontextmenu="showStackCardContextMenu(event, ${JSON.stringify(card).replace(/"/g, '&quot;')}, ${isMe}, ${stackId}); return false;"`;
                 const stackedClass = isTop ? 'stack-top' : 'stacked';
-                const hoverPreview = `onmouseenter="showCardHoverPreview(event, '${card.image_normal || card.image_small}')" onmousemove="updateCardHoverPosition(event)" onmouseleave="hideCardHoverPreview()"`;
+
+                // Check if this is a token
+                const isToken = card.is_token;
+                let tokenColorClass = '';
+                if (isToken && card.token_colors) {
+                    const firstColor = card.token_colors[0];
+                    if (firstColor) tokenColorClass = `color-${firstColor}`;
+                }
+
+                const hoverPreview = !isToken ? `onmouseenter="showCardHoverPreview(event, '${card.image_normal || card.image_small}')" onmousemove="updateCardHoverPosition(event)" onmouseleave="hideCardHoverPreview()"` : '';
+
+                let cardContent;
+                if (isToken) {
+                    const ptDisplay = card.power && card.toughness ? `${card.power}/${card.toughness}` : '';
+                    const abilitiesShort = (card.oracle_text || '').substring(0, 30);
+                    cardContent = `
+                        <div class="token-visual">
+                            <div class="token-name">${card.name}</div>
+                            ${ptDisplay ? `<div class="token-pt">${ptDisplay}</div>` : ''}
+                        </div>
+                        ${countersHtml}
+                    `;
+                } else {
+                    cardContent = `
+                        <img src="${card.image_small}" alt="${card.name}" draggable="false">
+                        ${countersHtml}
+                    `;
+                }
 
                 return `
-                    <div class="card ${stackedClass} ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''}"
+                    <div class="card ${stackedClass} ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''} ${isToken ? 'token' : ''} ${tokenColorClass}"
                          data-id="${card.id}" ${draggable}
                          ${dragStart} ${dragEnd} ${dropHandlers}
                          onclick="handleStackCardClick(event, '${card.id}', ${isMe}, ${stackId})"
                          ondblclick="${isMe ? `event.stopPropagation(); toggleTap('${card.id}')` : ''}"
                          ${contextMenu} ${hoverPreview}>
-                        <img src="${card.image_small}" alt="${card.name}" draggable="false">
-                        ${countersHtml}
+                        ${cardContent}
                     </div>
                 `;
             }).join('');
@@ -3392,9 +3835,12 @@
             e.preventDefault();
             e.stopPropagation();
 
+            // Store card for potential modal viewing
+            _currentViewCard = card;
+
             if (isMe) {
                 const items = [
-                    { label: 'Ver carta', action: `showCardModal('${card.id}', '${card.image_normal}', '${card.name.replace(/'/g, "\\'")}', 'battlefield', true); hideContextMenu();` },
+                    { label: 'Ver carta', action: `showBattlefieldCardModal();` },
                     { divider: true },
                     { label: card.is_tapped ? 'Desvirar' : 'Virar', action: `toggleTap('${card.id}'); hideContextMenu();` },
                     { divider: true },
@@ -4685,13 +5131,25 @@
             const escapedName = (card.name || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
             const escapedImage = (card.image_small || card.image_normal || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 
+            // Check if this is a token
+            const isToken = card.is_token;
+            let tokenColorClass = '';
+            if (isToken && card.token_colors) {
+                const firstColor = card.token_colors[0];
+                if (firstColor) tokenColorClass = `color-${firstColor}`;
+            }
+
             const cardEl = document.createElement('div');
-            cardEl.className = `card ${card.is_commander ? 'commander' : ''}`;
+            cardEl.className = `card ${card.is_commander ? 'commander' : ''} ${isToken ? 'token' : ''} ${tokenColorClass}`;
             cardEl.dataset.id = card.id;
             if (isMe) {
                 cardEl.draggable = true;
                 cardEl.setAttribute('ondragstart', `handleDragStart(event, '${card.id}', 'battlefield')`);
                 cardEl.setAttribute('ondragend', `handleBattlefieldDragEnd(event)`);
+                // Drop handlers for stacking
+                cardEl.setAttribute('ondragover', `handleBattlefieldCardDragOver(event, '${card.id}')`);
+                cardEl.setAttribute('ondragleave', `handleBattlefieldCardDragLeave(event)`);
+                cardEl.setAttribute('ondrop', `handleBattlefieldCardDrop(event, '${card.id}')`);
             }
             cardEl.setAttribute('onclick', `handleBattlefieldCardClick(event, '${card.id}', ${isMe})`);
             if (isMe) {
@@ -4700,7 +5158,22 @@
             } else {
                 cardEl.setAttribute('oncontextmenu', `showBattlefieldContextMenuById(event, '${card.id}', false); return false;`);
             }
-            cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}">`;
+
+            // Token vs regular card content
+            if (isToken) {
+                const ptDisplay = card.power && card.toughness ? `${card.power}/${card.toughness}` : '';
+                const abilitiesShort = (card.oracle_text || '').substring(0, 50);
+                cardEl.innerHTML = `
+                    <div class="token-visual">
+                        <div class="token-name">${escapedName}</div>
+                        <div class="token-type-line">${(card.type_line || '').replace('Token', '').trim()}</div>
+                        ${ptDisplay ? `<div class="token-pt">${ptDisplay}</div>` : ''}
+                        ${abilitiesShort ? `<div class="token-abilities-text">${abilitiesShort}</div>` : ''}
+                    </div>
+                `;
+            } else {
+                cardEl.innerHTML = `<img src="${escapedImage}" alt="${escapedName}">`;
+            }
 
             targetRow.appendChild(cardEl);
             pendingAdditions.set(card.id, { card, row, seat });
@@ -4787,6 +5260,7 @@
 
         // ===== MULTI-SELECT =====
         let selectionStartedInMyArea = false;
+        let justFinishedBoxSelection = false;
 
         document.addEventListener('mousedown', function(e) {
             if (e.button !== 0) return;
@@ -4876,6 +5350,9 @@
             if (newSelection.size > 0) {
                 selectedCards = newSelection;
                 updateCardSelectionVisual(); // Surgical update, no blink
+                // Prevent the click event from clearing selection
+                justFinishedBoxSelection = true;
+                setTimeout(() => { justFinishedBoxSelection = false; }, 50);
             }
         });
 
@@ -4931,6 +5408,21 @@
                 }
             }
         });
+
+        // Clear selection when clicking on battlefield empty space
+        function clearSelectionIfOutside(e) {
+            // Don't clear if we just finished a box selection
+            if (justFinishedBoxSelection) return;
+            // Check if we clicked on a card or inside a card
+            if (e.target.closest('.card')) return;
+            // Check if we clicked on context menu or modal
+            if (e.target.closest('.context-menu, .modal-overlay, .modal, .card-modal')) return;
+            // Clear selection
+            if (selectedCards.size > 0) {
+                selectedCards.clear();
+                updateCardSelectionVisual();
+            }
+        }
 
         function showLibraryContextMenu(e) {
             const mulliganLabel = mulliganCount === 0
@@ -5162,15 +5654,28 @@
             ], true); // openUpward = true for hand cards
         }
 
+        // Store current card for modal viewing (used by showBattlefieldCardModal)
+        let _currentViewCard = null;
+
+        function showBattlefieldCardModal() {
+            if (!_currentViewCard) return;
+            const card = _currentViewCard;
+            showCard(card.id, card.image_normal || '', card.name, 'battlefield', true, card);
+            hideContextMenu();
+        }
+
         function showBattlefieldContextMenu(e, card, isMe = false) {
             const items = [];
+
+            // Store card for potential modal viewing
+            _currentViewCard = card;
 
             // Check if clicked card is in selection and there are multiple cards selected
             const isMultiSelect = selectedCards.has(card.id) && selectedCards.size > 1;
             const countLabel = isMultiSelect ? ` (${selectedCards.size})` : '';
 
-            // Ver carta option (always single card)
-            items.push({ label: 'Ver carta', action: `showCard('${card.id}', '${card.image_normal}', '${card.name}', 'battlefield', ${isMe}); hideContextMenu();` });
+            // Ver carta option (always single card) - use helper for tokens
+            items.push({ label: 'Ver carta', action: `showBattlefieldCardModal();` });
 
             if (isMe) {
                 items.push({ divider: true });
@@ -5219,13 +5724,32 @@
 
                 items.push({ divider: true });
 
-                // Counter actions
+                // Counter actions - +1/+1 and -1/-1
                 if (isMultiSelect) {
-                    items.push({ label: `Adicionar +1/+1${countLabel}`, action: `addCounterToSelected(); hideContextMenu();` });
-                    items.push({ label: `Remover +1/+1${countLabel}`, action: `removeCounterFromSelected(); hideContextMenu();` });
+                    items.push({ label: `Adicionar +1/+1${countLabel}`, action: `addCounterToSelected('+1/+1'); hideContextMenu();` });
+                    items.push({ label: `Remover +1/+1${countLabel}`, action: `removeCounterFromSelected('+1/+1'); hideContextMenu();` });
+                    items.push({ label: `Adicionar -1/-1${countLabel}`, action: `addCounterToSelected('-1/-1'); hideContextMenu();` });
+                    items.push({ label: `Remover -1/-1${countLabel}`, action: `removeCounterFromSelected('-1/-1'); hideContextMenu();` });
                 } else {
-                    items.push({ label: 'Adicionar +1/+1', action: `addCounter('${card.id}'); hideContextMenu();` });
-                    items.push({ label: 'Remover +1/+1', action: `removeCounter('${card.id}'); hideContextMenu();` });
+                    items.push({ label: 'Adicionar +1/+1', action: `addCounter('${card.id}', '+1/+1');` });
+                    items.push({ label: 'Remover +1/+1', action: `removeCounter('${card.id}', '+1/+1');` });
+                    items.push({ label: 'Adicionar -1/-1', action: `addCounter('${card.id}', '-1/-1');` });
+                    items.push({ label: 'Remover -1/-1', action: `removeCounter('${card.id}', '-1/-1');` });
+                }
+
+                // Color markers submenu
+                items.push({ divider: true });
+                const markerColors = ['red', 'blue', 'green', 'yellow', 'purple', 'white', 'black'];
+                const markerLabels = {red: '🔴', blue: '🔵', green: '🟢', yellow: '🟡', purple: '🟣', white: '⚪', black: '⚫'};
+                if (isMultiSelect) {
+                    items.push({ label: `Marcadores ▸`, action: `showMarkerSubmenu(event, null, true, ${selectedCards.size});` });
+                } else {
+                    // Check which markers the card has
+                    const cardMarkers = card.counters ? Object.keys(card.counters).filter(k => k.startsWith('marker-')) : [];
+                    items.push({ label: 'Adicionar Marcador ▸', action: `showMarkerSubmenu(event, '${card.id}', false, 0);` });
+                    if (cardMarkers.length > 0) {
+                        items.push({ label: 'Remover Marcador ▸', action: `showRemoveMarkerSubmenu(event, '${card.id}');` });
+                    }
                 }
 
                 // Stack actions
@@ -5237,6 +5761,15 @@
                 if (stackInfo) {
                     items.push({ label: 'Remover da pilha', action: `unstackCard('${card.id}'); renderPlayersGrid(true); hideContextMenu();` });
                     items.push({ label: 'Desempilhar todas', action: `unstackAll(${stackInfo.stackId}); hideContextMenu();` });
+                }
+
+                // Token creation
+                items.push({ divider: true });
+                items.push({ label: 'Criar Token...', action: `openTokenModal(); hideContextMenu();` });
+
+                // Token removal (if card is a token)
+                if (card.is_token) {
+                    items.push({ label: 'Destruir Token', action: `sendAction('move_card', {object_id: '${card.id}', zone: 'graveyard'}); hideContextMenu();` });
                 }
             }
             showContextMenu(e, items);
@@ -5258,6 +5791,15 @@
             showContextMenu(e, [
                 { label: 'Lancar Comandante', action: `moveCard('${cardId}', 'battlefield'); hideContextMenu();` },
                 { label: 'Exilar', action: `moveCard('${cardId}', 'exile'); hideContextMenu();` },
+            ]);
+        }
+
+        function showBattlefieldRowContextMenu(e) {
+            // Only show if clicking on empty space, not on a card
+            if (e.target.closest('.card')) return;
+
+            showContextMenu(e, [
+                { label: 'Criar Token...', action: `openTokenModal(); hideContextMenu();` },
             ]);
         }
 
@@ -5285,12 +5827,60 @@
             updateCardSelectionVisual();
         }
 
-        function addCounterToSelected() {
-            selectedCards.forEach(id => sendAction('add_counter', { object_id: id }));
+        function addCounterToSelected(counterType = '+1/+1') {
+            selectedCards.forEach(id => sendAction('add_counter', { object_id: id, counter_type: counterType }));
+            hideContextMenu();
         }
 
-        function removeCounterFromSelected() {
-            selectedCards.forEach(id => sendAction('remove_counter', { object_id: id }));
+        function removeCounterFromSelected(counterType = '+1/+1') {
+            selectedCards.forEach(id => sendAction('remove_counter', { object_id: id, counter_type: counterType }));
+            hideContextMenu();
+        }
+
+        // Marker submenu functions
+        function showMarkerSubmenu(e, cardId, isMulti, count) {
+            e.stopPropagation();
+            const colors = [
+                {id: 'red', label: '🔴 Vermelho'},
+                {id: 'blue', label: '🔵 Azul'},
+                {id: 'green', label: '🟢 Verde'},
+                {id: 'yellow', label: '🟡 Amarelo'},
+                {id: 'purple', label: '🟣 Roxo'},
+                {id: 'white', label: '⚪ Branco'},
+                {id: 'black', label: '⚫ Preto'}
+            ];
+            const items = colors.map(c => {
+                if (isMulti) {
+                    return { label: c.label, action: `addMarkerToSelected('${c.id}');` };
+                } else {
+                    return { label: c.label, action: `addMarker('${cardId}', '${c.id}');` };
+                }
+            });
+            showContextMenu(e, items);
+        }
+
+        function showRemoveMarkerSubmenu(e, cardId) {
+            e.stopPropagation();
+            const card = findCardById(cardId);
+            if (!card || !card.counters) return;
+
+            const markerLabels = {red: '🔴 Vermelho', blue: '🔵 Azul', green: '🟢 Verde', yellow: '🟡 Amarelo', purple: '🟣 Roxo', white: '⚪ Branco', black: '⚫ Preto'};
+            const items = [];
+            for (const [key, count] of Object.entries(card.counters)) {
+                if (key.startsWith('marker-') && count > 0) {
+                    const color = key.replace('marker-', '');
+                    const label = markerLabels[color] || color;
+                    items.push({ label: `${label} (${count})`, action: `removeMarker('${cardId}', '${color}');` });
+                }
+            }
+            if (items.length > 0) {
+                showContextMenu(e, items);
+            }
+        }
+
+        function addMarkerToSelected(color) {
+            selectedCards.forEach(id => sendAction('add_counter', { object_id: id, counter_type: `marker-${color}` }));
+            hideContextMenu();
         }
 
         function removeArrowsFromSelected() {
@@ -5363,6 +5953,231 @@
         function closeScryModal() {
             document.getElementById('scryModal').classList.remove('show');
             scryCardsData = [];
+        }
+
+        // ===== TOKEN CREATION =====
+        const tokenPresets = {
+            treasure: {
+                name: 'Treasure',
+                type: 'Artifact Token',
+                power: '',
+                toughness: '',
+                colors: 'C',
+                abilities: 'Tap, Sacrifice this artifact: Add one mana of any color.',
+                row: 'enchantments'
+            },
+            map: {
+                name: 'Map',
+                type: 'Artifact Token',
+                power: '',
+                toughness: '',
+                colors: 'C',
+                abilities: '1, Tap, Sacrifice this token: Target creature you control explores. Activate only as a sorcery.',
+                row: 'enchantments'
+            },
+            food: {
+                name: 'Food',
+                type: 'Artifact Token',
+                power: '',
+                toughness: '',
+                colors: 'C',
+                abilities: '2, Tap, Sacrifice this artifact: You gain 3 life.',
+                row: 'enchantments'
+            },
+            clue: {
+                name: 'Clue',
+                type: 'Artifact Token',
+                power: '',
+                toughness: '',
+                colors: 'C',
+                abilities: '2, Sacrifice this artifact: Draw a card.',
+                row: 'enchantments'
+            },
+            blood: {
+                name: 'Blood',
+                type: 'Artifact Token',
+                power: '',
+                toughness: '',
+                colors: 'C',
+                abilities: '1, Tap, Discard a card, Sacrifice this artifact: Draw a card.',
+                row: 'enchantments'
+            },
+            gnome: {
+                name: 'Gnome',
+                type: 'Artifact Creature Token — Gnome',
+                power: '1',
+                toughness: '1',
+                colors: 'C',
+                abilities: '',
+                row: 'creatures'
+            },
+            soldier: {
+                name: 'Soldier',
+                type: 'Creature Token — Soldier',
+                power: '1',
+                toughness: '1',
+                colors: 'W',
+                abilities: '',
+                row: 'creatures'
+            },
+            zombie: {
+                name: 'Zombie',
+                type: 'Creature Token — Zombie',
+                power: '2',
+                toughness: '2',
+                colors: 'B',
+                abilities: '',
+                row: 'creatures'
+            },
+            spirit: {
+                name: 'Spirit',
+                type: 'Creature Token — Spirit',
+                power: '1',
+                toughness: '1',
+                colors: 'W',
+                abilities: 'Flying',
+                row: 'creatures'
+            },
+            saproling: {
+                name: 'Saproling',
+                type: 'Creature Token — Saproling',
+                power: '1',
+                toughness: '1',
+                colors: 'G',
+                abilities: '',
+                row: 'creatures'
+            },
+            beast: {
+                name: 'Beast',
+                type: 'Creature Token — Beast',
+                power: '3',
+                toughness: '3',
+                colors: 'G',
+                abilities: '',
+                row: 'creatures'
+            },
+            angel: {
+                name: 'Angel',
+                type: 'Creature Token — Angel',
+                power: '4',
+                toughness: '4',
+                colors: 'W',
+                abilities: 'Flying',
+                row: 'creatures'
+            },
+            custom: {
+                name: '',
+                type: 'Creature Token',
+                power: '',
+                toughness: '',
+                colors: '',
+                abilities: '',
+                row: 'creatures'
+            }
+        };
+
+        let selectedTokenColors = new Set();
+        let currentTokenRow = 'creatures';
+
+        function openTokenModal() {
+            document.getElementById('tokenModal').classList.add('show');
+            selectTokenPreset('treasure'); // Default selection
+        }
+
+        function closeTokenModal() {
+            document.getElementById('tokenModal').classList.remove('show');
+            selectedTokenColors.clear();
+            document.querySelectorAll('.token-preset').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('.token-color').forEach(el => el.classList.remove('selected'));
+        }
+
+        function selectTokenPreset(presetKey) {
+            const preset = tokenPresets[presetKey];
+            if (!preset) return;
+
+            // Update form
+            document.getElementById('tokenName').value = preset.name;
+            document.getElementById('tokenType').value = preset.type;
+            document.getElementById('tokenPower').value = preset.power;
+            document.getElementById('tokenToughness').value = preset.toughness;
+            document.getElementById('tokenAbilities').value = preset.abilities;
+            currentTokenRow = preset.row;
+
+            // Update color selection
+            selectedTokenColors.clear();
+            document.querySelectorAll('.token-color').forEach(el => el.classList.remove('selected'));
+            if (preset.colors) {
+                preset.colors.split('').forEach(c => {
+                    selectedTokenColors.add(c);
+                    const colorEl = document.querySelector(`.token-color[data-color="${c}"]`);
+                    if (colorEl) colorEl.classList.add('selected');
+                });
+            }
+
+            // Update preset buttons
+            document.querySelectorAll('.token-preset').forEach(el => el.classList.remove('selected'));
+            event.target.classList.add('selected');
+
+            updateTokenPreview();
+        }
+
+        function toggleTokenColor(el) {
+            const color = el.dataset.color;
+            if (selectedTokenColors.has(color)) {
+                selectedTokenColors.delete(color);
+                el.classList.remove('selected');
+            } else {
+                selectedTokenColors.add(color);
+                el.classList.add('selected');
+            }
+            updateTokenPreview();
+        }
+
+        function updateTokenPreview() {
+            const name = document.getElementById('tokenName').value || 'Token';
+            const type = document.getElementById('tokenType').value || 'Token';
+            const power = document.getElementById('tokenPower').value;
+            const toughness = document.getElementById('tokenToughness').value;
+            const abilities = document.getElementById('tokenAbilities').value;
+
+            document.getElementById('previewName').textContent = name;
+            document.getElementById('previewType').textContent = type;
+            document.getElementById('previewPT').textContent = power && toughness ? `${power}/${toughness}` : '';
+            document.getElementById('previewAbilities').textContent = abilities;
+
+            // Update row based on type
+            const typeLower = type.toLowerCase();
+            if (typeLower.includes('creature')) {
+                currentTokenRow = 'creatures';
+            } else if (typeLower.includes('land')) {
+                currentTokenRow = 'lands';
+            } else {
+                currentTokenRow = 'enchantments';
+            }
+        }
+
+        function createToken() {
+            const name = document.getElementById('tokenName').value || 'Token';
+            const type = document.getElementById('tokenType').value || 'Token';
+            const power = document.getElementById('tokenPower').value;
+            const toughness = document.getElementById('tokenToughness').value;
+            const abilities = document.getElementById('tokenAbilities').value;
+            const count = parseInt(document.getElementById('tokenCount').value) || 1;
+            const isTapped = document.getElementById('tokenTapped').checked;
+
+            sendAction('create_token', {
+                token_name: name,
+                token_type: type,
+                token_power: power,
+                token_toughness: toughness,
+                token_colors: Array.from(selectedTokenColors).join(''),
+                token_abilities: abilities,
+                count: Math.min(count, 20), // Limit to 20
+                is_tapped: isTapped,
+                row: currentTokenRow
+            });
+
+            closeTokenModal();
         }
 
         let currentZoneViewer = { zone: null, seat: null };
@@ -5771,9 +6586,37 @@
             setTimeout(() => lib.classList.remove('shuffling'), 500);
         }
 
-        function showCard(objId, imageUrl, cardName, zone, isMe = false) {
+        function showCard(objId, imageUrl, cardName, zone, isMe = false, cardData = null) {
             selectedCard = { id: objId, zone, name: cardName, image: imageUrl };
-            document.getElementById('modalImage').src = imageUrl;
+
+            const modalImage = document.getElementById('modalImage');
+            const modalTokenDisplay = document.getElementById('modalTokenDisplay');
+
+            // Check if this is a token (no image or cardData says it's a token)
+            const isToken = cardData?.is_token || (!imageUrl && cardData);
+
+            if (isToken && cardData) {
+                // Show token display, hide image
+                modalImage.style.display = 'none';
+                modalTokenDisplay.style.display = 'flex';
+
+                // Set token color class
+                modalTokenDisplay.className = 'modal-token-display';
+                if (cardData.token_colors && cardData.token_colors[0]) {
+                    modalTokenDisplay.classList.add('color-' + cardData.token_colors[0]);
+                }
+
+                document.getElementById('modalTokenName').textContent = cardData.name || 'Token';
+                document.getElementById('modalTokenType').textContent = cardData.type_line || 'Token';
+                document.getElementById('modalTokenPT').textContent =
+                    cardData.power && cardData.toughness ? `${cardData.power}/${cardData.toughness}` : '';
+                document.getElementById('modalTokenAbilities').textContent = cardData.oracle_text || '';
+            } else {
+                // Show image, hide token display
+                modalImage.style.display = 'block';
+                modalTokenDisplay.style.display = 'none';
+                modalImage.src = imageUrl;
+            }
 
             let actions = '<button class="close" onclick="closeModal()">Fechar</button>';
             if (isMe) {
@@ -5863,14 +6706,53 @@
             sendAction('change_life', { target_seat: seat, delta });
         }
 
-        function addCounter(objId) {
-            closeModal();
-            sendAction('add_counter', { object_id: objId, counter_type: '+1/+1' });
+        // Format counters for display - converts +1/+1:2 to +2/+2
+        function formatCountersHtml(counters) {
+            if (!counters || Object.keys(counters).length === 0) return '';
+
+            const badges = [];
+            for (const [type, count] of Object.entries(counters)) {
+                if (count <= 0) continue;
+
+                if (type === '+1/+1') {
+                    // Show as +N/+N
+                    badges.push(`<span class="counter-badge plus">+${count}/+${count}</span>`);
+                } else if (type === '-1/-1') {
+                    // Show as -N/-N
+                    badges.push(`<span class="counter-badge minus">-${count}/-${count}</span>`);
+                } else if (type.startsWith('marker-')) {
+                    // Color markers
+                    const color = type.replace('marker-', '');
+                    badges.push(`<span class="counter-badge marker-${color}">${count}</span>`);
+                } else {
+                    // Generic counters (loyalty, poison, etc)
+                    badges.push(`<span class="counter-badge generic">${type}: ${count}</span>`);
+                }
+            }
+
+            return badges.length > 0 ? `<div class="counters">${badges.join('')}</div>` : '';
         }
 
-        function removeCounter(objId) {
+        function addCounter(objId, counterType = '+1/+1') {
             closeModal();
-            sendAction('remove_counter', { object_id: objId, counter_type: '+1/+1' });
+            hideContextMenu();
+            sendAction('add_counter', { object_id: objId, counter_type: counterType });
+        }
+
+        function removeCounter(objId, counterType = '+1/+1') {
+            closeModal();
+            hideContextMenu();
+            sendAction('remove_counter', { object_id: objId, counter_type: counterType });
+        }
+
+        function addMarker(objId, color) {
+            hideContextMenu();
+            sendAction('add_counter', { object_id: objId, counter_type: `marker-${color}` });
+        }
+
+        function removeMarker(objId, color) {
+            hideContextMenu();
+            sendAction('remove_counter', { object_id: objId, counter_type: `marker-${color}` });
         }
 
         // ===== EVENT LISTENERS =====

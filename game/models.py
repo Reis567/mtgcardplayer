@@ -127,7 +127,16 @@ class GameObject(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='game_objects')
-    card = models.ForeignKey(Card, on_delete=models.PROTECT)
+    card = models.ForeignKey(Card, on_delete=models.PROTECT, null=True, blank=True)
+
+    # Token support - when card is null, these fields define the token
+    is_token = models.BooleanField(default=False)
+    token_name = models.CharField(max_length=100, blank=True, default='')
+    token_type = models.CharField(max_length=100, blank=True, default='')
+    token_power = models.CharField(max_length=10, blank=True, default='')
+    token_toughness = models.CharField(max_length=10, blank=True, default='')
+    token_colors = models.CharField(max_length=50, blank=True, default='')
+    token_abilities = models.TextField(blank=True, default='')
 
     owner = models.ForeignKey(GamePlayer, on_delete=models.CASCADE, related_name='owned_objects')
     controller = models.ForeignKey(GamePlayer, on_delete=models.CASCADE, related_name='controlled_objects')
@@ -155,7 +164,8 @@ class GameObject(models.Model):
         ordering = ['zone', 'zone_position']
 
     def __str__(self):
-        return f"{self.card.name} ({self.zone}) - {self.controller.player.nickname}"
+        name = self.token_name if self.is_token else (self.card.name if self.card else 'Unknown')
+        return f"{name} ({self.zone}) - {self.controller.player.nickname}"
 
 
 class GameAction(models.Model):
@@ -188,6 +198,8 @@ class GameAction(models.Model):
         ('put_bottom', 'Colocar no Fundo'),
         ('reveal', 'Revelar'),
         ('shuffle_into', 'Embaralhar Dentro'),
+        # Token actions
+        ('create_token', 'Criar Token'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
