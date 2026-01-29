@@ -5,11 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Partida - MTG Commander</title>
     <style>
+        /* ===== THEME VARIABLES ===== */
+        :root {
+            --bg-primary: #0a0a12;
+            --bg-secondary: rgba(255,255,255,0.05);
+            --bg-tertiary: rgba(255,255,255,0.1);
+            --bg-card: #1a1a2e;
+            --text-primary: #eee;
+            --text-secondary: #aaa;
+            --accent-red: #e94560;
+            --accent-yellow: #ffc107;
+            --accent-green: #27ae60;
+            --accent-blue: #3498db;
+            --border-color: rgba(255,255,255,0.1);
+            --shadow-color: rgba(0,0,0,0.3);
+        }
+
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: rgba(0,0,0,0.05);
+            --bg-tertiary: rgba(0,0,0,0.1);
+            --bg-card: #ffffff;
+            --text-primary: #222;
+            --text-secondary: #666;
+            --accent-red: #d63031;
+            --accent-yellow: #f39c12;
+            --accent-green: #27ae60;
+            --accent-blue: #2980b9;
+            --border-color: rgba(0,0,0,0.15);
+            --shadow-color: rgba(0,0,0,0.1);
+        }
+
+        /* Blue Theme */
+        [data-theme="blue"] {
+            --bg-primary: #0c1929;
+            --bg-secondary: rgba(52,152,219,0.1);
+            --bg-tertiary: rgba(52,152,219,0.2);
+            --bg-card: #1a3a5c;
+            --text-primary: #ecf0f1;
+            --text-secondary: #bdc3c7;
+            --accent-red: #e74c3c;
+            --accent-yellow: #f1c40f;
+            --accent-green: #2ecc71;
+            --accent-blue: #3498db;
+            --border-color: rgba(52,152,219,0.3);
+            --shadow-color: rgba(0,0,0,0.4);
+        }
+
+        /* Green Theme */
+        [data-theme="green"] {
+            --bg-primary: #0d1f0d;
+            --bg-secondary: rgba(39,174,96,0.1);
+            --bg-tertiary: rgba(39,174,96,0.2);
+            --bg-card: #1a3a1a;
+            --text-primary: #ecf0f1;
+            --text-secondary: #bdc3c7;
+            --accent-red: #e74c3c;
+            --accent-yellow: #f1c40f;
+            --accent-green: #27ae60;
+            --accent-blue: #3498db;
+            --border-color: rgba(39,174,96,0.3);
+            --shadow-color: rgba(0,0,0,0.4);
+        }
+
+        /* Purple Theme */
+        [data-theme="purple"] {
+            --bg-primary: #1a0a2e;
+            --bg-secondary: rgba(155,89,182,0.1);
+            --bg-tertiary: rgba(155,89,182,0.2);
+            --bg-card: #2d1b4e;
+            --text-primary: #ecf0f1;
+            --text-secondary: #bdc3c7;
+            --accent-red: #e74c3c;
+            --accent-yellow: #f1c40f;
+            --accent-green: #2ecc71;
+            --accent-blue: #9b59b6;
+            --border-color: rgba(155,89,182,0.3);
+            --shadow-color: rgba(0,0,0,0.4);
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0a0a12;
-            color: #eee;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             overflow: hidden;
         }
@@ -27,29 +107,29 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255,255,255,0.05);
+            background: var(--bg-secondary);
             padding: 5px 10px;
             border-radius: 5px;
         }
         .turn-info { display: flex; gap: 10px; align-items: center; font-size: 0.9rem; }
-        .turn-info .turn { color: #e94560; font-weight: bold; }
-        .turn-info .active { color: #ffc107; }
+        .turn-info .turn { color: var(--accent-red); font-weight: bold; }
+        .turn-info .active { color: var(--accent-yellow); }
         .connection-status { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; }
         .connection-dot { width: 7px; height: 7px; border-radius: 50%; background: #c0392b; }
-        .connection-dot.connected { background: #27ae60; }
+        .connection-dot.connected { background: var(--accent-green); }
         .game-controls button {
             padding: 5px 10px;
             margin-left: 5px;
-            background: rgba(255,255,255,0.1);
+            background: var(--bg-tertiary);
             border: none;
             border-radius: 4px;
-            color: white;
+            color: var(--text-primary);
             cursor: pointer;
             font-size: 0.8rem;
             transition: all 0.2s;
         }
-        .game-controls button:hover { background: rgba(255,255,255,0.2); }
-        .game-controls button.primary { background: #e94560; }
+        .game-controls button:hover { background: var(--accent-blue); }
+        .game-controls button.primary { background: var(--accent-red); }
 
         /* ===== PHASE TRACKER ===== */
         .phase-tracker {
@@ -157,7 +237,7 @@
 
         /* ===== PLAYER AREA ===== */
         .player-area {
-            background: rgba(255,255,255,0.02);
+            background: var(--bg-secondary);
             border-radius: 6px;
             padding: 5px;
             display: flex;
@@ -168,8 +248,8 @@
             transition: border-color 0.3s;
             position: relative;
         }
-        .player-area.is-me { border-color: rgba(233, 69, 96, 0.3); }
-        .player-area.active-turn { border-color: #ffc107; }
+        .player-area.is-me { border-color: var(--accent-red); border-style: solid; border-width: 2px; opacity: 1; }
+        .player-area.active-turn { border-color: var(--accent-yellow); }
         .player-area.dead { opacity: 0.5; }
         .player-area.drag-over-player {
             border-color: #4ecdc4 !important;
@@ -1148,6 +1228,151 @@
             margin-top: 6px;
         }
         .scry-content .btn.primary { background: #e94560; color: white; }
+
+        /* ===== EMOTES SYSTEM ===== */
+        .emote-bar {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            background: var(--bg-secondary, rgba(0,0,0,0.8));
+            padding: 8px 12px;
+            border-radius: 25px;
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .emote-bar.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .emote-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg-tertiary, rgba(255,255,255,0.1));
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: transform 0.15s, background 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .emote-btn:hover {
+            transform: scale(1.2);
+            background: var(--accent-blue, #3498db);
+        }
+        .emote-phrase-btn {
+            padding: 8px 14px;
+            border-radius: 15px;
+            border: none;
+            background: var(--bg-tertiary, rgba(255,255,255,0.1));
+            color: var(--text-primary, #fff);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: transform 0.15s, background 0.15s;
+        }
+        .emote-phrase-btn:hover {
+            transform: scale(1.05);
+            background: var(--accent-blue, #3498db);
+        }
+
+        /* Emote popup that appears on player area */
+        .emote-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            z-index: 500;
+            animation: emotePopup 2s ease-out forwards;
+            pointer-events: none;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .emote-popup.phrase {
+            font-size: 1.2rem;
+            background: rgba(0,0,0,0.85);
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: #fff;
+            white-space: nowrap;
+        }
+        @keyframes emotePopup {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            15% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            30% { transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -60%); }
+            100% { opacity: 0; transform: translate(-50%, -80%); }
+        }
+
+        /* ===== SETTINGS MODAL ===== */
+        .settings-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 2500;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .settings-modal.show { display: flex; }
+        .settings-content {
+            background: var(--bg-card, #1a1a2e);
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .settings-content h2 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .settings-section {
+            margin-bottom: 20px;
+        }
+        .settings-section h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary, #888);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .theme-option {
+            padding: 15px 10px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .theme-option:hover { border-color: var(--accent-blue); }
+        .theme-option.active { border-color: var(--accent-green); }
+        .theme-option .theme-preview {
+            width: 100%;
+            height: 30px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .theme-option .theme-name { font-size: 0.8rem; }
+        .theme-option[data-theme="dark"] .theme-preview { background: linear-gradient(135deg, #0a0a12, #1a1a2e); }
+        .theme-option[data-theme="light"] .theme-preview { background: linear-gradient(135deg, #f5f5f5, #ffffff); }
+        .theme-option[data-theme="blue"] .theme-preview { background: linear-gradient(135deg, #0c1929, #1a3a5c); }
+        .theme-option[data-theme="green"] .theme-preview { background: linear-gradient(135deg, #0d1f0d, #1a3a1a); }
+        .theme-option[data-theme="purple"] .theme-preview { background: linear-gradient(135deg, #1a0a2e, #2d1b4e); }
 
         /* Token Creation Modal */
         .token-modal {
@@ -2381,6 +2606,89 @@
         <div id="contextMenuItems"></div>
     </div>
 
+    <!-- Emote Bar -->
+    <div class="emote-bar" id="emoteBar">
+        <button class="emote-btn" onclick="sendEmote('👍')" title="Legal!">👍</button>
+        <button class="emote-btn" onclick="sendEmote('👎')" title="Ruim">👎</button>
+        <button class="emote-btn" onclick="sendEmote('😄')" title="Haha">😄</button>
+        <button class="emote-btn" onclick="sendEmote('😮')" title="Wow">😮</button>
+        <button class="emote-btn" onclick="sendEmote('🤔')" title="Pensando">🤔</button>
+        <button class="emote-btn" onclick="sendEmote('⏳')" title="Esperando">⏳</button>
+        <button class="emote-btn" onclick="sendEmote('🎉')" title="GG">🎉</button>
+        <button class="emote-btn" onclick="sendEmote('💀')" title="RIP">💀</button>
+        <span style="width:1px;background:#444;margin:0 5px;"></span>
+        <button class="emote-phrase-btn" onclick="sendEmote('Boa jogada!')">Boa jogada!</button>
+        <button class="emote-phrase-btn" onclick="sendEmote('GG!')">GG!</button>
+        <button class="emote-phrase-btn" onclick="sendEmote('Um momento...')">Um momento...</button>
+        <button class="emote-phrase-btn" onclick="sendEmote('Passo prioridade')">Passo</button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <h2>
+                Configurações
+                <button onclick="closeSettingsModal()" style="background:none;border:none;color:var(--text-secondary);font-size:1.5rem;cursor:pointer;">&times;</button>
+            </h2>
+
+            <div class="settings-section">
+                <h3>🎨 Tema</h3>
+                <div class="theme-grid">
+                    <div class="theme-option active" data-theme="dark" onclick="setTheme('dark')">
+                        <div class="theme-preview"></div>
+                        <div class="theme-name">Escuro</div>
+                    </div>
+                    <div class="theme-option" data-theme="light" onclick="setTheme('light')">
+                        <div class="theme-preview"></div>
+                        <div class="theme-name">Claro</div>
+                    </div>
+                    <div class="theme-option" data-theme="blue" onclick="setTheme('blue')">
+                        <div class="theme-preview"></div>
+                        <div class="theme-name">Azul</div>
+                    </div>
+                    <div class="theme-option" data-theme="green" onclick="setTheme('green')">
+                        <div class="theme-preview"></div>
+                        <div class="theme-name">Verde</div>
+                    </div>
+                    <div class="theme-option" data-theme="purple" onclick="setTheme('purple')">
+                        <div class="theme-preview"></div>
+                        <div class="theme-name">Roxo</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>⚡ Ações Rápidas</h3>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <button onclick="untapAll(); closeSettingsModal();" style="padding:12px;border-radius:8px;border:none;background:var(--accent-blue);color:#fff;cursor:pointer;font-size:0.9rem;">
+                        🔄 Desvirar Todas Permanentes
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>⌨️ Atalhos</h3>
+                <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.8;display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+                    <div><kbd>Q</kbd> - Emotes</div>
+                    <div><kbd>U</kbd> - Desvirar todas</div>
+                    <div><kbd>D</kbd> - Comprar carta</div>
+                    <div><kbd>N</kbd> - Próxima fase</div>
+                    <div><kbd>P</kbd> - Passar turno</div>
+                    <div><kbd>S</kbd> - Embaralhar</div>
+                    <div><kbd>G</kbd> - Ver cemitério</div>
+                    <div><kbd>E</kbd> - Ver exílio</div>
+                    <div><kbd>L</kbd> - Menu biblioteca</div>
+                    <div><kbd>C</kbd> - Chat/Log</div>
+                    <div><kbd>R</kbd> - Rolar dados</div>
+                    <div><kbd>H</kbd> - Guia</div>
+                    <div><kbd>K</kbd> - Keywords</div>
+                    <div><kbd>X</kbd> - Limpar setas</div>
+                    <div><kbd>ESC</kbd> - Fechar modais</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Zone Viewer Modal -->
     <div class="modal-overlay" id="zoneViewerModal">
         <div class="modal-content">
@@ -2612,6 +2920,8 @@
         <button class="help-btn guide" onclick="openGuideModal()" title="Guia (H)">?</button>
         <button class="help-btn keywords" onclick="openKeywordsModal()" title="Keywords (K)">K</button>
         <button class="help-btn dice" onclick="openDiceModal()" title="Dados (R)">🎲</button>
+        <button class="help-btn" onclick="toggleEmoteBar()" title="Emotes (E)" style="background:#9b59b6;">😀</button>
+        <button class="help-btn" onclick="openSettingsModal()" title="Configurações" style="background:#34495e;">⚙️</button>
     </div>
 
     <!-- Dice Roller Modal -->
@@ -2692,10 +3002,13 @@
                             <div class="shortcut-item"><span class="shortcut-key">N</span><span class="shortcut-desc">Proxima fase</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">P</span><span class="shortcut-desc">Passar turno</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">S</span><span class="shortcut-desc">Embaralhar biblioteca</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">U</span><span class="shortcut-desc">Desvirar todas permanentes</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">G</span><span class="shortcut-desc">Ver cemiterio</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">E</span><span class="shortcut-desc">Ver exilio</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">L</span><span class="shortcut-desc">Menu da biblioteca</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">C</span><span class="shortcut-desc">Abrir/fechar chat</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">Q</span><span class="shortcut-desc">Abrir emotes</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">R</span><span class="shortcut-desc">Rolar dados</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">X</span><span class="shortcut-desc">Limpar todas setas</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">H</span><span class="shortcut-desc">Este guia</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">K</span><span class="shortcut-desc">Keywords de Magic</span></div>
@@ -2708,7 +3021,7 @@
                             <div class="shortcut-item"><span class="shortcut-key">2x</span><span class="shortcut-desc">Virar/desvirar carta</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">Shift+Clique</span><span class="shortcut-desc">Multi-selecao</span></div>
                             <div class="shortcut-item"><span class="shortcut-key">Clique Direito</span><span class="shortcut-desc">Menu de contexto</span></div>
-                            <div class="shortcut-item"><span class="shortcut-key">Arrastar</span><span class="shortcut-desc">Mover carta</span></div>
+                            <div class="shortcut-item"><span class="shortcut-key">Arrastar</span><span class="shortcut-desc">Mover carta / Selecao em caixa</span></div>
                         </div>
                     </div>
                 </div>
@@ -2997,6 +3310,10 @@
                     if (data.seat !== mySeat) {
                         applyRemoteStacks(data.seat, data.stacks);
                     }
+                    break;
+                case 'emote':
+                    // Show emote from another player
+                    showEmotePopup(data.seat, data.emote, data.sender);
                     break;
             }
         }
@@ -6801,6 +7118,8 @@
                 case 'h': openGuideModal(); break;
                 case 'k': openKeywordsModal(); break;
                 case 'r': openDiceModal(); break;
+                case 'u': untapAll(); break;
+                case 'q': toggleEmoteBar(); break;
             }
         });
 
@@ -6809,6 +7128,84 @@
 
         if (tabId) {
             document.getElementById('lobbyLink').href = `/lobby/?tab=${tabId}`;
+        }
+
+        // ===== THEME SYSTEM =====
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('mtg-theme', theme);
+            // Update active state in settings
+            document.querySelectorAll('.theme-option').forEach(el => {
+                el.classList.toggle('active', el.dataset.theme === theme);
+            });
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('mtg-theme') || 'dark';
+            setTheme(savedTheme);
+        }
+
+        // Load theme on page load
+        loadTheme();
+
+        // ===== SETTINGS MODAL =====
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.add('show');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('show');
+        }
+
+        document.getElementById('settingsModal').addEventListener('click', function(e) {
+            if (e.target === this) closeSettingsModal();
+        });
+
+        // ===== EMOTE SYSTEM =====
+        let emoteBarVisible = false;
+
+        function toggleEmoteBar() {
+            emoteBarVisible = !emoteBarVisible;
+            document.getElementById('emoteBar').classList.toggle('show', emoteBarVisible);
+        }
+
+        function hideEmoteBar() {
+            emoteBarVisible = false;
+            document.getElementById('emoteBar').classList.remove('show');
+        }
+
+        function sendEmote(emote) {
+            sendAction('send_emote', { emote: emote });
+            // Show locally too
+            showEmotePopup(mySeat, emote, myNickname);
+            hideEmoteBar();
+        }
+
+        function showEmotePopup(seat, emote, sender) {
+            const playerArea = document.getElementById(`playerArea-${seat}`);
+            if (!playerArea) return;
+
+            // Remove any existing emote popup
+            const existing = playerArea.querySelector('.emote-popup');
+            if (existing) existing.remove();
+
+            // Create popup
+            const popup = document.createElement('div');
+            popup.className = 'emote-popup' + (emote.length > 2 ? ' phrase' : '');
+            popup.textContent = emote;
+            playerArea.style.position = 'relative';
+            playerArea.appendChild(popup);
+
+            // Also add to chat
+            addChatMessage(sender, emote);
+
+            // Remove after animation
+            setTimeout(() => popup.remove(), 2000);
+        }
+
+        // ===== UNTAP ALL =====
+        function untapAll() {
+            sendAction('untap_all');
         }
 
         // ===== DICE ROLLER =====

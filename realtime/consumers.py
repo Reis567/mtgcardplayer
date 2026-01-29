@@ -551,7 +551,21 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             return None
         try:
             player = PlayerProfile.objects.get(id=self.player_id)
-            return GamePlayer.objects.get(game_id=self.game_id, player=player)
+            return GamePlayer.objects.select_related('player').get(game_id=self.game_id, player=player)
+        except:
+            return None
+
+    @database_sync_to_async
+    def get_player_info(self):
+        """Get player nickname and seat for emotes"""
+        from game.models import GamePlayer
+        from accounts.models import PlayerProfile
+        if not self.player_id:
+            return None
+        try:
+            player = PlayerProfile.objects.get(id=self.player_id)
+            gp = GamePlayer.objects.select_related('player').get(game_id=self.game_id, player=player)
+            return {'nickname': gp.player.nickname, 'seat': gp.seat_position}
         except:
             return None
 
@@ -815,6 +829,26 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     phase=game.current_phase
                 )
                 return {'success': True, 'turn': game.turn_number, 'active_seat': game.active_player_seat}
+
+            elif action == 'untap_all':
+                # Untap all permanents controlled by the player
+                count = GameObject.objects.filter(
+                    game=game,
+                    controller=game_player,
+                    zone='battlefield',
+                    is_tapped=True
+                ).update(is_tapped=False)
+
+                if count > 0:
+                    GameAction.objects.create(
+                        game=game,
+                        action_type='untap_all',
+                        player=game_player,
+                        display_text=f"{game_player.player.nickname} desvirou todas as permanentes ({count})",
+                        turn_number=game.turn_number,
+                        phase=game.current_phase
+                    )
+                return {'success': True, 'count': count}
 
             elif action == 'draw_card':
                 library = GameObject.objects.filter(
@@ -1418,12 +1452,29 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
 
+        elif action == 'send_emote':
+            # Broadcast emote to all players
+            emote = content.get('data', {}).get('emote', '')
+            if emote:
+                player_info = await self.get_player_info()
+                if player_info:
+                    await self.channel_layer.group_send(
+                        self.group_name,
+                        {
+                            'type': 'emote_message',
+                            'sender': player_info['nickname'],
+                            'seat': player_info['seat'],
+                            'emote': emote,
+                        }
+                    )
+            return
+
         elif action in ['move_card', 'tap_card', 'change_life', 'add_counter', 'remove_counter',
                         'next_phase', 'next_turn', 'draw_card', 'shuffle_library', 'concede',
                         'scry', 'look_top', 'put_top', 'put_bottom', 'reveal_card',
                         'shuffle_into', 'reorder_scry', 'set_battlefield_row',
                         'go_to_phase', 'view_library', 'roll_dice', 'set_starting_player',
-                        'create_token']:
+                        'create_token', 'untap_all']:
             result = await self.execute_game_action(action, content.get('data', {}))
 
             # Send action result to the sender
@@ -1503,6 +1554,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'type': 'chat',
             'message': event['message'],
             'sender': event['sender']
+        })
+
+    async def emote_message(self, event):
+        await self.send_json({
+            'type': 'emote',
+            'sender': event['sender'],
+            'seat': event['seat'],
+            'emote': event['emote']
         })
 
     async def game_state_update(self, event):
