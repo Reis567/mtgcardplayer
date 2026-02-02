@@ -1,12 +1,15 @@
 from django.urls import path
 from .views import (
     CardListView, CardCatalogView, CardDetailView,
-    CardAutocompleteView, RandomCardView
+    CardAutocompleteView, RandomCardView, CardAssistantView
 )
 
 urlpatterns = [
     # Catalogo principal (nova pagina com filtros avancados)
     path('', CardCatalogView.as_view(), name='card_catalog'),
+
+    # Assistente de cards similares
+    path('assistant/', CardAssistantView.as_view(), name='card_assistant'),
 
     # Listagem simples (legado)
     path('list/', CardListView.as_view(), name='card_list'),

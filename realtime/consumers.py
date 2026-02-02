@@ -493,6 +493,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             'is_tapped': obj.is_tapped,
                             'counters': obj.counters or {},
                             'is_commander': obj.is_commander,
+                            'commander_cast_count': obj.commander_cast_count if obj.is_commander else 0,
                             'zone': obj.zone,
                             'battlefield_row': obj.battlefield_row,
                             'owner_seat': obj.owner.seat_position,
@@ -648,6 +649,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         obj.battlefield_row = 'lands'
                     else:
                         obj.battlefield_row = 'enchantments'
+
+                # Increment commander cast count when casting from command zone
+                if obj.is_commander and old_zone == 'command' and new_zone == 'battlefield':
+                    obj.commander_cast_count += 1
 
                 obj.save()
 

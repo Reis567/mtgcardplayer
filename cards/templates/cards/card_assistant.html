@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente de Cards - MTG Commander</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        /* ===== NAVBAR ===== */
+        .main-navbar {
+            background: rgba(15, 15, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .main-navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .main-navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .main-navbar-logo {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #e94560, #4ecdc4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .main-navbar-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .main-navbar-title span {
+            color: #e94560;
+        }
+
+        .main-navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-nav-link {
+            padding: 10px 18px;
+            border-radius: 10px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-nav-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .main-nav-link.active {
+            background: rgba(233, 69, 96, 0.15);
+            color: #e94560;
+        }
+
+        .main-nav-icon {
+            font-size: 1.1rem;
+        }
+
+        .main-navbar-guest {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .main-btn-login {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border-radius: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .main-btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.35);
+        }
+
+        .main-navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .main-user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .main-user-info {
+            text-align: right;
+        }
+
+        .main-user-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .main-btn-logout {
+            padding: 8px 15px;
+            background: rgba(233, 69, 96, 0.15);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            border-radius: 8px;
+            color: #e94560;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .main-btn-logout:hover {
+            background: rgba(233, 69, 96, 0.25);
+        }
+
+        @media (max-width: 768px) {
+            .main-navbar-nav { display: none; }
+            .main-navbar-title { display: none; }
+            .main-user-info { display: none; }
+        }
+
+        /* ===== PAGE LAYOUT ===== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero-section {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.1), rgba(78, 205, 196, 0.1));
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+
+        .hero-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fff, #e94560);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-section p {
+            color: #888;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ===== SEARCH SECTION ===== */
+        .search-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .search-section h2 {
+            font-size: 1.3rem;
+            color: #4ecdc4;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-main-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 16px 20px;
+            padding-left: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+
+        .search-input-wrapper input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .search-input-wrapper::before {
+            content: "?";
+            position: absolute;
+            left: 18px;
+            top: 50%; 
+            transform: translateY(-50%);
+            font-size: 1.3rem;
+            color: #4ecdc4;
+        }
+
+        .search-btn {
+            padding: 16px 35px;
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.35);
+        }
+
+        /* Autocomplete dropdown */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 35, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            margin-top: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(78, 205, 196, 0.15);
+        }
+
+        .autocomplete-item img {
+            width: 40px;
+            height: 56px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .autocomplete-item-info {
+            flex: 1;
+        }
+
+        .autocomplete-item-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .autocomplete-item-type {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* ===== FILTERS SECTION ===== */
+        .filters-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #888;
+            cursor: pointer;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .filters-toggle:hover {
+            color: #fff;
+        }
+
+        .filters-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .filters-grid.show {
+            display: grid;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+
+        /* Color filters */
+        .color-filters {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .color-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .color-btn:hover { transform: scale(1.1); }
+        .color-btn.selected { border-color: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+
+        .color-btn.W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+        .color-btn.U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+        .color-btn.B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #ccc; }
+        .color-btn.R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+        .color-btn.G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+
+        /* Rarity checkboxes */
+        .rarity-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .rarity-checkbox {
+            cursor: pointer;
+        }
+
+        .rarity-checkbox input { display: none; }
+
+        .rarity-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .rarity-checkbox input:checked + .rarity-badge { border-color: #fff; }
+
+        .rarity-common { background: rgba(170, 170, 170, 0.2); color: #aaa; }
+        .rarity-uncommon { background: rgba(192, 192, 192, 0.2); color: #c0c0c0; }
+        .rarity-rare { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
+        .rarity-mythic { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+
+        /* ===== SELECTED CARD ===== */
+        .selected-card-section {
+            display: flex;
+            gap: 30px;
+            background: rgba(78, 205, 196, 0.05);
+            border: 1px solid rgba(78, 205, 196, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .selected-card-image {
+            flex-shrink: 0;
+        }
+
+        .selected-card-image img {
+            width: 220px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .selected-card-info {
+            flex: 1;
+        }
+
+        .selected-card-info h2 {
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .selected-card-type {
+            color: #4ecdc4;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .selected-card-oracle {
+            color: #ccc;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .selected-card-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        /* ===== RESULTS SECTION ===== */
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h2 {
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .results-count {
+            color: #888;
+        }
+
+        .results-count strong {
+            color: #4ecdc4;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .card-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card-item:hover {
+            transform: translateY(-5px);
+            border-color: rgba(78, 205, 196, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-image-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .card-item:hover .card-image {
+            transform: scale(1.05);
+        }
+
+        .no-image {
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .similarity-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .card-info {
+            padding: 12px;
+        }
+
+        .card-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-type {
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-reasons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .reason-tag {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            background: rgba(233, 69, 96, 0.2);
+            color: #e94560;
+            border-radius: 8px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+
+        /* ===== TIPS SECTION ===== */
+        .tips-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 40px;
+        }
+
+        .tips-section h3 {
+            color: #e94560;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .tip-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .tip-card h4 {
+            color: #4ecdc4;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .tip-card p {
+            color: #888;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .selected-card-section {
+                flex-direction: column;
+            }
+
+            .selected-card-image img {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .search-main-row {
+                flex-direction: column;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="main-navbar">
+        <div class="main-navbar-content">
+            <a href="#" class="main-navbar-brand">
+                <div class="main-navbar-logo">M</div>
+                <div class="main-navbar-title">MTG <span>Commander</span></div>
+            </a>
+
+            <div class="main-navbar-nav">
+                {% if player %}
+                <a href="/lobby/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link">
+                    <span class="main-nav-icon">&#127968;</span> Dashboard
+                </a>
+                {% endif %}
+                <a href="/cards/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link">
+                    <span class="main-nav-icon">&#127183;</span> Cartas
+                </a>
+                <a href="/cards/assistant/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link active">
+                    <span class="main-nav-icon">&#129302;</span> Assistente
+                </a>
+                <a href="/decks/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link">
+                    <span class="main-nav-icon">&#128451;</span> Decks
+                </a>
+            </div>
+
+            {% if player %}
+            <div class="main-navbar-user">
+                <div class="main-user-info">
+                    <div class="main-user-name">{{ player.nickname }}</div>
+                </div>
+                <div class="main-user-avatar" style="background: {{ player.avatar_color }};">
+                    {{ player.nickname|slice:":1"|upper }}
+                </div>
+                <a href="/logout/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-btn-logout">Sair</a>
+            </div>
+            {% else %}
+            <div class="main-navbar-guest">
+                <a href="/login/" class="main-btn-login">Entrar</a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1>Assistente de Cards</h1>
+            <p>Encontre cards similares baseados em mecanicas, tipos, cores e mais. Digite o nome de uma carta para descobrir alternativas.</p>
+        </section>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <h2>&#128270; Buscar Cards Similares</h2>
+            <form method="get" id="searchForm">
+                <div class="search-main-row">
+                    <div class="search-input-wrapper">
+                        <input type="text" name="similar_to" id="cardSearchInput"
+                               value="{{ similar_to }}"
+                               placeholder="Digite o nome de uma carta... (ex: Atraxa, Praetors' Voice)"
+                               autocomplete="off">
+                        <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+                    </div>
+                    <button type="submit" class="search-btn">Buscar Similares</button>
+                </div>
+
+                <!-- Filters Toggle -->
+                <div class="filters-toggle" onclick="toggleFilters()">
+                    <span id="filtersIcon">&#9654;</span> Filtros Opcionais
+                </div>
+
+                <!-- Filters Grid -->
+                <div class="filters-grid" id="filtersGrid">
+                    <!-- Colors -->
+                    <div class="filter-group">
+                        <label>Filtrar por Cores</label>
+                        <div class="color-filters">
+                            <button type="button" class="color-btn W {% if 'W' in filters.colors %}selected{% endif %}" data-color="W" onclick="toggleColor(this)">W</button>
+                            <button type="button" class="color-btn U {% if 'U' in filters.colors %}selected{% endif %}" data-color="U" onclick="toggleColor(this)">U</button>
+                            <button type="button" class="color-btn B {% if 'B' in filters.colors %}selected{% endif %}" data-color="B" onclick="toggleColor(this)">B</button>
+                            <button type="button" class="color-btn R {% if 'R' in filters.colors %}selected{% endif %}" data-color="R" onclick="toggleColor(this)">R</button>
+                            <button type="button" class="color-btn G {% if 'G' in filters.colors %}selected{% endif %}" data-color="G" onclick="toggleColor(this)">G</button>
+                        </div>
+                        <div id="colorInputs"></div>
+                    </div>
+
+                    <!-- Card Type -->
+                    <div class="filter-group">
+                        <label>Tipo de Carta</label>
+                        <select name="type">
+                            <option value="">Todos</option>
+                            {% for type in card_types %}
+                            <option value="{{ type }}" {% if filters.type == type %}selected{% endif %}>{{ type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Subtype -->
+                    <div class="filter-group">
+                        <label>Subtipo</label>
+                        <select name="subtype">
+                            <option value="">Todos</option>
+                            {% for sub in subtypes %}
+                            <option value="{{ sub }}" {% if filters.subtype == sub %}selected{% endif %}>{{ sub }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- CMC -->
+                    <div class="filter-group">
+                        <label>Custo de Mana (CMC)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" name="cmc_min" placeholder="Min" min="0" max="20" value="{{ filters.cmc_min }}">
+                            <input type="number" name="cmc_max" placeholder="Max" min="0" max="20" value="{{ filters.cmc_max }}">
+                        </div>
+                    </div>
+
+                    <!-- Power -->
+                    <div class="filter-group">
+                        <label>Poder</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" name="power_min" placeholder="Min" min="0" value="{{ filters.power_min }}">
+                            <input type="number" name="power_max" placeholder="Max" min="0" value="{{ filters.power_max }}">
+                        </div>
+                    </div>
+
+                    <!-- Oracle Text -->
+                    <div class="filter-group">
+                        <label>Texto do Oracle</label>
+                        <input type="text" name="oracle" placeholder="Ex: draw, destroy, counter..." value="{{ filters.oracle }}">
+                    </div>
+
+                    <!-- Rarity -->
+                    <div class="filter-group">
+                        <label>Raridade</label>
+                        <div class="rarity-filters">
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="common" {% if 'common' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-common">C</span>
+                            </label>
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="uncommon" {% if 'uncommon' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-uncommon">U</span>
+                            </label>
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="rare" {% if 'rare' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-rare">R</span>
+                            </label>
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="mythic" {% if 'mythic' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-mythic">M</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        {% if selected_card %}
+        <!-- Selected Card Section -->
+        <section class="selected-card-section">
+            <div class="selected-card-image">
+                {% if selected_card.image_normal %}
+                <img src="{{ selected_card.image_normal }}" alt="{{ selected_card.name }}">
+                {% endif %}
+            </div>
+            <div class="selected-card-info">
+                <h2>{{ selected_card.name }}</h2>
+                <div class="selected-card-type">{{ selected_card.type_line }}</div>
+                {% if selected_card.oracle_text %}
+                <div class="selected-card-oracle">{{ selected_card.oracle_text }}</div>
+                {% endif %}
+                <div class="selected-card-stats">
+                    {% if selected_card.mana_cost %}
+                    <span class="stat-badge">Mana: {{ selected_card.mana_cost }}</span>
+                    {% endif %}
+                    <span class="stat-badge">CMC: {{ selected_card.cmc }}</span>
+                    {% if selected_card.power and selected_card.toughness %}
+                    <span class="stat-badge">{{ selected_card.power }}/{{ selected_card.toughness }}</span>
+                    {% endif %}
+                    {% if selected_card.color_identity %}
+                    <span class="stat-badge">Cores: {{ selected_card.color_identity }}</span>
+                    {% endif %}
+                    <span class="stat-badge" style="background: rgba(233, 69, 96, 0.2); color: #e94560;">{{ selected_card.rarity|title }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section">
+            <div class="results-header">
+                <h2>Cards Similares</h2>
+                <span class="results-count"><strong>{{ similar_cards|length }}</strong> cards encontrados</span>
+            </div>
+
+            {% if similar_cards %}
+            <div class="cards-grid">
+                {% for item in similar_cards %}
+                <a href="{% url 'card_detail' card_id=item.card.id %}" class="card-item">
+                    <div class="card-image-container">
+                        {% if item.card.image_normal %}
+                        <img src="{{ item.card.image_normal }}" alt="{{ item.card.name }}" class="card-image" loading="lazy">
+                        {% else %}
+                        <div class="no-image">Sem imagem</div>
+                        {% endif %}
+                        <span class="similarity-badge">{{ item.score }}%</span>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-name" title="{{ item.card.name }}">{{ item.card.name }}</div>
+                        <div class="card-type">{{ item.card.type_line|truncatechars:30 }}</div>
+                        <div class="card-reasons">
+                            {% for reason in item.reasons|slice:":2" %}
+                            <span class="reason-tag">{{ reason|truncatechars:20 }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>Nenhum card similar encontrado</h3>
+                <p>Tente ajustar os filtros ou buscar uma carta diferente.</p>
+            </div>
+            {% endif %}
+        </section>
+        {% else %}
+        <!-- Empty State / Tips -->
+        {% if similar_to %}
+        <div class="empty-state">
+            <h3>Carta nao encontrada</h3>
+            <p>"{{ similar_to }}" nao foi encontrado. Verifique a ortografia ou tente outro nome.</p>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- Tips Section -->
+        <section class="tips-section">
+            <h3>&#128161; Dicas de Uso</h3>
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <h4>Mecanicas Similares</h4>
+                    <p>O assistente analisa o texto do oracle para encontrar cartas com mecanicas parecidas, como ETB effects, ramp, removal, etc.</p>
+                </div>
+                <div class="tip-card">
+                    <h4>Cores e Tipos</h4>
+                    <p>Use os filtros para restringir a busca por cor, tipo de carta ou subtipo especifico (como "Elf" ou "Dragon").</p>
+                </div>
+                <div class="tip-card">
+                    <h4>Construcao de Decks</h4>
+                    <p>Ideal para encontrar alternativas para cartas caras ou para diversificar seu deck com opcoes similares.</p>
+                </div>
+                <div class="tip-card">
+                    <h4>Score de Similaridade</h4>
+                    <p>O numero no card indica o quanto ele e similar ao de referencia, considerando texto, cores, tipo e estatisticas.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Selected colors
+        const selectedColors = new Set([{% for c in filters.colors %}'{{ c }}',{% endfor %}]);
+
+        function toggleColor(btn) {
+            const color = btn.dataset.color;
+            if (selectedColors.has(color)) {
+                selectedColors.delete(color);
+                btn.classList.remove('selected');
+            } else {
+                selectedColors.add(color);
+                btn.classList.add('selected');
+            }
+            updateColorInputs();
+        }
+
+        function updateColorInputs() {
+            const container = document.getElementById('colorInputs');
+            container.innerHTML = '';
+            selectedColors.forEach(color => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'color';
+                input.value = color;
+                container.appendChild(input);
+            });
+        }
+
+        // Initialize color inputs
+        updateColorInputs();
+
+        // Toggle filters
+        function toggleFilters() {
+            const grid = document.getElementById('filtersGrid');
+            const icon = document.getElementById('filtersIcon');
+            grid.classList.toggle('show');
+            icon.innerHTML = grid.classList.contains('show') ? '&#9660;' : '&#9654;';
+        }
+
+        // Autocomplete
+        const searchInput = document.getElementById('cardSearchInput');
+        const dropdown = document.getElementById('autocompleteDropdown');
+        let searchTimeout;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+
+            if (query.length < 2) {
+                dropdown.classList.remove('show');
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/cards/api/autocomplete/?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.results && data.results.length > 0) {
+                            dropdown.innerHTML = data.results.map(card => `
+                                <div class="autocomplete-item" onclick="selectCard('${card.name.replace(/'/g, "\\'")}')">
+                                    ${card.image_small ? `<img src="${card.image_small}" alt="">` : ''}
+                                    <div class="autocomplete-item-info">
+                                        <div class="autocomplete-item-name">${card.name}</div>
+                                        <div class="autocomplete-item-type">${card.type_line || ''}</div>
+                                    </div>
+                                </div>
+                            `).join('');
+                            dropdown.classList.add('show');
+                        } else {
+                            dropdown.classList.remove('show');
+                        }
+                    })
+                    .catch(() => dropdown.classList.remove('show'));
+            }, 300);
+        });
+
+        function selectCard(name) {
+            searchInput.value = name;
+            dropdown.classList.remove('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Show filters if any are active
+        {% if filters.colors or filters.type or filters.subtype or filters.cmc_min or filters.cmc_max or filters.rarity or filters.oracle %}
+        document.getElementById('filtersGrid').classList.add('show');
+        document.getElementById('filtersIcon').innerHTML = '&#9660;';
+        {% endif %}
+    </script>
+</body>
+</html>

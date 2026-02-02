@@ -329,6 +329,24 @@
         }
         .player-life button:hover { background: rgba(255,255,255,0.2); }
 
+        /* Commander Tax */
+        .commander-tax {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 6px;
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #fff;
+            cursor: default;
+        }
+        .commander-tax .tax-count {
+            min-width: 12px;
+            text-align: center;
+        }
+
         /* Generic Counters */
         .generic-counters {
             display: flex;
@@ -2620,7 +2638,12 @@
         <button class="emote-phrase-btn" onclick="sendEmote('Boa jogada!')">Boa jogada!</button>
         <button class="emote-phrase-btn" onclick="sendEmote('GG!')">GG!</button>
         <button class="emote-phrase-btn" onclick="sendEmote('Um momento...')">Um momento...</button>
-        <button class="emote-phrase-btn" onclick="sendEmote('Passo prioridade')">Passo</button>
+        <button class="emote-phrase-btn" onclick="sendEmote('Passo')">Passo</button>
+        <span style="width:1px;background:#444;margin:0 5px;"></span>
+        <input type="text" id="customEmoteInput" placeholder="Digite sua mensagem..."
+               style="padding:8px 12px;border-radius:15px;border:none;background:var(--bg-tertiary, rgba(255,255,255,0.15));color:var(--text-primary, #fff);font-size:0.8rem;width:150px;"
+               onkeydown="if(event.key==='Enter'){sendCustomEmote();event.preventDefault();}">
+        <button class="emote-phrase-btn" onclick="sendCustomEmote()" style="background:var(--accent-green, #27ae60);">Enviar</button>
     </div>
 
     <!-- Settings Modal -->
@@ -2654,6 +2677,16 @@
                         <div class="theme-preview"></div>
                         <div class="theme-name">Roxo</div>
                     </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>💬 Comunicação</h3>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                        <input type="checkbox" id="muteEmotesCheckbox" onchange="toggleMuteEmotes()" style="width:18px;height:18px;cursor:pointer;">
+                        <span>Mutar emotes/taunts dos outros jogadores</span>
+                    </label>
                 </div>
             </div>
 
@@ -3312,8 +3345,10 @@
                     }
                     break;
                 case 'emote':
-                    // Show emote from another player
-                    showEmotePopup(data.seat, data.emote, data.sender);
+                    // Show emote from another player (skip if it's our own - already shown locally)
+                    if (data.seat !== mySeat) {
+                        showEmotePopup(data.seat, data.emote, data.sender, false);
+                    }
                     break;
             }
         }
@@ -3640,6 +3675,18 @@
                     counterEls[4].textContent = counters.purple || '';
                 }
 
+                // Update commander tax
+                let commanderTax = 0;
+                ['command', 'battlefield', 'graveyard', 'exile', 'hand'].forEach(zoneName => {
+                    (zones[zoneName] || []).forEach(card => {
+                        if (card.is_commander && card.owner_seat === player.seat_position) {
+                            commanderTax += card.commander_cast_count || 0;
+                        }
+                    });
+                });
+                const taxCountEl = playerArea.querySelector('.commander-tax .tax-count');
+                if (taxCountEl) taxCountEl.textContent = commanderTax;
+
                 // Update commander link
                 const playerInfo = playerArea.querySelector('.player-info');
                 if (playerInfo) {
@@ -3856,6 +3903,17 @@
 
             const counters = playerCounters[player.seat_position] || { red: 0, blue: 0, green: 0, yellow: 0, purple: 0 };
 
+            // Calculate total commander cast count (tax) for this player
+            let commanderTax = 0;
+            // Check all zones for commanders owned by this player
+            ['command', 'battlefield', 'graveyard', 'exile', 'hand'].forEach(zoneName => {
+                (zones[zoneName] || []).forEach(card => {
+                    if (card.is_commander && card.owner_seat === player.seat_position) {
+                        commanderTax += card.commander_cast_count || 0;
+                    }
+                });
+            });
+
             return `
                 <div class="${classes.join(' ')}" data-seat="${player.seat_position}" id="playerArea-${player.seat_position}"
                      ondragover="handlePlayerDragOver(event, ${player.seat_position})"
@@ -3880,6 +3938,9 @@
                                 <button onclick="event.stopPropagation(); changeLife(${player.seat_position}, -1)">-</button>
                                 <span class="life">${player.life}</span>
                                 <button onclick="event.stopPropagation(); changeLife(${player.seat_position}, 1)">+</button>
+                            </div>
+                            <div class="commander-tax" title="Commander Tax (vezes lancado)">
+                                👑 <span class="tax-count">${commanderTax}</span>
                             </div>
                             <div class="generic-counters">
                                 <div class="generic-counter red" onclick="event.stopPropagation(); openCounterModal(${player.seat_position}, 'red')">${counters.red || ''}</div>
@@ -7151,6 +7212,7 @@
         // ===== SETTINGS MODAL =====
         function openSettingsModal() {
             document.getElementById('settingsModal').classList.add('show');
+            loadEmoteMuteState(); // Sync checkbox with saved state
         }
 
         function closeSettingsModal() {
@@ -7163,10 +7225,25 @@
 
         // ===== EMOTE SYSTEM =====
         let emoteBarVisible = false;
+        let emoteMuted = localStorage.getItem('mtg-mute-emotes') === 'true';
+
+        // Load mute state on page load
+        function loadEmoteMuteState() {
+            const checkbox = document.getElementById('muteEmotesCheckbox');
+            if (checkbox) checkbox.checked = emoteMuted;
+        }
+
+        function toggleMuteEmotes() {
+            emoteMuted = document.getElementById('muteEmotesCheckbox').checked;
+            localStorage.setItem('mtg-mute-emotes', emoteMuted);
+        }
 
         function toggleEmoteBar() {
             emoteBarVisible = !emoteBarVisible;
             document.getElementById('emoteBar').classList.toggle('show', emoteBarVisible);
+            if (emoteBarVisible) {
+                setTimeout(() => document.getElementById('customEmoteInput').focus(), 100);
+            }
         }
 
         function hideEmoteBar() {
@@ -7175,32 +7252,47 @@
         }
 
         function sendEmote(emote) {
-            sendAction('send_emote', { emote: emote });
-            // Show locally too
-            showEmotePopup(mySeat, emote, myNickname);
+            if (!emote || emote.trim() === '') return;
+            sendAction('send_emote', { emote: emote.trim() });
+            // Show locally too (always show own emotes)
+            showEmotePopup(mySeat, emote.trim(), myNickname, true);
             hideEmoteBar();
         }
 
-        function showEmotePopup(seat, emote, sender) {
-            const playerArea = document.getElementById(`playerArea-${seat}`);
-            if (!playerArea) return;
+        function sendCustomEmote() {
+            const input = document.getElementById('customEmoteInput');
+            const emote = input.value.trim();
+            if (emote) {
+                sendEmote(emote);
+                input.value = '';
+            }
+        }
 
-            // Remove any existing emote popup
-            const existing = playerArea.querySelector('.emote-popup');
-            if (existing) existing.remove();
+        function showEmotePopup(seat, emote, sender, isOwnEmote = false) {
+            // If muted and not own emote, don't show popup (but still add to chat)
+            const showPopup = !emoteMuted || isOwnEmote;
 
-            // Create popup
-            const popup = document.createElement('div');
-            popup.className = 'emote-popup' + (emote.length > 2 ? ' phrase' : '');
-            popup.textContent = emote;
-            playerArea.style.position = 'relative';
-            playerArea.appendChild(popup);
+            if (showPopup) {
+                const playerArea = document.getElementById(`playerArea-${seat}`);
+                if (playerArea) {
+                    // Remove any existing emote popup
+                    const existing = playerArea.querySelector('.emote-popup');
+                    if (existing) existing.remove();
 
-            // Also add to chat
+                    // Create popup
+                    const popup = document.createElement('div');
+                    popup.className = 'emote-popup' + (emote.length > 2 ? ' phrase' : '');
+                    popup.textContent = emote;
+                    playerArea.style.position = 'relative';
+                    playerArea.appendChild(popup);
+
+                    // Remove after animation
+                    setTimeout(() => popup.remove(), 2000);
+                }
+            }
+
+            // Always add to chat (even if muted, so you can see history)
             addChatMessage(sender, emote);
-
-            // Remove after animation
-            setTimeout(() => popup.remove(), 2000);
         }
 
         // ===== UNTAP ALL =====
