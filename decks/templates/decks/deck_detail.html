@@ -616,6 +616,7 @@
 
             <div class="actions">
                 <a href="{% url 'lobby_list' %}{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="btn">Ir para Lobby</a>
+                <a href="{% url 'deck_analyzer' deck.id %}" class="btn btn-secondary" style="background: rgba(78, 205, 196, 0.2); border: 1px solid #4ecdc4;">Analisar Deck</a>
                 <button class="btn btn-secondary" onclick="showTab('export')">Exportar Deck</button>
                 {% if is_owner %}
                 <form method="post" style="display: inline;">

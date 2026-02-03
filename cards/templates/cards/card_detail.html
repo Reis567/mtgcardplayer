@@ -727,6 +727,159 @@
             border-radius: 16px;
         }
 
+        /* Compare Modal */
+        .compare-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .compare-modal.active {
+            display: flex;
+        }
+
+        .compare-modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .compare-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .compare-modal-close:hover {
+            color: #fff;
+        }
+
+        .compare-modal h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: #4ecdc4;
+        }
+
+        .compare-input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .compare-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .compare-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .compare-input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+
+        .autocomplete-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+        }
+
+        .autocomplete-results.active {
+            display: block;
+        }
+
+        .autocomplete-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(78, 205, 196, 0.1);
+        }
+
+        .autocomplete-item img {
+            width: 40px;
+            height: 56px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .autocomplete-item-info {
+            flex: 1;
+        }
+
+        .autocomplete-item-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .autocomplete-item-type {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .compare-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .compare-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.35);
+        }
+
+        .compare-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .card-name {
@@ -836,6 +989,9 @@
                     <a href="{% url 'card_catalog' %}?q={{ card.name|urlencode }}" class="action-btn secondary">
                         Buscar Versoes
                     </a>
+                    <button class="action-btn secondary" onclick="openCompareModal()" style="background: rgba(78, 205, 196, 0.2); border-color: #4ecdc4;">
+                        Comparar
+                    </button>
                 </div>
 
                 <!-- Format Legality -->
@@ -943,6 +1099,26 @@
         {% endif %}
     </div>
 
+    <!-- Compare Modal -->
+    <div class="compare-modal" id="compareModal">
+        <div class="compare-modal-content">
+            <button class="compare-modal-close" onclick="closeCompareModal()">&times;</button>
+            <h3>Comparar com outra carta</h3>
+            <p style="color: #888; margin-bottom: 20px;">Carta atual: <strong style="color: #e94560;">{{ card.name }}</strong></p>
+
+            <div class="compare-input-group">
+                <label>Buscar carta para comparar</label>
+                <input type="text" class="compare-input" id="compareCardInput"
+                       placeholder="Digite o nome da carta..." autocomplete="off">
+                <div class="autocomplete-results" id="autocompleteResults"></div>
+            </div>
+
+            <button class="compare-btn" id="compareBtn" disabled onclick="goToComparison()">
+                Comparar Cartas
+            </button>
+        </div>
+    </div>
+
     <script>
         // Mana/symbol rendering helper
         function renderSymbol(value) {
@@ -1018,11 +1194,6 @@
             document.body.style.overflow = '';
         }
 
-        // Close on Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeZoom();
-        });
-
         function copyCardName() {
             navigator.clipboard.writeText('{{ card.name }}').then(() => {
                 const btn = event.target;
@@ -1031,6 +1202,103 @@
                 setTimeout(() => btn.textContent = originalText, 2000);
             });
         }
+
+        // Compare Modal
+        let selectedCompareCard = null;
+
+        function openCompareModal() {
+            document.getElementById('compareModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('compareCardInput').focus();
+        }
+
+        function closeCompareModal() {
+            document.getElementById('compareModal').classList.remove('active');
+            document.body.style.overflow = '';
+            document.getElementById('compareCardInput').value = '';
+            document.getElementById('autocompleteResults').innerHTML = '';
+            document.getElementById('autocompleteResults').classList.remove('active');
+            selectedCompareCard = null;
+            document.getElementById('compareBtn').disabled = true;
+        }
+
+        // Close compare modal on click outside
+        document.getElementById('compareModal').addEventListener('click', function(e) {
+            if (e.target === this) closeCompareModal();
+        });
+
+        // Autocomplete for compare
+        let debounceTimer;
+        const compareInput = document.getElementById('compareCardInput');
+        const autocompleteResults = document.getElementById('autocompleteResults');
+
+        compareInput.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            clearTimeout(debounceTimer);
+
+            if (query.length < 2) {
+                autocompleteResults.classList.remove('active');
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/cards/api/autocomplete/?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.results.length > 0) {
+                            autocompleteResults.innerHTML = data.results.map(card => `
+                                <div class="autocomplete-item" data-name="${card.name}">
+                                    ${card.image_small ? `<img src="${card.image_small}" alt="${card.name}">` : ''}
+                                    <div class="autocomplete-item-info">
+                                        <div class="autocomplete-item-name">${card.name}</div>
+                                        <div class="autocomplete-item-type">${card.type_line || ''}</div>
+                                    </div>
+                                </div>
+                            `).join('');
+                            autocompleteResults.classList.add('active');
+
+                            // Add click handlers
+                            autocompleteResults.querySelectorAll('.autocomplete-item').forEach(item => {
+                                item.addEventListener('click', function() {
+                                    selectCompareCard(this.dataset.name);
+                                });
+                            });
+                        } else {
+                            autocompleteResults.classList.remove('active');
+                        }
+                    });
+            }, 300);
+        });
+
+        function selectCompareCard(cardName) {
+            selectedCompareCard = cardName;
+            compareInput.value = cardName;
+            autocompleteResults.classList.remove('active');
+            document.getElementById('compareBtn').disabled = false;
+        }
+
+        function goToComparison() {
+            if (selectedCompareCard) {
+                const currentCard = '{{ card.name|escapejs }}';
+                window.location.href = `/decks/compare/?card=${encodeURIComponent(currentCard)}&card=${encodeURIComponent(selectedCompareCard)}`;
+            }
+        }
+
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeZoom();
+                closeCompareModal();
+            }
+        });
+
+        // Enter to submit comparison
+        compareInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && selectedCompareCard) {
+                goToComparison();
+            }
+        });
     </script>
 </body>
 </html>

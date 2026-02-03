@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construtor de Deck - MTG Commander</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+
+        /* Header */
+        .page-header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.1), rgba(78, 205, 196, 0.1));
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fff, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .page-header p { color: #888; font-size: 1.1rem; }
+
+        /* Search Section */
+        .search-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .search-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        .search-group { flex: 1; position: relative; }
+        .search-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+        .search-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .search-group input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+
+        /* Autocomplete */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            max-height: 350px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            margin-top: 5px;
+        }
+        .autocomplete-dropdown.active { display: block; }
+        .autocomplete-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover, .autocomplete-item.active {
+            background: rgba(78, 205, 196, 0.15);
+        }
+        .autocomplete-item img {
+            width: 45px;
+            height: 63px;
+            object-fit: cover;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .autocomplete-item-info { flex: 1; min-width: 0; }
+        .autocomplete-item-name {
+            font-weight: 600;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .autocomplete-item-type {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .autocomplete-item-mana {
+            display: flex;
+            gap: 2px;
+            margin-top: 3px;
+        }
+        .autocomplete-item .mana-symbol {
+            width: 18px;
+            height: 18px;
+            font-size: 0.65rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.35);
+        }
+
+        /* Commander Display */
+        .commander-section {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.08), rgba(45, 183, 209, 0.05));
+            border: 1px solid rgba(78, 205, 196, 0.25);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .commander-image img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        }
+        .commander-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .commander-info h2 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #fff, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .commander-type {
+            color: #4ecdc4;
+            font-size: 1rem;
+        }
+        .commander-oracle {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            line-height: 1.7;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            flex: 1;
+        }
+        .commander-footer {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .color-badge {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .color-badge-label {
+            color: #888;
+            font-size: 0.85rem;
+            margin-right: 5px;
+        }
+        .mana-symbol {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        .ms-w { background: linear-gradient(135deg, #fffdf5, #f0edd0); color: #333; }
+        .ms-u { background: linear-gradient(135deg, #1e90ff, #0066cc); color: white; }
+        .ms-b { background: linear-gradient(135deg, #4a3a2a, #1a1008); color: #ccc; border: 1px solid #555; }
+        .ms-r { background: linear-gradient(135deg, #ff4444, #cc0000); color: white; }
+        .ms-g { background: linear-gradient(135deg, #2ecc71, #006600); color: white; }
+        .ms-c { background: linear-gradient(135deg, #bbb, #888); color: #333; }
+        .ms-generic { background: linear-gradient(135deg, #666, #444); color: #fff; }
+
+        /* Stats Cards */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4ecdc4;
+            margin-bottom: 5px;
+        }
+        .stat-card-label {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        /* Mana Curve Section */
+        .curve-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .curve-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .curve-header h3 {
+            color: #fff;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .curve-header h3 .icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        .curve-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 140px;
+            padding: 0 10px;
+        }
+        .curve-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            max-width: 80px;
+        }
+        .curve-count {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4ecdc4;
+        }
+        .curve-fill {
+            width: 100%;
+            background: linear-gradient(180deg, #4ecdc4, #2d8a85);
+            border-radius: 6px 6px 0 0;
+            min-height: 4px;
+            transition: height 0.3s ease;
+            position: relative;
+        }
+        .curve-fill:hover {
+            filter: brightness(1.2);
+        }
+        .curve-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
+            border-radius: 6px 6px 0 0;
+        }
+        .curve-label {
+            font-size: 0.85rem;
+            color: #888;
+            font-weight: 500;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        /* Category Section */
+        .category-section {
+            margin-bottom: 35px;
+        }
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .category-title {
+            font-size: 1.3rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .category-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .category-icon.synergy { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .category-icon.ramp { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .category-icon.draw { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .category-icon.removal { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .category-icon.board { background: linear-gradient(135deg, #f39c12, #d35400); }
+        .category-icon.protection { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .category-icon.finisher { background: linear-gradient(135deg, #e945a0, #b8246b); }
+        .category-icon.utility { background: linear-gradient(135deg, #1abc9c, #16a085); }
+        .category-target {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(78, 205, 196, 0.15);
+            border-radius: 20px;
+            color: #4ecdc4;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .category-desc {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        /* Card Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+        }
+        .card-item {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .card-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(78, 205, 196, 0.4);
+        }
+        .card-item-image {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 488 / 680;
+        }
+        .card-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s;
+        }
+        .card-item:hover .card-item-image img {
+            transform: scale(1.05);
+        }
+        .card-item-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+            padding: 30px 10px 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .card-item:hover .card-item-overlay {
+            opacity: 1;
+        }
+        .card-item-info {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .card-item-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .card-item-type {
+            font-size: 0.75rem;
+            color: #888;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .synergy-reason {
+            font-size: 0.75rem;
+            color: #4ecdc4;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .synergy-reason::before {
+            content: '✦';
+            font-size: 0.7rem;
+        }
+
+        /* No Image Placeholder */
+        .card-no-image {
+            aspect-ratio: 488 / 680;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            font-size: 2rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+        }
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        .empty-state h3 {
+            color: #888;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        .empty-state p {
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Back Link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #4ecdc4;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #7ee8e2; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .commander-section {
+                grid-template-columns: 1fr;
+            }
+            .commander-image {
+                display: flex;
+                justify-content: center;
+            }
+            .commander-image img {
+                max-width: 280px;
+            }
+            .search-row { flex-direction: column; }
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            .curve-chart {
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'includes/navbar.html' with active_page='decks' %}
+
+    <div class="container">
+        <a href="{% url 'deck_list' %}" class="back-link">← Voltar para Decks</a>
+
+        <div class="page-header">
+            <h1>Construtor de Deck Inteligente</h1>
+            <p>Escolha um comandante e receba sugestoes de cartas para cada categoria do seu deck</p>
+        </div>
+
+        <div class="search-section">
+            <form method="get" id="commanderForm">
+                <div class="search-row">
+                    <div class="search-group">
+                        <label>Nome do Comandante</label>
+                        <input type="text" name="commander" id="commanderInput" value="{{ commander_name }}"
+                               placeholder="Ex: Atraxa, Praetors' Voice" autocomplete="off">
+                        <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Gerar Sugestoes</button>
+                </div>
+            </form>
+        </div>
+
+        {% if commander %}
+        <!-- Commander Display -->
+        <div class="commander-section">
+            <div class="commander-image">
+                {% if commander.image_normal %}
+                <img src="{{ commander.image_normal }}" alt="{{ commander.name }}">
+                {% else %}
+                <div class="card-no-image">🎴</div>
+                {% endif %}
+            </div>
+            <div class="commander-info">
+                <h2>{{ commander.name }}</h2>
+                <div class="commander-type">{{ commander.type_line }}</div>
+                {% if commander.oracle_text %}
+                <div class="commander-oracle">{{ commander.oracle_text|linebreaksbr }}</div>
+                {% endif %}
+                <div class="commander-footer">
+                    <div class="color-badge">
+                        <span class="color-badge-label">Cores:</span>
+                        {% for c in color_identity %}
+                        {% if c != ',' %}
+                        <span class="mana-symbol ms-{{ c|lower }}">{{ c }}</span>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if commander.cmc %}
+                    <div class="color-badge">
+                        <span class="color-badge-label">CMC:</span>
+                        <span style="color: #4ecdc4; font-weight: 600;">{{ commander.cmc|floatformat:0 }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-card-value">99</div>
+                <div class="stat-card-label">Cartas no Deck</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">~36</div>
+                <div class="stat-card-label">Terrenos Recomendados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">~63</div>
+                <div class="stat-card-label">Nao-Terrenos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">{{ color_identity|length }}</div>
+                <div class="stat-card-label">Cores</div>
+            </div>
+        </div>
+
+        <!-- Ideal Mana Curve -->
+        <div class="curve-section">
+            <div class="curve-header">
+                <h3><span class="icon">📊</span> Curva de Mana Ideal para Commander</h3>
+            </div>
+            <div class="curve-chart">
+                {% for cmc, count in ideal_curve.items %}
+                <div class="curve-bar">
+                    <div class="curve-count">{{ count }}</div>
+                    <div class="curve-fill" style="height: {{ count }}0px;"></div>
+                    <div class="curve-label">{% if cmc == 7 %}7+{% else %}{{ cmc }}{% endif %}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Synergy Cards -->
+        {% if synergy_cards %}
+        <div class="category-section">
+            <div class="category-header">
+                <h3 class="category-title">
+                    <span class="category-icon synergy">✨</span>
+                    Cartas com Sinergia
+                </h3>
+                <span class="category-target">{{ synergy_cards|length }} cartas encontradas</span>
+            </div>
+            <p class="category-desc">Cartas que combinam diretamente com as mecanicas e habilidades do seu comandante</p>
+            <div class="cards-grid">
+                {% for item in synergy_cards %}
+                <a href="{% url 'card_detail' item.card.id %}" class="card-item">
+                    <div class="card-item-image">
+                        {% if item.card.image_normal %}
+                        <img src="{{ item.card.image_normal }}" alt="{{ item.card.name }}" loading="lazy">
+                        {% else %}
+                        <div class="card-no-image">🎴</div>
+                        {% endif %}
+                    </div>
+                    <div class="card-item-info">
+                        <div class="card-item-name" title="{{ item.card.name }}">{{ item.card.name }}</div>
+                        <div class="synergy-reason">{{ item.reason }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Category Suggestions -->
+        {% for cat_id, cat_data in suggestions.items %}
+        <div class="category-section">
+            <div class="category-header">
+                <h3 class="category-title">
+                    <span class="category-icon {% if cat_id == 'ramp' %}ramp{% elif cat_id == 'draw' %}draw{% elif cat_id == 'removal' %}removal{% elif cat_id == 'board_wipes' %}board{% elif cat_id == 'protection' %}protection{% elif cat_id == 'finishers' %}finisher{% else %}utility{% endif %}">
+                        {% if cat_id == 'ramp' %}🌱{% elif cat_id == 'draw' %}🎴{% elif cat_id == 'removal' %}💀{% elif cat_id == 'board_wipes' %}💥{% elif cat_id == 'protection' %}🛡️{% elif cat_id == 'finishers' %}⚔️{% else %}🔧{% endif %}
+                    </span>
+                    {{ cat_data.name }}
+                </h3>
+                <span class="category-target">Meta: {{ cat_data.target }} cartas</span>
+            </div>
+            <p class="category-desc">{{ cat_data.description }}</p>
+            <div class="cards-grid">
+                {% for card in cat_data.cards %}
+                <a href="{% url 'card_detail' card.id %}" class="card-item">
+                    <div class="card-item-image">
+                        {% if card.image_normal %}
+                        <img src="{{ card.image_normal }}" alt="{{ card.name }}" loading="lazy">
+                        {% else %}
+                        <div class="card-no-image">🎴</div>
+                        {% endif %}
+                    </div>
+                    <div class="card-item-info">
+                        <div class="card-item-name" title="{{ card.name }}">{{ card.name }}</div>
+                        <div class="card-item-type">{{ card.type_line|truncatechars:30 }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% elif commander_name %}
+        <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <h3>Comandante nao encontrado</h3>
+            <p>Verifique se o nome esta correto e tente novamente. Use o autocomplete para facilitar a busca.</p>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">🎯</div>
+            <h3>Selecione um Comandante</h3>
+            <p>Digite o nome do seu comandante no campo acima para receber sugestoes personalizadas de cartas para construir seu deck.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Autocomplete for commander input
+        const commanderInput = document.getElementById('commanderInput');
+        const autocompleteDropdown = document.getElementById('autocompleteDropdown');
+        let debounceTimer;
+        let selectedIndex = -1;
+
+        function renderMana(manaString) {
+            if (!manaString) return '';
+            const symbols = manaString.match(/\{([^}]+)\}/g) || [];
+            return symbols.map(sym => {
+                const val = sym.replace(/[{}]/g, '');
+                let cls = 'mana-symbol ';
+                if (['W', 'U', 'B', 'R', 'G'].includes(val)) cls += 'ms-' + val.toLowerCase();
+                else cls += 'ms-generic';
+                return `<span class="${cls}">${val}</span>`;
+            }).join('');
+        }
+
+        commanderInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            clearTimeout(debounceTimer);
+            selectedIndex = -1;
+
+            if (query.length < 2) {
+                autocompleteDropdown.classList.remove('active');
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/cards/api/autocomplete/?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        // Filter results to show only potential commanders
+                        const commanders = data.results.filter(c =>
+                            c.type_line && (
+                                c.type_line.toLowerCase().includes('legendary') &&
+                                c.type_line.toLowerCase().includes('creature')
+                            )
+                        );
+
+                        if (commanders.length > 0) {
+                            autocompleteDropdown.innerHTML = commanders.slice(0, 10).map((card, idx) => `
+                                <div class="autocomplete-item" data-name="${card.name}" data-index="${idx}">
+                                    ${card.image_small ? `<img src="${card.image_small}" alt="${card.name}">` : ''}
+                                    <div class="autocomplete-item-info">
+                                        <div class="autocomplete-item-name">${card.name}</div>
+                                        <div class="autocomplete-item-type">${card.type_line || ''}</div>
+                                        ${card.mana_cost ? `<div class="autocomplete-item-mana">${renderMana(card.mana_cost)}</div>` : ''}
+                                    </div>
+                                </div>
+                            `).join('');
+                            autocompleteDropdown.classList.add('active');
+
+                            // Add click handlers
+                            autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                                item.addEventListener('click', function() {
+                                    commanderInput.value = this.dataset.name;
+                                    autocompleteDropdown.classList.remove('active');
+                                    document.getElementById('commanderForm').submit();
+                                });
+                            });
+                        } else {
+                            autocompleteDropdown.classList.remove('active');
+                        }
+                    });
+            }, 300);
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!commanderInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+                autocompleteDropdown.classList.remove('active');
+            }
+        });
+
+        // Keyboard navigation
+        commanderInput.addEventListener('keydown', function(e) {
+            const items = autocompleteDropdown.querySelectorAll('.autocomplete-item');
+
+            if (!autocompleteDropdown.classList.contains('active') || items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                updateSelection(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, 0);
+                updateSelection(items);
+            } else if (e.key === 'Enter') {
+                if (selectedIndex >= 0 && items[selectedIndex]) {
+                    e.preventDefault();
+                    commanderInput.value = items[selectedIndex].dataset.name;
+                    autocompleteDropdown.classList.remove('active');
+                    document.getElementById('commanderForm').submit();
+                }
+            } else if (e.key === 'Escape') {
+                autocompleteDropdown.classList.remove('active');
+                selectedIndex = -1;
+            }
+        });
+
+        function updateSelection(items) {
+            items.forEach((item, idx) => {
+                if (idx === selectedIndex) {
+                    item.classList.add('active');
+                    item.scrollIntoView({ block: 'nearest' });
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

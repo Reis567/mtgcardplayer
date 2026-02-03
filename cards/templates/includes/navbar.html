@@ -264,7 +264,7 @@
 <!-- Navbar HTML -->
 <nav class="main-navbar">
     <div class="main-navbar-content">
-        <a href="/" class="main-navbar-brand">
+        <a href="#" class="main-navbar-brand">
             <div class="main-navbar-logo">M</div>
             <div class="main-navbar-title">MTG <span>Commander</span></div>
         </a>
@@ -298,6 +298,37 @@
                         <div class="nav-dropdown-item-text">
                             Buscar Comandantes
                             <div class="nav-dropdown-item-desc">Explore comandantes por arquetipo</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Dropdown Ferramentas -->
+            <div class="nav-dropdown">
+                <button class="nav-dropdown-toggle {% if active_page == 'builder' or active_page == 'manabase' or active_page == 'compare' %}active{% endif %}">
+                    <span class="main-nav-icon">&#128295;</span> Ferramentas
+                    <span class="nav-dropdown-arrow">&#9660;</span>
+                </button>
+                <div class="nav-dropdown-menu">
+                    <a href="/decks/builder/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="nav-dropdown-item {% if active_page == 'builder' %}active{% endif %}">
+                        <span class="nav-dropdown-item-icon">&#128736;</span>
+                        <div class="nav-dropdown-item-text">
+                            Construtor de Deck
+                            <div class="nav-dropdown-item-desc">Sugestoes inteligentes</div>
+                        </div>
+                    </a>
+                    <a href="/decks/mana-base/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="nav-dropdown-item {% if active_page == 'manabase' %}active{% endif %}">
+                        <span class="nav-dropdown-item-icon">&#127966;</span>
+                        <div class="nav-dropdown-item-text">
+                            Gerador de Mana Base
+                            <div class="nav-dropdown-item-desc">Calcule seus terrenos</div>
+                        </div>
+                    </a>
+                    <a href="/decks/compare/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="nav-dropdown-item {% if active_page == 'compare' %}active{% endif %}">
+                        <span class="nav-dropdown-item-icon">&#128200;</span>
+                        <div class="nav-dropdown-item-text">
+                            Comparador de Cartas
+                            <div class="nav-dropdown-item-desc">Compare cartas lado a lado</div>
                         </div>
                     </a>
                 </div>
