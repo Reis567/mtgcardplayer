@@ -1,0 +1,330 @@
+<!-- Navbar Styles -->
+<style>
+    .main-navbar {
+        background: rgba(15, 15, 26, 0.95);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 15px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .main-navbar-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .main-navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+    }
+
+    .main-navbar-logo {
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(135deg, #e94560, #4ecdc4);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #fff;
+    }
+
+    .main-navbar-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .main-navbar-title span {
+        color: #e94560;
+    }
+
+    .main-navbar-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .main-nav-link {
+        padding: 10px 18px;
+        border-radius: 10px;
+        color: #888;
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .main-nav-link:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+    }
+
+    .main-nav-link.active {
+        background: rgba(233, 69, 96, 0.15);
+        color: #e94560;
+    }
+
+    .main-nav-icon {
+        font-size: 1.1rem;
+    }
+
+    /* Dropdown styles */
+    .nav-dropdown {
+        position: relative;
+    }
+
+    .nav-dropdown-toggle {
+        padding: 10px 18px;
+        border-radius: 10px;
+        color: #888;
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        background: none;
+        border: none;
+    }
+
+    .nav-dropdown-toggle:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+    }
+
+    .nav-dropdown-toggle.active {
+        background: rgba(233, 69, 96, 0.15);
+        color: #e94560;
+    }
+
+    .nav-dropdown-arrow {
+        font-size: 0.7rem;
+        transition: transform 0.2s;
+    }
+
+    .nav-dropdown:hover .nav-dropdown-arrow {
+        transform: rotate(180deg);
+    }
+
+    .nav-dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        min-width: 200px;
+        background: rgba(20, 20, 35, 0.98);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 8px;
+        margin-top: 5px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.2s;
+        z-index: 1000;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .nav-dropdown:hover .nav-dropdown-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .nav-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 15px;
+        border-radius: 8px;
+        color: #aaa;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .nav-dropdown-item:hover {
+        background: rgba(78, 205, 196, 0.15);
+        color: #fff;
+    }
+
+    .nav-dropdown-item.active {
+        background: rgba(233, 69, 96, 0.15);
+        color: #e94560;
+    }
+
+    .nav-dropdown-item-icon {
+        font-size: 1.1rem;
+    }
+
+    .nav-dropdown-item-text {
+        flex: 1;
+    }
+
+    .nav-dropdown-item-desc {
+        font-size: 0.75rem;
+        color: #666;
+        margin-top: 2px;
+    }
+
+    /* User section */
+    .main-navbar-guest {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .main-btn-login {
+        padding: 10px 25px;
+        background: linear-gradient(135deg, #e94560, #ff6b6b);
+        border-radius: 10px;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+
+    .main-btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(233, 69, 96, 0.35);
+    }
+
+    .main-navbar-user {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .main-user-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #fff;
+        font-size: 1.1rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .main-user-info {
+        text-align: right;
+    }
+
+    .main-user-name {
+        font-weight: 600;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .main-user-stats {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    .main-btn-logout {
+        padding: 8px 15px;
+        background: rgba(233, 69, 96, 0.15);
+        border: 1px solid rgba(233, 69, 96, 0.3);
+        border-radius: 8px;
+        color: #e94560;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .main-btn-logout:hover {
+        background: rgba(233, 69, 96, 0.25);
+    }
+
+    @media (max-width: 768px) {
+        .main-navbar-nav { display: none; }
+        .main-navbar-title { display: none; }
+        .main-user-info { display: none; }
+    }
+</style>
+
+<!-- Navbar HTML -->
+<nav class="main-navbar">
+    <div class="main-navbar-content">
+        <a href="/" class="main-navbar-brand">
+            <div class="main-navbar-logo">M</div>
+            <div class="main-navbar-title">MTG <span>Commander</span></div>
+        </a>
+
+        <div class="main-navbar-nav">
+            {% if player %}
+            <a href="/lobby/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                <span class="main-nav-icon">&#127968;</span> Dashboard
+            </a>
+            {% endif %}
+            <a href="/cards/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link {% if active_page == 'cards' %}active{% endif %}">
+                <span class="main-nav-icon">&#127183;</span> Cartas
+            </a>
+
+            <!-- Dropdown Assistente -->
+            <div class="nav-dropdown">
+                <button class="nav-dropdown-toggle {% if active_page == 'assistant' or active_page == 'commanders' %}active{% endif %}">
+                    <span class="main-nav-icon">&#129302;</span> Assistente
+                    <span class="nav-dropdown-arrow">&#9660;</span>
+                </button>
+                <div class="nav-dropdown-menu">
+                    <a href="/cards/assistant/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="nav-dropdown-item {% if active_page == 'assistant' %}active{% endif %}">
+                        <span class="nav-dropdown-item-icon">&#128269;</span>
+                        <div class="nav-dropdown-item-text">
+                            Buscar Similares
+                            <div class="nav-dropdown-item-desc">Encontre cards parecidos</div>
+                        </div>
+                    </a>
+                    <a href="/cards/commanders/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="nav-dropdown-item {% if active_page == 'commanders' %}active{% endif %}">
+                        <span class="nav-dropdown-item-icon">&#128081;</span>
+                        <div class="nav-dropdown-item-text">
+                            Buscar Comandantes
+                            <div class="nav-dropdown-item-desc">Explore comandantes por arquetipo</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <a href="/decks/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link {% if active_page == 'decks' %}active{% endif %}">
+                <span class="main-nav-icon">&#128451;</span> Decks
+            </a>
+        </div>
+
+        {% if player %}
+        <div class="main-navbar-user">
+            <div class="main-user-info">
+                <div class="main-user-name">{{ player.nickname }}</div>
+                {% if player.games_won is not None %}
+                <div class="main-user-stats">{{ player.games_won }} vitoria{% if player.games_won != 1 %}s{% endif %}</div>
+                {% endif %}
+            </div>
+            <div class="main-user-avatar" style="background: {{ player.avatar_color|default:'#e94560' }};">
+                {{ player.nickname|slice:":1"|upper }}
+            </div>
+            <a href="/logout/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-btn-logout">Sair</a>
+        </div>
+        {% else %}
+        <div class="main-navbar-guest">
+            <a href="/login/" class="main-btn-login">Entrar</a>
+        </div>
+        {% endif %}
+    </div>
+</nav>

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ideias de Comandantes - MTG Commander</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        /* ===== PAGE LAYOUT ===== */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero-section {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(233, 69, 96, 0.1));
+            border-radius: 20px;
+            margin-bottom: 25px;
+        }
+
+        .hero-section h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffd700, #e94560);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-section p {
+            color: #888;
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ===== FILTERS SECTION - IMPROVED LAYOUT ===== */
+        .filters-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .filters-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-group label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.9rem;
+            min-width: 100px;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .filter-group input[type="number"] {
+            width: 70px;
+        }
+
+        /* Color filters - compact */
+        .color-filters {
+            display: flex;
+            gap: 4px;
+        }
+
+        .color-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .color-btn:hover { transform: scale(1.1); }
+        .color-btn.selected { border-color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+
+        .color-btn.W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+        .color-btn.U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+        .color-btn.B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #ccc; border: 2px solid #444; }
+        .color-btn.R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+        .color-btn.G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+        .color-btn.C { background: linear-gradient(135deg, #888, #aaa); color: #333; }
+
+        /* Color mode - compact */
+        .color-mode-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .color-mode-btn {
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: #888;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-mode-btn:hover { color: #fff; }
+        .color-mode-btn.active {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+
+        /* Rarity - compact */
+        .rarity-filters {
+            display: flex;
+            gap: 4px;
+        }
+
+        .rarity-checkbox {
+            cursor: pointer;
+        }
+
+        .rarity-checkbox input { display: none; }
+
+        .rarity-badge {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .rarity-checkbox input:checked + .rarity-badge { border-color: #ffd700; }
+
+        .rarity-uncommon { background: rgba(192, 192, 192, 0.2); color: #c0c0c0; }
+        .rarity-rare { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
+        .rarity-mythic { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+
+        /* Number inputs row */
+        .number-inputs {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .number-inputs span {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        /* Archetypes row */
+        .archetypes-row {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .archetypes-row label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .archetype-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .archetype-chip {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: #aaa;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .archetype-chip:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.3);
+            color: #fff;
+        }
+
+        .archetype-chip.selected {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+
+        /* Search row */
+        .search-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .btn-search {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #ffd700, #ffb700);
+            border: none;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.35);
+        }
+
+        .btn-clear {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #888;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clear:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        /* ===== RESULTS SECTION ===== */
+        .results-section {
+            margin-top: 25px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .results-header h2 {
+            font-size: 1.3rem;
+            color: #fff;
+        }
+
+        .results-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .results-count {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .results-count strong {
+            color: #ffd700;
+        }
+
+        .sort-options {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sort-options label {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .sort-options select {
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.85rem;
+        }
+
+        /* Commanders Grid */
+        .commanders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .commander-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .commander-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(255, 215, 0, 0.5);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .commander-image-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .commander-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .commander-card:hover .commander-image {
+            transform: scale(1.03);
+        }
+
+        .no-image {
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .color-indicator {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            display: flex;
+            gap: 2px;
+        }
+
+        .color-pip {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .color-pip.W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+        .color-pip.U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+        .color-pip.B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #888; }
+        .color-pip.R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+        .color-pip.G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+
+        .commander-info {
+            padding: 12px;
+        }
+
+        .commander-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .commander-type {
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .commander-stats {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            padding: 3px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+
+        .stat-badge.cmc {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+        }
+
+        .stat-badge.power {
+            background: rgba(233, 69, 96, 0.2);
+            color: #e94560;
+        }
+
+        .commander-archetypes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .archetype-tag {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            background: rgba(255, 215, 0, 0.15);
+            color: #ffd700;
+            border-radius: 8px;
+        }
+
+        .color-name-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #888;
+            border-radius: 10px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        /* ===== ARCHETYPES INFO ===== */
+        .archetypes-info {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .archetypes-info h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .archetypes-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .archetype-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .archetype-item h4 {
+            color: #e94560;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .archetype-item p {
+            color: #888;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .filters-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .commanders-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 12px;
+            }
+
+            .search-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'includes/navbar.html' with active_page='commanders' %}
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1>&#128081; Ideias de Comandantes</h1>
+            <p>Explore comandantes por cores, arquetipos, tribos e mais!</p>
+        </section>
+
+        <!-- Filters Section -->
+        <section class="filters-section">
+            <form method="get" id="filtersForm">
+                <!-- First Row: Main Filters -->
+                <div class="filters-row">
+                    <!-- Colors -->
+                    <div class="filter-group">
+                        <label>Cores</label>
+                        <div class="color-filters">
+                            <button type="button" class="color-btn W {% if 'W' in filters.colors %}selected{% endif %}" data-color="W" onclick="toggleColor(this)">W</button>
+                            <button type="button" class="color-btn U {% if 'U' in filters.colors %}selected{% endif %}" data-color="U" onclick="toggleColor(this)">U</button>
+                            <button type="button" class="color-btn B {% if 'B' in filters.colors %}selected{% endif %}" data-color="B" onclick="toggleColor(this)">B</button>
+                            <button type="button" class="color-btn R {% if 'R' in filters.colors %}selected{% endif %}" data-color="R" onclick="toggleColor(this)">R</button>
+                            <button type="button" class="color-btn G {% if 'G' in filters.colors %}selected{% endif %}" data-color="G" onclick="toggleColor(this)">G</button>
+                            <button type="button" class="color-btn C {% if 'C' in filters.colors %}selected{% endif %}" data-color="C" onclick="toggleColor(this)">C</button>
+                        </div>
+                        <div id="colorInputs"></div>
+                    </div>
+
+                    <!-- Color Mode -->
+                    <div class="filter-group">
+                        <label>Modo</label>
+                        <div class="color-mode-group">
+                            <button type="button" class="color-mode-btn {% if filters.color_mode == 'include' %}active{% endif %}" data-mode="include" onclick="setColorMode(this)">Inclui</button>
+                            <button type="button" class="color-mode-btn {% if filters.color_mode == 'exact' %}active{% endif %}" data-mode="exact" onclick="setColorMode(this)">Exato</button>
+                            <button type="button" class="color-mode-btn {% if filters.color_mode == 'at_most' %}active{% endif %}" data-mode="at_most" onclick="setColorMode(this)">Max</button>
+                        </div>
+                        <input type="hidden" name="color_mode" id="colorModeInput" value="{{ filters.color_mode|default:'include' }}">
+                    </div>
+
+                    <!-- CMC -->
+                    <div class="filter-group">
+                        <label>CMC</label>
+                        <div class="number-inputs">
+                            <input type="number" name="cmc_min" placeholder="Min" min="0" max="20" value="{{ filters.cmc_min }}">
+                            <span>-</span>
+                            <input type="number" name="cmc_max" placeholder="Max" min="0" max="20" value="{{ filters.cmc_max }}">
+                        </div>
+                    </div>
+
+                    <!-- Power -->
+                    <div class="filter-group">
+                        <label>Poder</label>
+                        <div class="number-inputs">
+                            <input type="number" name="power_min" placeholder="Min" min="0" value="{{ filters.power_min }}">
+                            <span>-</span>
+                            <input type="number" name="power_max" placeholder="Max" min="0" value="{{ filters.power_max }}">
+                        </div>
+                    </div>
+
+                    <!-- Toughness -->
+                    <div class="filter-group">
+                        <label>Resistencia</label>
+                        <div class="number-inputs">
+                            <input type="number" name="tough_min" placeholder="Min" min="0" value="{{ filters.tough_min }}">
+                            <span>-</span>
+                            <input type="number" name="tough_max" placeholder="Max" min="0" value="{{ filters.tough_max }}">
+                        </div>
+                    </div>
+
+                    <!-- Tribe -->
+                    <div class="filter-group">
+                        <label>Tribo</label>
+                        <select name="tribe">
+                            <option value="">Todas</option>
+                            {% for tribe in tribes %}
+                            <option value="{{ tribe }}" {% if filters.tribe == tribe %}selected{% endif %}>{{ tribe }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Partner -->
+                    <div class="filter-group">
+                        <label>Partner</label>
+                        <select name="partner">
+                            <option value="" {% if not filters.partner %}selected{% endif %}>Todos</option>
+                            <option value="yes" {% if filters.partner == 'yes' %}selected{% endif %}>Sim</option>
+                            <option value="no" {% if filters.partner == 'no' %}selected{% endif %}>Nao</option>
+                        </select>
+                    </div>
+
+                    <!-- Rarity -->
+                    <div class="filter-group">
+                        <label>Raridade</label>
+                        <div class="rarity-filters">
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="uncommon" {% if 'uncommon' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-uncommon">U</span>
+                            </label>
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="rare" {% if 'rare' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-rare">R</span>
+                            </label>
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="mythic" {% if 'mythic' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-mythic">M</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Archetypes Row -->
+                <div class="archetypes-row">
+                    <label>Arquetipo</label>
+                    <div class="archetype-chips">
+                        {% for name, id, desc in archetypes %}
+                        <button type="button" class="archetype-chip {% if filters.archetype == id %}selected{% endif %}"
+                                data-archetype="{{ id }}" onclick="selectArchetype(this)" title="{{ desc }}">
+                            {{ name }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="archetype" id="archetypeInput" value="{{ filters.archetype }}">
+                </div>
+
+                <!-- Search Row -->
+                <div class="search-row">
+                    <input type="text" name="q" class="search-input" placeholder="Buscar por nome..." value="{{ filters.search }}">
+                    <input type="text" name="oracle" class="search-input" placeholder="Texto do oracle..." value="{{ filters.oracle }}" style="max-width: 200px;">
+                    <input type="hidden" name="order" id="orderInput" value="{{ filters.order }}">
+                    <input type="hidden" name="dir" id="dirInput" value="{{ filters.dir }}">
+                    <button type="button" class="btn-clear" onclick="clearFilters()">Limpar</button>
+                    <button type="submit" class="btn-search">Buscar</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section">
+            <div class="results-header">
+                <h2>Comandantes</h2>
+                <div class="results-meta">
+                    <span class="results-count"><strong>{{ total_found }}</strong> encontrados</span>
+                    <div class="sort-options">
+                        <label>Ordenar:</label>
+                        <select onchange="sortBy(this.value)">
+                            <option value="name-asc" {% if filters.order == 'name' and filters.dir == 'asc' %}selected{% endif %}>Nome A-Z</option>
+                            <option value="name-desc" {% if filters.order == 'name' and filters.dir == 'desc' %}selected{% endif %}>Nome Z-A</option>
+                            <option value="cmc-asc" {% if filters.order == 'cmc' and filters.dir == 'asc' %}selected{% endif %}>CMC Menor</option>
+                            <option value="cmc-desc" {% if filters.order == 'cmc' and filters.dir == 'desc' %}selected{% endif %}>CMC Maior</option>
+                            <option value="power-desc" {% if filters.order == 'power' and filters.dir == 'desc' %}selected{% endif %}>Poder Maior</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {% if commanders %}
+            <div class="commanders-grid">
+                {% for item in commanders %}
+                <a href="{% url 'card_detail' card_id=item.card.id %}" class="commander-card">
+                    <div class="commander-image-container">
+                        {% if item.card.image_normal %}
+                        <img src="{{ item.card.image_normal }}" alt="{{ item.card.name }}" class="commander-image" loading="lazy">
+                        {% else %}
+                        <div class="no-image">Sem imagem</div>
+                        {% endif %}
+                        {% if item.card.color_identity %}
+                        <div class="color-indicator">
+                            {% for color in item.card.color_identity|make_list %}
+                            {% if color != ',' %}
+                            <span class="color-pip {{ color }}">{{ color }}</span>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="commander-info">
+                        <div class="commander-name" title="{{ item.card.name }}">{{ item.card.name }}</div>
+                        <div class="commander-type">{{ item.card.type_line|truncatechars:35 }}</div>
+                        <div class="commander-stats">
+                            <span class="stat-badge cmc">CMC {{ item.card.cmc|floatformat:0 }}</span>
+                            {% if item.card.power and item.card.toughness %}
+                            <span class="stat-badge power">{{ item.card.power }}/{{ item.card.toughness }}</span>
+                            {% endif %}
+                            <span class="color-name-badge">{{ item.color_name }}</span>
+                        </div>
+                        {% if item.archetypes %}
+                        <div class="commander-archetypes">
+                            {% for arch in item.archetypes|slice:":3" %}
+                            <span class="archetype-tag" title="{{ arch.description }}">{{ arch.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>Nenhum comandante encontrado</h3>
+                <p>Tente ajustar os filtros ou limpar a busca.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Archetypes Info -->
+        <section class="archetypes-info">
+            <h3>&#128218; Guia de Arquetipos</h3>
+            <div class="archetypes-list">
+                {% for name, id, desc in archetypes|slice:":12" %}
+                <div class="archetype-item">
+                    <h4>{{ name }}</h4>
+                    <p>{{ desc }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Color selection
+        const selectedColors = new Set([{% for c in filters.colors %}'{{ c }}',{% endfor %}]);
+
+        function toggleColor(btn) {
+            const color = btn.dataset.color;
+            if (selectedColors.has(color)) {
+                selectedColors.delete(color);
+                btn.classList.remove('selected');
+            } else {
+                selectedColors.add(color);
+                btn.classList.add('selected');
+            }
+            updateColorInputs();
+        }
+
+        function updateColorInputs() {
+            const container = document.getElementById('colorInputs');
+            container.innerHTML = '';
+            selectedColors.forEach(color => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'color';
+                input.value = color;
+                container.appendChild(input);
+            });
+        }
+
+        updateColorInputs();
+
+        function setColorMode(btn) {
+            document.querySelectorAll('.color-mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('colorModeInput').value = btn.dataset.mode;
+        }
+
+        function selectArchetype(btn) {
+            const archetype = btn.dataset.archetype;
+            const input = document.getElementById('archetypeInput');
+
+            if (btn.classList.contains('selected')) {
+                btn.classList.remove('selected');
+                input.value = '';
+            } else {
+                document.querySelectorAll('.archetype-chip').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                input.value = archetype;
+            }
+        }
+
+        function sortBy(value) {
+            const [order, dir] = value.split('-');
+            document.getElementById('orderInput').value = order;
+            document.getElementById('dirInput').value = dir;
+            document.getElementById('filtersForm').submit();
+        }
+
+        function clearFilters() {
+            window.location.href = window.location.pathname;
+        }
+    </script>
+</body>
+</html>

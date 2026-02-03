@@ -864,41 +864,7 @@
 {% block content %}
 </div><!-- Close default container -->
 
-<!-- NAVBAR -->
-<nav class="navbar">
-    <div class="navbar-content">
-        <a href="#" class="navbar-brand">
-            <div class="navbar-logo">M</div>
-            <div class="navbar-title">MTG <span>Commander</span></div>
-        </a>
-
-        <div class="navbar-nav">
-            <a href="/lobby/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="nav-link active">
-                <span class="nav-link-icon">&#127968;</span> Dashboard
-            </a>
-            <a href="/cards/" class="nav-link">
-                <span class="nav-link-icon">&#127183;</span> Cartas
-            </a>
-            <a href="/cards/assistant/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="nav-link">
-                <span class="nav-link-icon">&#129302;</span> Assistente
-            </a>
-            <a href="/decks/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="nav-link">
-                <span class="nav-link-icon">&#128451;</span> Decks
-            </a>
-        </div>
-
-        <div class="navbar-user">
-            <div class="user-info">
-                <div class="user-name">{{ player.nickname }}</div>
-                <div class="user-stats">{{ player.games_won }} vitoria{% if player.games_won != 1 %}s{% endif %}</div>
-            </div>
-            <div class="user-avatar" style="background-color: {{ player.avatar_color|default:'#e94560' }}">
-                {{ player.nickname|slice:":1"|upper }}
-            </div>
-            <a href="/logout/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="btn-logout">Sair</a>
-        </div>
-    </div>
-</nav>
+{% include 'includes/navbar.html' with active_page='dashboard' %}
 
 <!-- MAIN CONTENT -->
 <main class="main-content">

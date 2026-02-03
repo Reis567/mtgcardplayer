@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (
     CardListView, CardCatalogView, CardDetailView,
-    CardAutocompleteView, RandomCardView, CardAssistantView
+    CardAutocompleteView, RandomCardView, CardAssistantView,
+    CommanderIdeasView
 )
 
 urlpatterns = [
@@ -10,6 +11,9 @@ urlpatterns = [
 
     # Assistente de cards similares
     path('assistant/', CardAssistantView.as_view(), name='card_assistant'),
+
+    # Ideias de comandantes
+    path('commanders/', CommanderIdeasView.as_view(), name='commander_ideas'),
 
     # Listagem simples (legado)
     path('list/', CardListView.as_view(), name='card_list'),

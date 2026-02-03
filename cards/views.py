@@ -796,3 +796,428 @@ class CardAssistantView(View):
         })
 
         return render(request, 'cards/card_assistant.html', context)
+
+
+class CommanderIdeasView(View):
+    """Pagina para descobrir ideias de comandantes com filtros avancados e deteccao de arquetipos"""
+
+    # Arquetipos de comandantes com patterns de deteccao
+    COMMANDER_ARCHETYPES = [
+        # (nome_exibicao, id, patterns, descricao)
+        ('Voltron', 'voltron', [
+            'equipped creature', 'equip', 'aura', 'enchanted creature',
+            'gets \\+', 'double strike', 'commander deals combat damage',
+            'hexproof', 'indestructible', 'protection from'
+        ], 'Foca em equipar/encantar o comandante para vencer com dano de comandante'),
+
+        ('Aristocrats', 'aristocrats', [
+            'whenever .* dies', 'sacrifice', 'when .* creature .* dies',
+            'blood artist', 'drain', 'lose .* life .* you gain',
+            'death trigger', 'whenever you sacrifice'
+        ], 'Sacrifica criaturas para gerar valor e drenar oponentes'),
+
+        ('Tokens', 'tokens', [
+            'create .* creature token', 'token creatures you control', 'populate',
+            'tokens you control get', 'for each token', 'for each creature token',
+            'creature tokens you control', 'number of creatures you control',
+            'create .* 1/1', 'create .* 2/2', 'army', 'convoke'
+        ], 'Gera muitos tokens para dominar o campo de batalha'),
+
+        ('Spellslinger', 'spellslinger', [
+            'instant or sorcery', 'whenever you cast .* instant', 'whenever you cast .* sorcery',
+            'magecraft', 'prowess', 'copy .* spell', 'storm', 'noncreature spell'
+        ], 'Foca em lancar muitas magicas instantaneas e feiticos'),
+
+        ('Tribal', 'tribal', [
+            'other .* you control get \\+', 'creature of the chosen type',
+            'creatures you control of the chosen type', 'share a creature type',
+            'changeling', 'each creature you control that shares a creature type',
+            'whenever another .* enters', 'creature type of your choice'
+        ], 'Sinergias com um tipo de criatura especifico'),
+
+        ('Control', 'control', [
+            'counter target spell', 'destroy target creature', 'exile target creature',
+            'return target .* to its owner', 'tap target .* doesn\'t untap',
+            "can't attack you", "can't cast .* spells", 'opponents can\'t',
+            'destroy all creatures', 'exile all'
+        ], 'Controla o jogo removendo ameacas e negando acoes'),
+
+        ('Combo', 'combo', [
+            'search your library', 'tutor', 'infinite', 'untap',
+            'whenever .* untaps', 'add .* mana', 'copy', 'extra turn'
+        ], 'Busca pecas de combo para vencer de forma explosiva'),
+
+        ('Reanimator', 'reanimator', [
+            'return .* from .* graveyard', 'reanimate', 'graveyard .* battlefield',
+            'mill', 'cards in your graveyard', 'flashback', 'unearth', 'escape'
+        ], 'Usa o cemiterio como recurso, reanimando criaturas'),
+
+        ('Aggro', 'aggro', [
+            'haste', 'whenever .* attacks', 'attack each combat', 'first strike',
+            'double strike', 'combat damage', 'additional combat', 'can\'t block'
+        ], 'Ataque rapido e agressivo para pressionar oponentes'),
+
+        ('Ramp/Big Mana', 'ramp', [
+            'search your library for .* land', 'put .* land .* onto the battlefield',
+            'add .* for each', 'double .* mana', 'mana of any color',
+            'costs .* less to cast', 'additional land', 'landfall',
+            'whenever a land enters .* add', 'for each land you control'
+        ], 'Acelera mana para jogar ameacas grandes rapidamente'),
+
+        ('Stax', 'stax', [
+            "can't .* more than", "opponents can't", "each player can't",
+            'costs .* more', 'tax', 'sacrifice .* permanent', "don't untap"
+        ], 'Restringe recursos e acoes dos oponentes'),
+
+        ('Group Hug', 'grouphug', [
+            'each player draws', 'each player may draw', 'each opponent draws',
+            'each other player draws', 'players each draw', 'all players draw',
+            'each player puts a land', 'each player gains .* life', 'each player may put',
+            'each player searches', 'opponents draw', 'each player untaps',
+            'whenever an opponent draws .* you', 'gift', 'tempting offer'
+        ], 'Distribui recursos entre todos, ganhando aliados'),
+
+        ('Mill', 'mill', [
+            'mill', 'cards .* into .* graveyard', 'library .* graveyard',
+            'exile .* library', 'cards in .* graveyard'
+        ], 'Vence fazendo oponentes comprarem de biblioteca vazia'),
+
+        ('Lifegain', 'lifegain', [
+            'gain .* life', 'whenever you gain life', 'lifelink',
+            'life .* or more', 'pay .* life', 'life total'
+        ], 'Ganha vida para ativar sinergias e sobreviver'),
+
+        ('+1/+1 Counters', 'counters', [
+            '\\+1/\\+1 counter', 'put .* counter', 'proliferate',
+            'counter on', 'with .* counters', 'modify', 'evolve', 'adapt'
+        ], 'Acumula marcadores +1/+1 para criaturas gigantes'),
+
+        ('Equipment', 'equipment', [
+            'equip', 'equipment', 'equipped creature', 'attach',
+            'for mirrodin', 'living weapon', 'reconfigure'
+        ], 'Sinergias com equipamentos e criaturas equipadas'),
+
+        ('Enchantress', 'enchantress', [
+            'enchantment', 'aura', 'enchanted', 'constellation',
+            'whenever .* enchantment', 'enchant'
+        ], 'Sinergias com encantamentos para gerar valor'),
+
+        ('Lands Matter', 'lands', [
+            'landfall', 'land enters', 'lands you control', 'sacrifice .* land',
+            'land .* graveyard', 'play .* additional land', 'land creature'
+        ], 'Usa terrenos como recurso principal de sinergia'),
+
+        ('Artifacts Matter', 'artifacts', [
+            'artifact', 'artifacts you control', 'metalcraft', 'affinity',
+            'improvise', 'treasure', 'clue', 'food', 'vehicle', 'crew'
+        ], 'Sinergias com artefatos e tokens de artefato'),
+
+        ('Draw/Card Advantage', 'draw', [
+            'whenever you draw', 'whenever .* draws a card', 'draw .* cards',
+            'cards in .* hand', 'no maximum hand size', 'draw two cards',
+            'draw three cards', 'draw cards equal', 'draw that many',
+            'for each card you\'ve drawn', 'second card you draw', 'draw .* then discard'
+        ], 'Foca em comprar muitas cartas para ter opcoes'),
+
+        ('Blink/Flicker', 'blink', [
+            'exile .* return', 'flicker', 'blink', 'enters the battlefield',
+            'etb', 'leave .* battlefield'
+        ], 'Pisca criaturas para reusar triggers de entrada'),
+
+        ('Graveyard', 'graveyard', [
+            'graveyard', 'from .* graveyard', 'mill', 'dredge', 'delve',
+            'escape', 'flashback', 'unearth', 'embalm', 'eternalize'
+        ], 'Usa o cemiterio como extensao da mao'),
+
+        ('Politics', 'politics', [
+            'vote', 'council', 'goad', 'monarch', 'choose .* opponent',
+            'an opponent of your choice', 'target opponent .* target opponent',
+            'deals combat damage to an opponent', 'for each opponent'
+        ], 'Manipula politica de mesa para ganhar vantagem'),
+
+        ('Theft', 'theft', [
+            'gain control', 'control of target', 'steal', 'exchange control',
+            'opponent controls .* you control', 'act of treason'
+        ], 'Rouba permanentes dos oponentes'),
+
+        ('Superfriends', 'superfriends', [
+            'planeswalker', 'loyalty', 'proliferate', 'each planeswalker',
+            'planeswalkers you control'
+        ], 'Foca em planeswalkers como principal estrategia'),
+
+        ('Chaos', 'chaos', [
+            'random', 'coin flip', 'chaos', 'each player .* random',
+            'at random', 'wheel of fortune'
+        ], 'Cria caos no jogo com efeitos aleatorios'),
+
+        ('Infect/Poison', 'infect', [
+            'infect', 'poison counter', 'toxic', 'proliferate',
+            'poisoned', 'corrupted'
+        ], 'Vence com 10 marcadores de veneno'),
+
+        ('Voltron Auras', 'auras', [
+            'enchanted creature', 'aura', 'enchant creature', 'bestow',
+            'totem armor', 'umbra'
+        ], 'Usa auras para tornar o comandante imbativel'),
+    ]
+
+    # Tribos populares para filtro
+    POPULAR_TRIBES = [
+        'Human', 'Elf', 'Goblin', 'Zombie', 'Dragon', 'Angel', 'Demon',
+        'Vampire', 'Merfolk', 'Wizard', 'Warrior', 'Knight', 'Soldier',
+        'Beast', 'Elemental', 'Spirit', 'Dinosaur', 'Pirate', 'Cat',
+        'Dog', 'Bird', 'Snake', 'Rat', 'Sliver', 'Eldrazi', 'Faerie',
+        'Giant', 'Treefolk', 'Fungus', 'Skeleton', 'Horror', 'Cleric',
+        'Rogue', 'Shaman', 'Druid', 'Artificer', 'Ninja', 'Samurai'
+    ]
+
+    def get_player_context(self, request):
+        """Helper para obter jogador atual da sessao/tab"""
+        from accounts.views import get_current_player, get_tab_id
+        return {
+            'player': get_current_player(request),
+            'tab_id': get_tab_id(request)
+        }
+
+    def detect_archetypes(self, oracle_text, min_matches=1):
+        """Detecta arquetipos baseado no oracle text do comandante"""
+        import re
+        if not oracle_text:
+            return []
+
+        text = oracle_text.lower()
+        detected = []
+
+        for name, archetype_id, patterns, description in self.COMMANDER_ARCHETYPES:
+            matches = 0
+            for pattern in patterns:
+                if re.search(pattern, text, re.IGNORECASE):
+                    matches += 1
+
+            # Se tem min_matches+ matches, considera como arquetipo
+            if matches >= min_matches:
+                detected.append({
+                    'name': name,
+                    'id': archetype_id,
+                    'description': description,
+                    'strength': min(matches, 5)  # Cap em 5 para indicador visual
+                })
+
+        # Ordenar por forca
+        detected.sort(key=lambda x: x['strength'], reverse=True)
+        return detected[:4]  # Max 4 arquetipos
+
+    def get_archetype_patterns(self, archetype_id):
+        """Retorna os patterns de um arquetipo especifico"""
+        for name, aid, patterns, desc in self.COMMANDER_ARCHETYPES:
+            if aid == archetype_id:
+                return patterns
+        return []
+
+    def get_color_identity_display(self, color_identity):
+        """Retorna nome legivel da identidade de cor"""
+        if not color_identity:
+            return 'Incolor'
+
+        colors = color_identity.split(',')
+        color_names = {
+            'W': 'Branco', 'U': 'Azul', 'B': 'Preto',
+            'R': 'Vermelho', 'G': 'Verde'
+        }
+
+        # Combinacoes conhecidas
+        combos = {
+            frozenset(['W', 'U']): 'Azorius',
+            frozenset(['U', 'B']): 'Dimir',
+            frozenset(['B', 'R']): 'Rakdos',
+            frozenset(['R', 'G']): 'Gruul',
+            frozenset(['G', 'W']): 'Selesnya',
+            frozenset(['W', 'B']): 'Orzhov',
+            frozenset(['U', 'R']): 'Izzet',
+            frozenset(['B', 'G']): 'Golgari',
+            frozenset(['R', 'W']): 'Boros',
+            frozenset(['G', 'U']): 'Simic',
+            frozenset(['W', 'U', 'B']): 'Esper',
+            frozenset(['U', 'B', 'R']): 'Grixis',
+            frozenset(['B', 'R', 'G']): 'Jund',
+            frozenset(['R', 'G', 'W']): 'Naya',
+            frozenset(['G', 'W', 'U']): 'Bant',
+            frozenset(['W', 'B', 'G']): 'Abzan',
+            frozenset(['U', 'R', 'W']): 'Jeskai',
+            frozenset(['B', 'G', 'U']): 'Sultai',
+            frozenset(['R', 'W', 'B']): 'Mardu',
+            frozenset(['G', 'U', 'R']): 'Temur',
+            frozenset(['W', 'U', 'B', 'R']): 'Yore-Tiller',
+            frozenset(['U', 'B', 'R', 'G']): 'Glint-Eye',
+            frozenset(['B', 'R', 'G', 'W']): 'Dune-Brood',
+            frozenset(['R', 'G', 'W', 'U']): 'Ink-Treader',
+            frozenset(['G', 'W', 'U', 'B']): 'Witch-Maw',
+            frozenset(['W', 'U', 'B', 'R', 'G']): '5 Cores',
+        }
+
+        color_set = frozenset(colors)
+        if color_set in combos:
+            return combos[color_set]
+
+        return ', '.join(color_names.get(c, c) for c in colors)
+
+    def get(self, request):
+        from django.db.models import Min
+        import re
+
+        context = self.get_player_context(request)
+
+        # Filtros
+        filters = {
+            'search': request.GET.get('q', '').strip(),
+            'colors': request.GET.getlist('color'),
+            'color_mode': request.GET.get('color_mode', 'include'),  # include, exact, at_most
+            'cmc_min': request.GET.get('cmc_min', ''),
+            'cmc_max': request.GET.get('cmc_max', ''),
+            'power_min': request.GET.get('power_min', ''),
+            'power_max': request.GET.get('power_max', ''),
+            'tough_min': request.GET.get('tough_min', ''),
+            'tough_max': request.GET.get('tough_max', ''),
+            'archetype': request.GET.get('archetype', ''),
+            'tribe': request.GET.get('tribe', ''),
+            'partner': request.GET.get('partner', ''),  # '', 'yes', 'no'
+            'rarity': request.GET.getlist('rarity'),
+            'oracle': request.GET.get('oracle', '').strip(),
+            'order': request.GET.get('order', 'name'),
+            'dir': request.GET.get('dir', 'asc'),
+        }
+
+        # Base query: apenas comandantes (Legendary Creature ou "can be your commander")
+        queryset = Card.objects.filter(
+            Q(type_line__icontains='Legendary') & Q(type_line__icontains='Creature') |
+            Q(oracle_text__icontains='can be your commander')
+        )
+
+        # Deduplicar por nome (pegar apenas uma versao de cada carta)
+        unique_ids = queryset.values('name').annotate(
+            first_id=Min('id')
+        ).values_list('first_id', flat=True)
+
+        queryset = Card.objects.filter(id__in=unique_ids)
+
+        # Aplicar filtros
+        if filters['search']:
+            queryset = queryset.filter(
+                Q(name__icontains=filters['search']) |
+                Q(oracle_text__icontains=filters['search'])
+            )
+
+        # Filtro de cores
+        if filters['colors']:
+            if filters['color_mode'] == 'exact':
+                # Exatamente essas cores
+                color_str = ','.join(sorted(filters['colors']))
+                queryset = queryset.filter(color_identity=color_str)
+            elif filters['color_mode'] == 'at_most':
+                # No maximo essas cores - excluir cores nao selecionadas
+                all_colors = {'W', 'U', 'B', 'R', 'G'}
+                excluded = all_colors - set(filters['colors'])
+                for c in excluded:
+                    queryset = queryset.exclude(color_identity__icontains=c)
+            else:
+                # Inclui essas cores (default)
+                for c in filters['colors']:
+                    queryset = queryset.filter(color_identity__icontains=c)
+
+        # Colorless filter
+        if 'C' in filters['colors']:
+            queryset = queryset.filter(
+                Q(color_identity='') | Q(color_identity__isnull=True)
+            )
+
+        # CMC
+        if filters['cmc_min']:
+            queryset = queryset.filter(cmc__gte=float(filters['cmc_min']))
+        if filters['cmc_max']:
+            queryset = queryset.filter(cmc__lte=float(filters['cmc_max']))
+
+        # Power/Toughness
+        if filters['power_min']:
+            queryset = queryset.filter(power__gte=filters['power_min'])
+        if filters['power_max']:
+            queryset = queryset.filter(power__lte=filters['power_max'])
+        if filters['tough_min']:
+            queryset = queryset.filter(toughness__gte=filters['tough_min'])
+        if filters['tough_max']:
+            queryset = queryset.filter(toughness__lte=filters['tough_max'])
+
+        # Tribo
+        if filters['tribe']:
+            queryset = queryset.filter(type_line__icontains=filters['tribe'])
+
+        # Partner
+        if filters['partner'] == 'yes':
+            queryset = queryset.filter(
+                Q(oracle_text__icontains='partner') |
+                Q(oracle_text__icontains='friends forever') |
+                Q(oracle_text__icontains='choose a background')
+            )
+        elif filters['partner'] == 'no':
+            queryset = queryset.exclude(oracle_text__icontains='partner')
+
+        # Raridade
+        if filters['rarity']:
+            queryset = queryset.filter(rarity__in=filters['rarity'])
+
+        # Oracle text search
+        if filters['oracle']:
+            queryset = queryset.filter(oracle_text__icontains=filters['oracle'])
+
+        # Filtro por arquetipo - aplica diretamente no queryset
+        archetype_filter = filters['archetype']
+        if archetype_filter:
+            patterns = self.get_archetype_patterns(archetype_filter)
+            if patterns:
+                # Criar Q objects para cada pattern (usando icontains para simplicidade)
+                archetype_q = Q()
+                for pattern in patterns:
+                    # Converter regex simples para busca de texto
+                    # Remove caracteres regex e faz busca simples
+                    simple_pattern = pattern.replace('.*', ' ').replace('\\+', '+').replace("can't", "can't")
+                    simple_pattern = re.sub(r'[\\^$.|?*+(){}[\]]', ' ', simple_pattern).strip()
+                    if simple_pattern and len(simple_pattern) > 2:
+                        archetype_q |= Q(oracle_text__icontains=simple_pattern)
+                if archetype_q:
+                    queryset = queryset.filter(archetype_q)
+
+        # Ordenacao
+        order_fields = {
+            'name': 'name',
+            'cmc': 'cmc',
+            'power': 'power',
+            'toughness': 'toughness',
+        }
+        order_field = order_fields.get(filters['order'], 'name')
+        if filters['dir'] == 'desc':
+            order_field = f'-{order_field}'
+        queryset = queryset.order_by(order_field)
+
+        # Processar comandantes e detectar arquetipos
+        commanders = []
+
+        for card in queryset[:200]:  # Limitar processamento
+            archetypes = self.detect_archetypes(card.oracle_text, min_matches=1)
+
+            commanders.append({
+                'card': card,
+                'archetypes': archetypes,
+                'color_name': self.get_color_identity_display(card.color_identity),
+            })
+
+        # Limitar resultado final
+        commanders = commanders[:60]
+
+        context.update({
+            'commanders': commanders,
+            'filters': filters,
+            'total_found': len(commanders),
+            'archetypes': [(name, aid, desc) for name, aid, _, desc in self.COMMANDER_ARCHETYPES],
+            'tribes': self.POPULAR_TRIBES,
+        })
+
+        return render(request, 'cards/commander_ideas.html', context)

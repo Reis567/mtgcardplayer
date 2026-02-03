@@ -931,48 +931,7 @@
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="main-navbar">
-        <div class="main-navbar-content">
-            <a href="#" class="main-navbar-brand">
-                <div class="main-navbar-logo">M</div>
-                <div class="main-navbar-title">MTG <span>Commander</span></div>
-            </a>
-
-            <div class="main-navbar-nav">
-                {% if player %}
-                <a href="/lobby/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link">
-                    <span class="main-nav-icon">&#127968;</span> Dashboard
-                </a>
-                {% endif %}
-                <a href="/cards/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link active">
-                    <span class="main-nav-icon">&#127183;</span> Cartas
-                </a>
-                <a href="/cards/assistant/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link">
-                    <span class="main-nav-icon">&#129302;</span> Assistente
-                </a>
-                <a href="/decks/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-nav-link">
-                    <span class="main-nav-icon">&#128451;</span> Decks
-                </a>
-            </div>
-
-            {% if player %}
-            <div class="main-navbar-user">
-                <div class="main-user-info">
-                    <div class="main-user-name">{{ player.nickname }}</div>
-                </div>
-                <div class="main-user-avatar" style="background: {{ player.avatar_color }};">
-                    {{ player.nickname|slice:":1"|upper }}
-                </div>
-                <a href="/logout/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="main-btn-logout">Sair</a>
-            </div>
-            {% else %}
-            <div class="main-navbar-guest">
-                <a href="/login/" class="main-btn-login">Entrar</a>
-            </div>
-            {% endif %}
-        </div>
-    </nav>
+    {% include 'includes/navbar.html' with active_page='cards' %}
 
     <!-- Search Header -->
     <header class="header">
