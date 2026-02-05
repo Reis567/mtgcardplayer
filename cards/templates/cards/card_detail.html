@@ -279,6 +279,108 @@
             opacity: 1;
         }
 
+        /* DFC (Double-Faced Card) Styles */
+        .dfc-container {
+            perspective: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .dfc-card {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 488 / 680;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dfc-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .dfc-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .dfc-face .card-image-wrapper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .dfc-face .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .dfc-back {
+            transform: rotateY(180deg);
+        }
+
+        .dfc-flip-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            border: none;
+            border-radius: 25px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dfc-flip-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(155, 89, 182, 0.4);
+        }
+
+        .dfc-face-indicator {
+            text-align: center;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dfc-face-indicator .face-label {
+            display: block;
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .dfc-face-indicator .face-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .dfc-face-indicator.showing-back .face-label {
+            color: #9b59b6;
+        }
+
+        .dfc-layout-badge {
+            padding: 8px 16px;
+            background: rgba(155, 89, 182, 0.15);
+            border: 1px solid rgba(155, 89, 182, 0.3);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #9b59b6;
+            font-weight: 600;
+        }
+
         /* Card Details */
         .card-details {
             display: flex;
@@ -916,6 +1018,36 @@
         <div class="card-hero">
             <!-- Card Image -->
             <div class="card-image-section">
+                {% if card.is_double_faced and card.back_face_image_normal %}
+                <!-- Double-Faced Card - Interactive Flip -->
+                <div class="dfc-container">
+                    <div class="dfc-card" id="dfcCard">
+                        <div class="dfc-face dfc-front">
+                            <div class="card-image-wrapper" onclick="openZoom('front')">
+                                <img src="{{ card.image_large|default:card.image_normal }}" alt="{{ card.name }}" class="card-image">
+                                <span class="zoom-hint">Clique para ampliar</span>
+                            </div>
+                        </div>
+                        <div class="dfc-face dfc-back">
+                            <div class="card-image-wrapper" onclick="openZoom('back')">
+                                <img src="{{ card.back_face_image_large|default:card.back_face_image_normal }}" alt="{{ card.back_face_name }}" class="card-image">
+                                <span class="zoom-hint">Clique para ampliar</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="dfc-flip-btn" onclick="toggleDfcFlip()">
+                        🔄 Virar Carta
+                    </button>
+                    <div class="dfc-face-indicator">
+                        <span class="face-label" id="currentFaceLabel">Face Frontal</span>
+                        <span class="face-name" id="currentFaceName">{{ card.name }}</span>
+                    </div>
+                    <div class="dfc-layout-badge">
+                        <span>{{ card.layout|title }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Regular Card -->
                 <div class="card-image-wrapper" onclick="openZoom()">
                     {% if card.image_large or card.image_normal %}
                     <img src="{{ card.image_large|default:card.image_normal }}" alt="{{ card.name }}" class="card-image">
@@ -924,6 +1056,7 @@
                     {% endif %}
                     <span class="zoom-hint">Clique para ampliar</span>
                 </div>
+                {% endif %}
             </div>
 
             <!-- Card Details -->
@@ -978,6 +1111,36 @@
                 {% if card.loyalty %}
                 <div>
                     <span class="loyalty-box">Lealdade: {{ card.loyalty }}</span>
+                </div>
+                {% endif %}
+
+                <!-- Back Face Details (DFC) -->
+                {% if card.is_double_faced and card.back_face_name %}
+                <div class="oracle-section" style="background: rgba(155, 89, 182, 0.1); border-color: rgba(155, 89, 182, 0.3); margin-top: 20px;">
+                    <h3 style="color: #9b59b6; display: flex; align-items: center; gap: 8px;">
+                        <span>🔄</span> Face Traseira: {{ card.back_face_name }}
+                    </h3>
+                    {% if card.back_face_type_line %}
+                    <div style="color: #888; font-size: 0.9rem; margin-bottom: 10px;">
+                        {{ card.back_face_type_line }}
+                    </div>
+                    {% endif %}
+                    {% if card.back_face_mana_cost %}
+                    <div style="margin-bottom: 10px;" data-mana="{{ card.back_face_mana_cost }}"></div>
+                    {% endif %}
+                    {% if card.back_face_oracle_text %}
+                    <div class="oracle-text" data-oracle="{{ card.back_face_oracle_text }}"></div>
+                    {% endif %}
+                    {% if card.back_face_power and card.back_face_toughness %}
+                    <div style="margin-top: 10px;">
+                        <span class="pt-box" style="background: rgba(155, 89, 182, 0.3);">{{ card.back_face_power }} / {{ card.back_face_toughness }}</span>
+                    </div>
+                    {% endif %}
+                    {% if card.back_face_loyalty %}
+                    <div style="margin-top: 10px;">
+                        <span class="loyalty-box">Lealdade: {{ card.back_face_loyalty }}</span>
+                    </div>
+                    {% endif %}
                 </div>
                 {% endif %}
 
@@ -1094,9 +1257,7 @@
 
     <!-- Zoom Modal -->
     <div class="zoom-modal" id="zoomModal" onclick="closeZoom()">
-        {% if card.image_large or card.image_normal %}
-        <img src="{{ card.image_large|default:card.image_normal }}" alt="{{ card.name }}">
-        {% endif %}
+        <img src="{{ card.image_large|default:card.image_normal }}" alt="{{ card.name }}" id="zoomImage">
     </div>
 
     <!-- Compare Modal -->
@@ -1184,7 +1345,50 @@
             el.innerHTML = renderOracleText(el.dataset.oracle);
         });
 
-        function openZoom() {
+        // Store images and names for DFC
+        const frontImage = '{{ card.image_large|default:card.image_normal|escapejs }}';
+        const backImage = '{{ card.back_face_image_large|default:card.back_face_image_normal|escapejs }}';
+        const frontName = '{{ card.name|escapejs }}'.split(' // ')[0];
+        const backName = '{{ card.back_face_name|default:""|escapejs }}' || '{{ card.name|escapejs }}'.split(' // ')[1] || 'Face Traseira';
+
+        // DFC Flip functionality
+        let isFlipped = false;
+
+        function toggleDfcFlip() {
+            const dfcCard = document.getElementById('dfcCard');
+            const indicator = document.querySelector('.dfc-face-indicator');
+            const faceLabel = document.getElementById('currentFaceLabel');
+            const faceName = document.getElementById('currentFaceName');
+
+            if (!dfcCard) return;
+
+            isFlipped = !isFlipped;
+            dfcCard.classList.toggle('flipped', isFlipped);
+
+            if (indicator) {
+                indicator.classList.toggle('showing-back', isFlipped);
+            }
+
+            if (faceLabel && faceName) {
+                if (isFlipped) {
+                    faceLabel.textContent = 'Face Traseira';
+                    faceName.textContent = backName;
+                } else {
+                    faceLabel.textContent = 'Face Frontal';
+                    faceName.textContent = frontName;
+                }
+            }
+        }
+
+        function openZoom(face = 'front') {
+            const zoomImg = document.getElementById('zoomImage');
+            // Use current flip state if no specific face requested
+            const showBack = face === 'back' || (face === 'front' && isFlipped);
+            if (showBack && backImage) {
+                zoomImg.src = backImage;
+            } else {
+                zoomImg.src = frontImage;
+            }
             document.getElementById('zoomModal').classList.add('active');
             document.body.style.overflow = 'hidden';
         }

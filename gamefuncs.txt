@@ -1,0 +1,231 @@
+Análise Completa do Modo de Jogo
+Aqui está a análise completa do seu sistema de jogo MTG Commander:
+
+1. Modelos de Dados (game/models.py)
+Modelo	Descrição
+Game	Partida principal - status, turno, fase atual, jogador ativo, vencedor
+GamePlayer	Jogador na partida - vida (40), veneno, posição, terrenos jogados
+CommanderDamage	Rastreia dano de cada comandante (21 = derrota)
+GameObject	Qualquer carta em qualquer zona - inclui suporte a tokens
+GameAction	Log de todas as ações (comprar, jogar, atacar, etc.)
+Status do Jogo:
+
+
+setup → mulligans → active → paused/finished
+Fases do Turno:
+
+
+untap → upkeep → draw → main1 → combat_begin → combat_attackers → 
+combat_blockers → combat_damage → combat_end → main2 → end → cleanup
+Zonas:
+
+
+library, hand, battlefield, graveyard, exile, command, stack
+2. WebSocket Consumers (realtime/consumers.py)
+LobbyConsumer (linhas 7-381)
+Gerencia o lobby pré-jogo:
+
+Mensagem	Função
+chat	Broadcast de mensagens
+select_deck	Jogador escolhe deck
+toggle_ready	Alterna status "pronto"
+start_game	Inicia criação do jogo
+get_state	Solicita estado atual
+Criação do Jogo (do_start_game):
+
+Cria instância Game
+Cria GamePlayer para cada jogador
+Coloca comandantes na zona de comando
+Embaralha decks e cria GameObject para biblioteca
+Compra 7 cartas iniciais
+Seleciona jogador inicial aleatoriamente
+GameConsumer (linhas 383-1631)
+Consumer principal do jogo:
+
+Ações Suportadas:
+
+Ação	Descrição
+move_card	Move carta entre zonas
+tap_card	Vira/desvira permanente
+change_life	Altera vida do jogador
+add_counter / remove_counter	Gerencia marcadores
+next_phase	Avança para próxima fase
+next_turn	Passa turno para próximo jogador
+draw_card	Compra da biblioteca
+shuffle_library	Embaralha biblioteca
+concede	Jogador desiste
+scry	Olha X cartas do topo
+put_top / put_bottom	Coloca carta em cima/baixo da biblioteca
+reveal_card	Revela carta para todos
+create_token	Cria token
+untap_all	Desvira todos permanentes
+create_arrows	Cria setas visuais (ataques/alvos)
+roll_dice	Rola dados
+Broadcasts em Tempo Real:
+
+game_state_update - Estado completo
+card_revealed - Cartas reveladas
+dice_rolled - Resultado de dados
+arrows_broadcast - Sincroniza setas
+stacks_broadcast - Sincroniza pilhas de cartas
+emote_message - Emotes dos jogadores
+3. JavaScript do Cliente (game/templates/game/game.html:3178+)
+Conexão WebSocket (linhas 3255-3287)
+
+function connectWebSocket() {
+    const wsUrl = `${protocol}//${window.location.host}/ws/game/${gameId}/?${params}`;
+    socket = new WebSocket(wsUrl);
+    
+    socket.onopen = () => {
+        socket.send(JSON.stringify({ action: 'get_state' }));
+    };
+    
+    socket.onmessage = (e) => handleMessage(JSON.parse(e.data));
+}
+Variáveis de Estado
+
+let gameState = null;        // Estado completo do jogo
+let selectedCard = null;     // Carta selecionada
+let selectedCards = new Set(); // Multi-seleção
+let draggedCard = null;      // Carta sendo arrastada
+let arrows = [];             // Setas visuais
+let seatStacks = {};         // Pilhas de cartas
+let handCardOrder = [];      // Ordem da mão (cliente)
+Tratamento de Mensagens (linhas 3289-3354)
+
+function handleMessage(data) {
+    switch (data.type) {
+        case 'game_state': renderGame(); break;
+        case 'chat': addChatMessage(); break;
+        case 'private_action': handlePrivateAction(); break;
+        case 'reveal': showRevealAnimation(); break;
+        case 'dice_roll': /* dados */ break;
+        case 'arrows_update': handleArrowsUpdate(); break;
+        case 'stacks_update': applyRemoteStacks(); break;
+        case 'emote': showEmotePopup(); break;
+    }
+}
+Renderização (linhas 3564-3600)
+
+function renderGame() {
+    updatePhaseTracker();    // Indicador de fase
+    renderPlayersGrid();     // Grid de jogadores
+    renderMyZones();         // Minhas zonas laterais
+    renderMyHand();          // Minha mão
+    renderActionLog();       // Log de ações
+    renderArrows();          // Setas visuais
+}
+Drag & Drop (linhas 4736-4946)
+
+function handleDragStart(e, cardId, zone) {
+    draggedCard = cardId;
+    // Suporte multi-drag com seleção
+    if (selectedCards.has(cardId) && selectedCards.size > 1) {
+        draggedCards = new Set(selectedCards);
+    }
+}
+Alvos de Drop:
+
+Linhas do campo (criaturas, encantamentos, terrenos)
+Áreas de jogadores (dar controle)
+Zonas (cemitério, exílio, mão, comando)
+Sistema de Setas (linhas 4410-4713)
+
+function startArrowFromCard(cardId) {
+    arrowMode = true;
+    arrowSourceCards.add(cardId);
+    document.body.style.cursor = 'crosshair';
+}
+
+function finalizeArrows(e) {
+    arrows.push(arrow);
+    sendAction('create_arrows', { arrows: newArrows });
+}
+Empilhamento de Cartas (linhas 5188-5395)
+
+function stackCards(bottomCardId, topCardId) {
+    // Cria ou adiciona a pilha existente
+    syncStacksToServer(); // Sincroniza com outros jogadores
+}
+Atalhos de Teclado
+Tecla	Ação
+D	Comprar carta
+N	Próxima fase
+P	Passar turno
+S	Embaralhar
+U	Desvirar tudo
+G	Ver cemitério
+E	Ver exílio
+L	Menu da biblioteca
+R	Rolar dados
+X	Limpar setas
+4. Fluxo Completo do Jogo
+
+┌─────────────────────────────────────────────────────────────────┐
+│                         LOBBY                                    │
+│  1. Jogadores entram via WebSocket                              │
+│  2. Cada um seleciona deck Commander                            │
+│  3. Marcam "Pronto"                                             │
+│  4. Qualquer um pode iniciar quando todos prontos               │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                    CRIAÇÃO DO JOGO                              │
+│  1. Cria Game (status='setup')                                  │
+│  2. Cria GamePlayer para cada (vida=40)                         │
+│  3. Comandantes → zona de comando                               │
+│  4. Embaralha decks → biblioteca                                │
+│  5. Compra 7 cartas                                             │
+│  6. Jogador inicial aleatório                                   │
+│  7. status='active'                                             │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      TURNO DO JOGO                              │
+│                                                                  │
+│  UNTAP ──→ UPKEEP ──→ DRAW ──→ MAIN1 ──┐                       │
+│                                          ↓                       │
+│  ┌────────────────────────────────────────────────────┐         │
+│  │              COMBATE                                │         │
+│  │  begin → attackers → blockers → damage → end       │         │
+│  └────────────────────────────────────────────────────┘         │
+│                                          ↓                       │
+│                                       MAIN2 ──→ END ──→ CLEANUP │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                    FIM DO JOGO                                  │
+│  - Último jogador vivo = vencedor                               │
+│  - Oponentes desistem                                           │
+│  - 21 dano de comandante                                        │
+│  - 10 marcadores de veneno                                      │
+│  - Deck vazio (não pode comprar)                                │
+└─────────────────────────────────────────────────────────────────┘
+5. Características Importantes
+Estilo Tabletop Simulator:
+
+Mecânicas são manuais - jogadores movem cartas, alteram vida
+Sem enforcement de regras - sistema baseado em honra
+Visual rico com drag-drop, multi-seleção, setas
+Formato Commander:
+
+40 pontos de vida iniciais
+Zona de comando para comandante
+Rastreamento de "commander tax" (commander_cast_count)
+Tracking de dano de comandante (21 = derrota)
+UI Completa:
+
+Grid dinâmico (2-8 jogadores)
+Campo dividido em linhas (criaturas/encantamentos/terrenos)
+Modais: visualizar zona, scry, criar token, mulligan, dados
+5 temas de cores (dark, light, blue, green, purple)
+Chat em tempo real
+Emotes
+6. Arquivos Principais
+Arquivo	Linhas	Descrição
+game/models.py	~222	Modelos de dados
+realtime/consumers.py	~1631	WebSocket consumers
+realtime/routing.py	~10	Rotas WebSocket
+game/templates/game/game.html	~6000+	Template + JS inline
+lobby/templates/lobby/lobby_detail.html	~800	Template do lobby
+A arquitetura está bem estruturada com separação clara entre modelos, consumers e templates. O sistema funciona como um simulador de mesa virtual, sem automação de regras.

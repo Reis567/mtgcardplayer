@@ -734,6 +734,53 @@
         .card.dragging { opacity: 0.4; }
         .card.arrow-source { box-shadow: 0 0 10px #e94560; }
         .card.has-arrow { box-shadow: 0 0 8px 2px #ffc107; }
+        /* DFC - Double-Faced Card styles */
+        .card.transformed {
+            border-color: #9b59b6;
+            box-shadow: 0 0 8px rgba(155, 89, 182, 0.6);
+        }
+        .card.transformed::after {
+            content: '🔄';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 0.7rem;
+            background: rgba(0,0,0,0.7);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card.is-dfc::before {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(135deg, #fff 50%, #333 50%);
+            border-radius: 50%;
+            border: 1px solid #666;
+            z-index: 1;
+        }
+        .card.flipping {
+            animation: flipCard 0.5s ease-in-out;
+        }
+        @keyframes flipCard {
+            0% { transform: perspective(400px) rotateY(0deg); }
+            50% { transform: perspective(400px) rotateY(90deg); }
+            100% { transform: perspective(400px) rotateY(0deg); }
+        }
+        .card.tapped.flipping {
+            animation: flipCardTapped 0.5s ease-in-out;
+        }
+        @keyframes flipCardTapped {
+            0% { transform: rotate(90deg) perspective(400px) rotateY(0deg); }
+            50% { transform: rotate(90deg) perspective(400px) rotateY(90deg); }
+            100% { transform: rotate(90deg) perspective(400px) rotateY(0deg); }
+        }
         .card.token {
             background: linear-gradient(135deg, #2a2a4e, #1a1a3e);
             border: 2px solid #4a4a6e;
@@ -2716,6 +2763,7 @@
                     <div><kbd>H</kbd> - Guia</div>
                     <div><kbd>K</kbd> - Keywords</div>
                     <div><kbd>X</kbd> - Limpar setas</div>
+                    <div><kbd>F</kbd> - Flip/Transform</div>
                     <div><kbd>ESC</kbd> - Fechar modais</div>
                 </div>
             </div>
@@ -3067,6 +3115,7 @@
                             <li><strong>Mao para Campo:</strong> Arraste a carta da mao para uma linha do seu campo, ou clique direito e selecione "Jogar no Campo"</li>
                             <li><strong>Lancar Comandante:</strong> Clique duplo no comandante na zona de comando, ou clique direito e "Lancar"</li>
                             <li><strong>Virar/Desvirar:</strong> Clique duplo na carta no campo, ou selecione varias com Shift e clique duplo</li>
+                            <li><strong>Transformar (DFC):</strong> Para cartas de duas faces (Werewolves, MDFCs), clique direito > "Transformar" ou pressione <kbd>F</kbd> com a carta selecionada</li>
                         </ul>
                     </div>
                     <div class="help-section">
@@ -3818,7 +3867,7 @@
             }
 
             const cardEl = document.createElement('div');
-            cardEl.className = `card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''} ${isToken ? 'token' : ''} ${tokenColorClass}`;
+            cardEl.className = `card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''} ${isToken ? 'token' : ''} ${tokenColorClass} ${card.is_double_faced ? 'is-dfc' : ''} ${card.is_transformed ? 'transformed' : ''}`;
             cardEl.dataset.id = card.id;
             if (isMe) {
                 cardEl.draggable = true;
@@ -3871,6 +3920,24 @@
             // Update arrow states
             cardEl.classList.toggle('arrow-source', arrowSourceCards.has(card.id));
             cardEl.classList.toggle('has-arrow', arrows.some(a => a.sourceCardId === card.id));
+
+            // Update DFC/transformed state
+            cardEl.classList.toggle('is-dfc', card.is_double_faced || false);
+            cardEl.classList.toggle('transformed', card.is_transformed || false);
+
+            // Update image and hover preview for DFCs (server swaps image_small/image_normal based on is_transformed)
+            const imgEl = cardEl.querySelector('img');
+            if (imgEl) {
+                const expectedImage = card.image_small || card.image_normal;
+                if (expectedImage && imgEl.src !== expectedImage) {
+                    imgEl.src = expectedImage;
+                }
+                // Update hover preview to match current face
+                const hoverImage = card.image_normal || card.image_small;
+                if (hoverImage) {
+                    cardEl.setAttribute('onmouseenter', `showCardHoverPreview(event, '${hoverImage.replace(/'/g, "\\'")}')`);
+                }
+            }
 
             // Update counters
             const existingCounters = cardEl.querySelector('.counters');
@@ -4117,7 +4184,7 @@
             const hoverPreview = !isToken ? `onmouseenter="showCardHoverPreview(event, '${card.image_normal || card.image_small}')" onmousemove="updateCardHoverPosition(event)" onmouseleave="hideCardHoverPreview()"` : '';
 
             return `
-                <div class="card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''} ${isToken ? 'token' : ''} ${tokenColorClass}"
+                <div class="card ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''} ${isToken ? 'token' : ''} ${tokenColorClass} ${card.is_double_faced ? 'is-dfc' : ''} ${card.is_transformed ? 'transformed' : ''}"
                      data-id="${card.id}" ${draggable}
                      ${dragStart} ${dragEnd} ${dropHandlers}
                      onclick="handleBattlefieldCardClick(event, '${card.id}', ${isMe})"
@@ -4176,7 +4243,7 @@
                 }
 
                 return `
-                    <div class="card ${stackedClass} ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''} ${isToken ? 'token' : ''} ${tokenColorClass}"
+                    <div class="card ${stackedClass} ${card.is_tapped ? 'tapped' : ''} ${card.is_commander ? 'commander' : ''} ${isSelected ? 'selected' : ''} ${isArrowSource ? 'arrow-source' : ''} ${hasArrow ? 'has-arrow' : ''} ${isToken ? 'token' : ''} ${tokenColorClass} ${card.is_double_faced ? 'is-dfc' : ''} ${card.is_transformed ? 'transformed' : ''}"
                          data-id="${card.id}" ${draggable}
                          ${dragStart} ${dragEnd} ${dropHandlers}
                          onclick="handleStackCardClick(event, '${card.id}', ${isMe}, ${stackId})"
@@ -5518,7 +5585,7 @@
             }
 
             const cardEl = document.createElement('div');
-            cardEl.className = `card ${card.is_commander ? 'commander' : ''} ${isToken ? 'token' : ''} ${tokenColorClass}`;
+            cardEl.className = `card ${card.is_commander ? 'commander' : ''} ${isToken ? 'token' : ''} ${tokenColorClass} ${card.is_double_faced ? 'is-dfc' : ''} ${card.is_transformed ? 'transformed' : ''}`;
             cardEl.dataset.id = card.id;
             if (isMe) {
                 cardEl.draggable = true;
@@ -5634,6 +5701,25 @@
                 pendingTaps.add(cardId);
                 sendAction('tap_card', { object_id: cardId });
             }
+        }
+
+        // ===== FLIP/TRANSFORM CARD (DFC) =====
+        function flipCard(cardId) {
+            const card = findCardById(cardId);
+            if (!card || !card.is_double_faced) {
+                console.warn('Card is not double-faced:', cardId);
+                return;
+            }
+
+            // Visual feedback - add flip animation class
+            const cardEl = document.querySelector(`.card[data-id="${cardId}"]`);
+            if (cardEl) {
+                cardEl.classList.add('flipping');
+                setTimeout(() => cardEl.classList.remove('flipping'), 600);
+            }
+
+            // Send action to server
+            sendAction('flip_card', { object_id: cardId });
         }
 
         // ===== MULTI-SELECT =====
@@ -6063,6 +6149,13 @@
                 } else {
                     items.push({ label: tapLabel, action: `toggleTap('${card.id}'); hideContextMenu();` });
                 }
+
+                // Flip/Transform option for double-faced cards
+                if (card.is_double_faced && !isMultiSelect) {
+                    const flipLabel = card.is_transformed ? '↩️ Destransformar' : '🔄 Transformar';
+                    items.push({ label: flipLabel, action: `flipCard('${card.id}'); hideContextMenu();` });
+                }
+
                 items.push({ divider: true });
 
                 // Arrow actions - can create from selected cards
@@ -7008,6 +7101,13 @@
                 } else if (zone === 'battlefield') {
                     actions += `
                         <button class="action-btn" onclick="toggleTap('${objId}')">Virar/Desvirar</button>
+                    `;
+                    // Add flip button for double-faced cards
+                    if (cardData && cardData.is_double_faced) {
+                        const flipLabel = cardData.is_transformed ? '↩️ Destransformar' : '🔄 Transformar';
+                        actions += `<button class="action-btn" onclick="flipCard('${objId}'); closeModal();" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">${flipLabel}</button>`;
+                    }
+                    actions += `
                         <button class="action-btn" onclick="moveCard('${objId}', 'graveyard')">Cemiterio</button>
                         <button class="action-btn" onclick="moveCard('${objId}', 'exile')">Exilar</button>
                         <button class="action-btn" onclick="moveCard('${objId}', 'hand')">Mao</button>
@@ -7181,8 +7281,20 @@
                 case 'r': openDiceModal(); break;
                 case 'u': untapAll(); break;
                 case 'q': toggleEmoteBar(); break;
+                case 'f': flipSelectedCards(); break;  // Flip DFCs
             }
         });
+
+        // Flip all selected double-faced cards
+        function flipSelectedCards() {
+            if (selectedCards.size === 0) return;
+            selectedCards.forEach(cardId => {
+                const card = findCardById(cardId);
+                if (card && card.is_double_faced) {
+                    flipCard(cardId);
+                }
+            });
+        }
 
         // Redraw arrows on resize
         window.addEventListener('resize', renderArrows);

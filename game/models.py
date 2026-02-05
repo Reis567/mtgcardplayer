@@ -149,6 +149,7 @@ class GameObject(models.Model):
 
     is_tapped = models.BooleanField(default=False)
     is_face_down = models.BooleanField(default=False)
+    is_transformed = models.BooleanField(default=False)  # Para DFCs - mostra face traseira
 
     # Reveal mechanics (for scry, reveal effects)
     is_revealed = models.BooleanField(default=False)

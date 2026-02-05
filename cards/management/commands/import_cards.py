@@ -226,17 +226,42 @@ class Command(BaseCommand):
         except (ValueError, KeyError):
             return 'skip'
 
+        layout = card_data.get('layout', 'normal')
+        card_faces = card_data.get('card_faces', [])
+
+        # Dados da face frontal
         image_uris = card_data.get('image_uris', {})
-        if not image_uris and 'card_faces' in card_data:
-            image_uris = card_data['card_faces'][0].get('image_uris', {})
+        front_face = {}
+        back_face = {}
+
+        # Para cartas de duas faces, extrair dados de cada face
+        if card_faces and len(card_faces) >= 1:
+            front_face = card_faces[0]
+            # Se nao tem image_uris no nivel raiz, pegar da primeira face
+            if not image_uris:
+                image_uris = front_face.get('image_uris', {})
+
+        if card_faces and len(card_faces) >= 2:
+            back_face = card_faces[1]
+
+        # Dados da face traseira (para DFCs)
+        back_face_image_uris = back_face.get('image_uris', {})
+
+        # Para cartas com faces, usar dados da face frontal se nao houver no nivel raiz
+        mana_cost = card_data.get('mana_cost', '') or front_face.get('mana_cost', '')
+        oracle_text = card_data.get('oracle_text', '') or front_face.get('oracle_text', '')
+        type_line = card_data.get('type_line', '') or front_face.get('type_line', '')
+        power = card_data.get('power') or front_face.get('power')
+        toughness = card_data.get('toughness') or front_face.get('toughness')
+        loyalty = card_data.get('loyalty') or front_face.get('loyalty')
 
         return Card(
             scryfall_id=card_data['id'],
             name=card_data.get('name', ''),
-            mana_cost=card_data.get('mana_cost', ''),
+            mana_cost=mana_cost,
             cmc=card_data.get('cmc', 0),
-            type_line=card_data.get('type_line', ''),
-            oracle_text=card_data.get('oracle_text', ''),
+            type_line=type_line,
+            oracle_text=oracle_text,
             colors=','.join(card_data.get('colors', [])),
             color_identity=','.join(card_data.get('color_identity', [])),
             set_code=card_data.get('set', ''),
@@ -245,7 +270,19 @@ class Command(BaseCommand):
             image_small=image_uris.get('small', ''),
             image_normal=image_uris.get('normal', ''),
             image_large=image_uris.get('large', ''),
-            power=card_data.get('power'),
-            toughness=card_data.get('toughness'),
-            loyalty=card_data.get('loyalty'),
+            power=power,
+            toughness=toughness,
+            loyalty=loyalty,
+            # DFC support
+            layout=layout,
+            back_face_name=back_face.get('name'),
+            back_face_mana_cost=back_face.get('mana_cost'),
+            back_face_type_line=back_face.get('type_line'),
+            back_face_oracle_text=back_face.get('oracle_text'),
+            back_face_power=back_face.get('power'),
+            back_face_toughness=back_face.get('toughness'),
+            back_face_loyalty=back_face.get('loyalty'),
+            back_face_image_small=back_face_image_uris.get('small'),
+            back_face_image_normal=back_face_image_uris.get('normal'),
+            back_face_image_large=back_face_image_uris.get('large'),
         )

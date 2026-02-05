@@ -479,17 +479,41 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             'token_colors': obj.token_colors
                         }
                     else:
+                        card = obj.card
+                        is_dfc = card.is_double_faced() if card else False
+
+                        # Se transformada e tem dados da face traseira, usar esses dados
+                        if obj.is_transformed and is_dfc and card.back_face_name:
+                            display_name = card.back_face_name
+                            display_type = card.back_face_type_line or ''
+                            display_mana = card.back_face_mana_cost or ''
+                            display_oracle = card.back_face_oracle_text or ''
+                            display_power = card.back_face_power
+                            display_toughness = card.back_face_toughness
+                            display_image_small = card.back_face_image_small or ''
+                            display_image_normal = card.back_face_image_normal or ''
+                        else:
+                            display_name = card.name if card else 'Unknown'
+                            display_type = (card.type_line or '') if card else ''
+                            display_mana = (card.mana_cost or '') if card else ''
+                            display_oracle = (card.oracle_text or '') if card else ''
+                            display_power = card.power if card else None
+                            display_toughness = card.toughness if card else None
+                            display_image_small = (card.image_small or '') if card else ''
+                            display_image_normal = (card.image_normal or '') if card else ''
+
                         obj_data = {
                             'id': str(obj.id),
-                            'card_id': str(obj.card.id) if obj.card else None,
-                            'name': obj.card.name if obj.card else 'Unknown',
-                            'type_line': (obj.card.type_line or '') if obj.card else '',
-                            'mana_cost': (obj.card.mana_cost or '') if obj.card else '',
-                            'oracle_text': (obj.card.oracle_text or '') if obj.card else '',
-                            'power': obj.card.power if obj.card else None,
-                            'toughness': obj.card.toughness if obj.card else None,
-                            'image_small': (obj.card.image_small or '') if obj.card else '',
-                            'image_normal': (obj.card.image_normal or '') if obj.card else '',
+                            'card_id': str(card.id) if card else None,
+                            'name': display_name,
+                            'full_name': card.name if card else 'Unknown',  # Nome completo (Frente // Verso)
+                            'type_line': display_type,
+                            'mana_cost': display_mana,
+                            'oracle_text': display_oracle,
+                            'power': display_power,
+                            'toughness': display_toughness,
+                            'image_small': display_image_small,
+                            'image_normal': display_image_normal,
                             'is_tapped': obj.is_tapped,
                             'counters': obj.counters or {},
                             'is_commander': obj.is_commander,
@@ -498,7 +522,32 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             'battlefield_row': obj.battlefield_row,
                             'owner_seat': obj.owner.seat_position,
                             'controller_seat': obj.controller.seat_position,
-                            'is_token': False
+                            'is_token': False,
+                            # DFC support
+                            'is_double_faced': is_dfc,
+                            'is_transformed': obj.is_transformed,
+                            'layout': card.layout if card else 'normal',
+                            # Dados da outra face (para UI de flip preview)
+                            'back_face': {
+                                'name': card.back_face_name,
+                                'type_line': card.back_face_type_line,
+                                'mana_cost': card.back_face_mana_cost,
+                                'oracle_text': card.back_face_oracle_text,
+                                'power': card.back_face_power,
+                                'toughness': card.back_face_toughness,
+                                'image_small': card.back_face_image_small,
+                                'image_normal': card.back_face_image_normal,
+                            } if is_dfc else None,
+                            'front_face': {
+                                'name': card.name.split(' // ')[0] if card and ' // ' in card.name else (card.name if card else ''),
+                                'type_line': card.type_line,
+                                'mana_cost': card.mana_cost,
+                                'oracle_text': card.oracle_text,
+                                'power': card.power,
+                                'toughness': card.toughness,
+                                'image_small': card.image_small,
+                                'image_normal': card.image_normal,
+                            } if is_dfc else None
                         }
                     zones_data[seat][obj.zone].append(obj_data)
 
@@ -628,6 +677,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 obj.zone = new_zone
                 obj.is_tapped = False
 
+                # Reset transform state when leaving battlefield (cards always enter other zones face-up)
+                if old_zone == 'battlefield' and new_zone != 'battlefield':
+                    obj.is_transformed = False
+
                 # Handle moving to another player's battlefield
                 if target_seat is not None:
                     new_controller = GamePlayer.objects.filter(game=game, seat_position=target_seat).first()
@@ -700,6 +753,39 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     phase=game.current_phase
                 )
                 return {'success': True, 'is_tapped': obj.is_tapped}
+
+            elif action == 'flip_card':
+                # Transformar/Flip carta de duas faces (DFC)
+                obj_id = data.get('object_id')
+                obj = GameObject.objects.filter(id=obj_id, game=game).first()
+                if not obj:
+                    return {'success': False, 'error': 'Object not found'}
+
+                # Verificar se a carta tem duas faces
+                if obj.card and obj.card.is_double_faced():
+                    obj.is_transformed = not obj.is_transformed
+                    obj.save()
+
+                    # Determinar qual face esta mostrando agora
+                    if obj.is_transformed:
+                        current_face = obj.card.back_face_name or 'Face traseira'
+                        action_text = 'transformou'
+                    else:
+                        current_face = obj.card.name.split(' // ')[0] if ' // ' in obj.card.name else obj.card.name
+                        action_text = 'destransformou'
+
+                    GameAction.objects.create(
+                        game=game,
+                        action_type='manual',
+                        player=game_player,
+                        data={'card': obj.card.name, 'is_transformed': obj.is_transformed},
+                        display_text=f"{game_player.player.nickname} {action_text} {obj.card.name} -> {current_face}",
+                        turn_number=game.turn_number,
+                        phase=game.current_phase
+                    )
+                    return {'success': True, 'is_transformed': obj.is_transformed}
+                else:
+                    return {'success': False, 'error': 'Card is not double-faced'}
 
             elif action == 'change_life':
                 target_seat = data.get('target_seat')
@@ -1479,7 +1565,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         'scry', 'look_top', 'put_top', 'put_bottom', 'reveal_card',
                         'shuffle_into', 'reorder_scry', 'set_battlefield_row',
                         'go_to_phase', 'view_library', 'roll_dice', 'set_starting_player',
-                        'create_token', 'untap_all']:
+                        'create_token', 'untap_all', 'flip_card']:
             result = await self.execute_game_action(action, content.get('data', {}))
 
             # Send action result to the sender
