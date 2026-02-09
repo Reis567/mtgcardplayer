@@ -2089,6 +2089,7 @@ class ArchetypeFinderView(View):
         # Filtrar cartas com score baixo se temas foram selecionados (remover falsos positivos)
         if filters['themes']:
             # Exigir score minimo de 3 para aparecer nos resultados
+            # Isso remove cartas que passaram o filtro SQL mas nao tem match real nos patterns
             scored_cards = [sc for sc in scored_cards if sc['score'] >= 3]
 
         # Limitar resultado final
