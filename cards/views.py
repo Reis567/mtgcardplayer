@@ -1861,6 +1861,117 @@ class ArchetypeFinderView(View):
 
         return ', '.join(color_names.get(c, c) for c in colors)
 
+    # Padroes de alta prioridade que indicam forte relevancia para o tema
+    HIGH_PRIORITY_PATTERNS = {
+        # Contadores
+        'energy': ['energy counter', '{e}', 'energy you have', 'pay {e}'],
+        'plus_counters': ['+1/+1 counter', 'proliferate', 'modular', 'evolve', 'adapt'],
+        'minus_counters': ['-1/-1 counter', 'wither', 'persist'],
+        'poison': ['poison counter', 'toxic', 'infect', 'corrupted'],
+        'charge': ['charge counter', 'storage counter'],
+        'oil': ['oil counter', 'compleated'],
+        'experience': ['experience counter'],
+
+        # Tipos de carta
+        'artifacts': ['artifact creature', 'artifacts you control', 'artifact enters', 'noncreature artifact'],
+        'equipment': ['equipped creature', 'equip {', 'attach', 'equipment you control'],
+        'enchantments': ['enchantments you control', 'enchantment creature', 'constellation', 'aura'],
+        'vehicles': ['vehicle', 'crew', 'crewed'],
+        'planeswalkers': ['planeswalker', 'loyalty counter', 'loyalty ability'],
+
+        # Zones e recursos
+        'tokens': ['create a token', 'token creature', 'populate', 'tokens you control'],
+        'graveyard': ['from your graveyard', 'graveyard to the battlefield', 'mill', 'flashback', 'unearth'],
+        'sacrifice': ['sacrifice a creature', 'whenever you sacrifice', 'when this creature dies', 'death trigger'],
+        'lifegain': ['whenever you gain life', 'lifelink', 'you gain life equal', 'pay life'],
+        'discard': ['discard a card', 'whenever you discard', 'madness', 'hellbent'],
+        'draw': ['draw a card', 'whenever you draw', 'draw two', 'cards in hand'],
+        'landfall': ['landfall', 'land enters', 'whenever a land'],
+        'ramp': ['search your library for a land', 'add {', 'mana of any color'],
+
+        # Estrategias
+        'spellslinger': ['instant or sorcery', 'magecraft', 'storm', 'prowess', 'cast from exile'],
+        'blink': ['exile, then return', 'flicker', 'enters the battlefield', 'etb'],
+        'reanimator': ['return target creature', 'graveyard to the battlefield', 'reanimate'],
+        'voltron': ['equipped creature', 'enchanted creature', 'aura', 'commander damage'],
+        'aristocrats': ['whenever a creature dies', 'sacrifice a creature', 'blood artist'],
+        'control': ['counter target', 'destroy target', 'exile target'],
+        'aggro': ['haste', 'first strike', 'double strike', 'trample'],
+
+        # Tribais populares (alta prioridade para nomes no type_line)
+        'elves': ['elf', 'elves you control', 'elf creature'],
+        'goblins': ['goblin', 'goblins you control', 'goblin creature'],
+        'zombies': ['zombie', 'zombies you control', 'zombie creature'],
+        'vampires': ['vampire', 'vampires you control', 'blood token'],
+        'dragons': ['dragon', 'dragons you control', 'dragon creature'],
+        'angels': ['angel', 'angels you control', 'angel creature'],
+        'demons': ['demon', 'demons you control', 'demon creature'],
+        'merfolk': ['merfolk', 'merfolk you control', 'islandwalk'],
+        'pirates': ['pirate', 'pirates you control', 'treasure token'],
+        'dinosaurs': ['dinosaur', 'dinosaurs you control', 'enrage'],
+        'slivers': ['sliver', 'slivers you control', 'all slivers'],
+        'humans': ['human', 'humans you control', 'human creature'],
+        'wizards': ['wizard', 'wizards you control', 'wizard creature'],
+        'soldiers': ['soldier', 'soldiers you control', 'soldier token'],
+        'spirits': ['spirit', 'spirits you control', 'soulshift'],
+    }
+
+    # Palavras que indicam que NAO e relevante (falsos positivos)
+    NEGATIVE_PATTERNS = {
+        'energy': ['synergy', 'synergies'],  # "synergy" contem "nergy"
+        'counter': ['counterattack', 'counterspell', 'counter target spell'],  # para themes de +1/+1
+        'elf': ['shelf', 'self', 'itself', 'yourself', 'himself', 'herself'],  # evitar matches falsos
+        'rat': ['rate', 'rated', 'rating', 'pirate'],  # pirate contem "rat"
+        'cat': ['locate', 'dedicated', 'replicate', 'syndicate'],  # evitar matches falsos
+        'ant': ['giant', 'instant', 'enchant', 'want', 'plant'],  # para insect tribal
+    }
+
+    # Sinergias entre temas (bonus quando multiplos temas combinam bem)
+    THEME_SYNERGIES = {
+        # Contadores
+        ('plus_counters', 'poison'): 5,  # proliferate combina
+        ('plus_counters', 'charge'): 4,
+        ('plus_counters', 'oil'): 4,
+        ('plus_counters', 'experience'): 4,
+
+        # Artefatos
+        ('artifacts', 'equipment'): 5,
+        ('artifacts', 'vehicles'): 5,
+        ('artifacts', 'tokens'): 4,  # thopters, servos
+        ('equipment', 'voltron'): 6,
+
+        # Criaturas e morte
+        ('tokens', 'sacrifice'): 6,
+        ('tokens', 'aristocrats'): 6,
+        ('graveyard', 'sacrifice'): 5,
+        ('graveyard', 'zombies'): 5,
+        ('graveyard', 'reanimator'): 6,
+        ('sacrifice', 'aristocrats'): 6,
+
+        # Vida
+        ('lifegain', 'vampires'): 5,
+        ('lifegain', 'angels'): 4,
+
+        # Spells
+        ('spellslinger', 'wizards'): 5,
+        ('spellslinger', 'draw'): 4,
+        ('spellslinger', 'control'): 4,
+
+        # Tribais especificos
+        ('energy', 'artifacts'): 4,
+        ('plus_counters', 'elves'): 4,
+        ('tokens', 'elves'): 4,
+        ('tokens', 'goblins'): 4,
+        ('pirates', 'tokens'): 4,  # treasures
+        ('dinosaurs', 'plus_counters'): 4,  # enrage + counters
+        ('zombies', 'tokens'): 4,
+        ('spirits', 'blink'): 5,
+
+        # Lands
+        ('landfall', 'ramp'): 5,
+        ('landfall', 'tokens'): 4,
+    }
+
     def calculate_theme_score(self, card, theme_ids):
         """Calcula pontuacao de relevancia de uma carta para os temas selecionados"""
         import re
@@ -1871,16 +1982,43 @@ class ArchetypeFinderView(View):
         oracle = (card.oracle_text or '').lower()
         type_line = (card.type_line or '').lower()
         name = (card.name or '').lower()
+        keywords = (card.keywords or '').lower() if hasattr(card, 'keywords') and card.keywords else ''
+
+        # Texto combinado para busca
+        full_text = f"{oracle} {type_line} {name} {keywords}"
 
         total_score = 0
-        themes_matched = 0
+        themes_matched = []
+        matched_patterns_detail = {}
 
         for theme_id in theme_ids:
             theme_score = 0
             patterns_matched = 0
+            high_priority_matched = False
 
             for theme_name, tid, patterns, desc, cat in self.DECK_THEMES:
                 if tid == theme_id:
+                    # Verificar padroes negativos primeiro
+                    has_negative = False
+                    for neg_key, neg_patterns in self.NEGATIVE_PATTERNS.items():
+                        if neg_key in theme_id:
+                            for neg_pat in neg_patterns:
+                                if neg_pat in oracle:
+                                    has_negative = True
+                                    break
+
+                    if has_negative:
+                        continue
+
+                    # Verificar padroes de alta prioridade
+                    if theme_id in self.HIGH_PRIORITY_PATTERNS:
+                        for hp in self.HIGH_PRIORITY_PATTERNS[theme_id]:
+                            hp_lower = hp.lower()
+                            if hp_lower in oracle or hp_lower in type_line:
+                                theme_score += 8  # Alta prioridade vale muito mais
+                                high_priority_matched = True
+                                patterns_matched += 1
+
                     for pattern in patterns:
                         # Limpar pattern - manter texto e simbolos de mana
                         clean_pattern = pattern.replace('.*', ' ').replace('\\+', '+').replace('\\', '')
@@ -1890,34 +2028,88 @@ class ArchetypeFinderView(View):
                         if len(clean_pattern) < 4 and '{' not in clean_pattern:
                             continue
 
-                        # Buscar no oracle_text
-                        if clean_pattern in oracle:
-                            theme_score += 3
-                            patterns_matched += 1
+                        # Usar word boundary para evitar matches parciais em palavras longas
+                        # Mas permitir matches em frases compostas
+                        pattern_words = clean_pattern.split()
 
-                        # Buscar no type_line (importante para tribais)
-                        if clean_pattern in type_line:
-                            theme_score += 4  # Type line match vale mais
-                            patterns_matched += 1
+                        # Para patterns de uma palavra, usar match mais estrito
+                        if len(pattern_words) == 1 and len(clean_pattern) < 6:
+                            # Palavra curta - verificar se e palavra completa
+                            word_pattern = r'\b' + re.escape(clean_pattern) + r'\b'
+                            if re.search(word_pattern, oracle):
+                                theme_score += 3
+                                patterns_matched += 1
+                            if re.search(word_pattern, type_line):
+                                theme_score += 5  # Type line match vale mais
+                                patterns_matched += 1
+                        else:
+                            # Frase ou palavra longa - match normal
+                            if clean_pattern in oracle:
+                                theme_score += 3
+                                patterns_matched += 1
+                            if clean_pattern in type_line:
+                                theme_score += 5  # Type line match vale mais (tribais)
+                                patterns_matched += 1
 
-                        # Buscar no nome
+                        # Bonus para match no nome (carta dedicada ao tema)
                         if clean_pattern in name:
-                            theme_score += 2
+                            theme_score += 4
+                            patterns_matched += 1
+
+                    # Verificar categoria tribal - bonus se tipo da criatura bate
+                    if cat == 'Tribal':
+                        # Extrair tipo da criatura do theme_id
+                        creature_type = theme_id.rstrip('s')  # Remove 's' plural
+                        type_pattern = r'\b' + re.escape(creature_type) + r'\b'
+                        if re.search(type_pattern, type_line, re.IGNORECASE):
+                            theme_score += 6  # E uma criatura do tipo tribal!
                             patterns_matched += 1
 
                     break
 
             # Bonus por ter multiplos patterns matched do mesmo tema
-            if patterns_matched >= 2:
+            if patterns_matched >= 3:
+                theme_score += patterns_matched * 3
+            elif patterns_matched >= 2:
                 theme_score += patterns_matched * 2
 
+            # Bonus grande se deu match em padrao de alta prioridade
+            if high_priority_matched:
+                theme_score += 5
+
             if theme_score > 0:
-                themes_matched += 1
+                themes_matched.append(theme_id)
+                matched_patterns_detail[theme_id] = patterns_matched
                 total_score += theme_score
 
         # Bonus para cartas que combinam multiplos temas
-        if themes_matched > 1:
-            total_score += themes_matched * 8
+        if len(themes_matched) > 1:
+            total_score += len(themes_matched) * 10
+
+            # Verificar sinergias especificas entre temas
+            for (t1, t2), bonus in self.THEME_SYNERGIES.items():
+                if t1 in themes_matched and t2 in themes_matched:
+                    total_score += bonus
+
+        # Bonus por tipo de carta relevante
+        card_type_bonus = 0
+        if 'creature' in type_line:
+            # Criaturas sao geralmente mais relevantes para tribais
+            if any(tid in themes_matched for tid in ['humans', 'elves', 'goblins', 'zombies',
+                   'vampires', 'soldiers', 'warriors', 'wizards', 'dragons', 'angels',
+                   'demons', 'pirates', 'dinosaurs', 'merfolk', 'spirits']):
+                card_type_bonus += 3
+        if 'artifact' in type_line:
+            if any(tid in themes_matched for tid in ['artifacts', 'equipment', 'vehicles', 'energy']):
+                card_type_bonus += 3
+        if 'enchantment' in type_line:
+            if any(tid in themes_matched for tid in ['enchantments', 'auras']):
+                card_type_bonus += 3
+        if 'instant' in type_line or 'sorcery' in type_line:
+            if 'spellslinger' in themes_matched:
+                card_type_bonus += 3
+
+        total_score += card_type_bonus
 
         return total_score
 
@@ -2022,12 +2214,49 @@ class ArchetypeFinderView(View):
                 'changelings', 'allies'
             ]
 
+            # Mapeamento de singular para tema tribal
+            tribal_singular = {
+                'humans': 'human', 'soldiers': 'soldier', 'warriors': 'warrior',
+                'knights': 'knight', 'clerics': 'cleric', 'rogues': 'rogue',
+                'wizards': 'wizard', 'shamans': 'shaman', 'pirates': 'pirate',
+                'ninjas': 'ninja', 'assassins': 'assassin', 'monks': 'monk',
+                'druids': 'druid', 'artificers': 'artificer', 'elves': 'elf',
+                'faeries': 'faerie', 'goblins': 'goblin', 'kobolds': 'kobold',
+                'rats': 'rat', 'squirrels': 'squirrel', 'zombies': 'zombie',
+                'vampires': 'vampire', 'skeletons': 'skeleton', 'spirits': 'spirit',
+                'horrors': 'horror', 'beasts': 'beast', 'cats': 'cat', 'dogs': 'dog',
+                'wolves': 'wolf', 'bears': 'bear', 'birds': 'bird', 'snakes': 'snake',
+                'spiders': 'spider', 'insects': 'insect', 'merfolk': 'merfolk',
+                'dragons': 'dragon', 'angels': 'angel', 'demons': 'demon',
+                'giants': 'giant', 'hydras': 'hydra', 'wurms': 'wurm',
+                'dinosaurs': 'dinosaur', 'elementals': 'elemental', 'phoenixes': 'phoenix',
+                'treefolk': 'treefolk', 'plants': 'plant', 'fungus': 'fungus',
+                'golems': 'golem', 'constructs': 'construct', 'thopters': 'thopter',
+                'myrs': 'myr', 'slivers': 'sliver', 'eldrazi': 'eldrazi',
+                'phyrexians': 'phyrexian', 'changelings': 'changeling', 'allies': 'ally',
+            }
+
             # Construir query para cada tema
             theme_q = Q()
 
             for theme_id in filters['themes']:
                 patterns = self.get_theme_patterns(theme_id)
                 theme_specific_q = Q()
+
+                # Para tribais, adicionar busca no type_line pelo tipo singular
+                if theme_id in tribal_themes:
+                    singular = tribal_singular.get(theme_id, theme_id.rstrip('s'))
+                    theme_specific_q |= Q(type_line__icontains=singular)
+
+                # Adicionar padroes de alta prioridade primeiro
+                if theme_id in self.HIGH_PRIORITY_PATTERNS:
+                    for hp in self.HIGH_PRIORITY_PATTERNS[theme_id]:
+                        hp_clean = hp.replace('.*', ' ').replace('\\+', '+').replace('\\', '')
+                        hp_clean = re.sub(r'[^a-zA-Z0-9\s\'/+-{}]', '', hp_clean).strip()
+                        if hp_clean and (len(hp_clean) >= 3 or '{' in hp_clean):
+                            theme_specific_q |= Q(oracle_text__icontains=hp_clean)
+                            if theme_id in tribal_themes:
+                                theme_specific_q |= Q(type_line__icontains=hp_clean)
 
                 for pattern in patterns:
                     # Limpar pattern para busca SQL - manter texto util e simbolos de mana {X}
@@ -2060,9 +2289,18 @@ class ArchetypeFinderView(View):
         for card in cards_raw:
             score = self.calculate_theme_score(card, filters['themes'])
 
-            # Bonus por ter oracle text (cartas mais interessantes)
-            if card.oracle_text and len(card.oracle_text) > 20:
-                score += 1
+            # Bonus por ter oracle text relevante (cartas com mais texto geralmente sao mais sinergicas)
+            if card.oracle_text:
+                text_len = len(card.oracle_text)
+                if text_len > 100:
+                    score += 2  # Texto longo = mais efeitos
+                elif text_len > 50:
+                    score += 1
+
+            # Penalidade para vanilla creatures (sem habilidades)
+            if card.oracle_text is None or len(card.oracle_text.strip()) == 0:
+                if 'creature' in (card.type_line or '').lower():
+                    score -= 3  # Vanilla creature sem sinergia
 
             scored_cards.append({
                 'card': card,
@@ -2088,9 +2326,10 @@ class ArchetypeFinderView(View):
 
         # Filtrar cartas com score baixo se temas foram selecionados (remover falsos positivos)
         if filters['themes']:
-            # Exigir score minimo de 3 para aparecer nos resultados
-            # Isso remove cartas que passaram o filtro SQL mas nao tem match real nos patterns
-            scored_cards = [sc for sc in scored_cards if sc['score'] >= 3]
+            # Score minimo dinamico baseado no numero de temas selecionados
+            # 1 tema = minimo 5, 2 temas = minimo 8, etc.
+            min_score = 5 + (len(filters['themes']) - 1) * 3
+            scored_cards = [sc for sc in scored_cards if sc['score'] >= min_score]
 
         # Limitar resultado final
         cards = [sc['card'] for sc in scored_cards[:100]]
