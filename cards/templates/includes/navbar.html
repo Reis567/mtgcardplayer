@@ -281,7 +281,7 @@
 
             <!-- Dropdown Assistente -->
             <div class="nav-dropdown">
-                <button class="nav-dropdown-toggle {% if active_page == 'assistant' or active_page == 'commanders' %}active{% endif %}">
+                <button class="nav-dropdown-toggle {% if active_page == 'assistant' or active_page == 'commanders' or active_page == 'archetypes' %}active{% endif %}">
                     <span class="main-nav-icon">&#129302;</span> Assistente
                     <span class="nav-dropdown-arrow">&#9660;</span>
                 </button>
@@ -298,6 +298,13 @@
                         <div class="nav-dropdown-item-text">
                             Buscar Comandantes
                             <div class="nav-dropdown-item-desc">Explore comandantes por arquetipo</div>
+                        </div>
+                    </a>
+                    <a href="/cards/archetypes/{% if tab_id %}?tab={{ tab_id }}{% endif %}" class="nav-dropdown-item {% if active_page == 'archetypes' %}active{% endif %}">
+                        <span class="nav-dropdown-item-icon">&#127919;</span>
+                        <div class="nav-dropdown-item-text">
+                            Buscar por Arquetipo
+                            <div class="nav-dropdown-item-desc">Cartas por tema e sinergia</div>
                         </div>
                     </a>
                 </div>

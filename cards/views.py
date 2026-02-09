@@ -1221,3 +1221,907 @@ class CommanderIdeasView(View):
         })
 
         return render(request, 'cards/commander_ideas.html', context)
+
+
+class ArchetypeFinderView(View):
+    """Pagina para buscar cartas por arquetipo/tema para montar decks"""
+
+    # Temas/Arquetipos com patterns de busca
+    # (nome_exibicao, id, patterns[], descricao, categoria)
+    # IMPORTANTE: patterns devem ter pelo menos 4 caracteres para evitar falsos positivos
+    DECK_THEMES = [
+        # === Contadores ===
+        ('Energy', 'energy', [
+            'energy counter', 'energy counters', 'energy you have', 'spend energy',
+            'you get {e}', 'pay {e}{e}', 'an energy counter'
+        ], 'Marcadores de energia', 'Contadores'),
+
+        ('+1/+1 Counters', 'plus_counters', [
+            '+1/+1 counter', 'put a +1/+1', 'with +1/+1 counters', 'modify',
+            'evolve', 'adapt', 'proliferate', 'bolster', 'support', 'reinforce',
+            'outlast', 'mentor', 'counters on it', 'counter on each'
+        ], 'Marcadores +1/+1', 'Contadores'),
+
+        ('-1/-1 Counters', 'minus_counters', [
+            '-1/-1 counter', 'put a -1/-1', 'wither', 'persist', 'undying'
+        ], 'Marcadores -1/-1', 'Contadores'),
+
+        ('Poison/Toxic', 'poison', [
+            'poison counter', 'toxic', 'infect', 'corrupted', 'proliferate'
+        ], 'Veneno e toxico', 'Contadores'),
+
+        ('Charge Counters', 'charge', [
+            'charge counter', 'storage counter', 'verse counter'
+        ], 'Marcadores de carga', 'Contadores'),
+
+        ('Oil Counters', 'oil', [
+            'oil counter', 'compleated'
+        ], 'Marcadores de oleo (Phyrexia)', 'Contadores'),
+
+        ('Experience', 'experience', [
+            'experience counter', 'experience counters you have'
+        ], 'Marcadores de experiencia', 'Contadores'),
+
+        # === Tribais - Humanoides ===
+        ('Humans', 'humans', [
+            'human', 'humans you control', 'each human', 'nonhuman'
+        ], 'Humanos', 'Tribal'),
+
+        ('Soldiers', 'soldiers', [
+            'soldier', 'soldiers you control', 'soldier token'
+        ], 'Soldados', 'Tribal'),
+
+        ('Warriors', 'warriors', [
+            'warrior', 'warriors you control', 'warrior token'
+        ], 'Guerreiros', 'Tribal'),
+
+        ('Knights', 'knights', [
+            'knight', 'knights you control', 'knight token'
+        ], 'Cavaleiros', 'Tribal'),
+
+        ('Clerics', 'clerics', [
+            'cleric', 'clerics you control'
+        ], 'Clerigos', 'Tribal'),
+
+        ('Rogues', 'rogues', [
+            'rogue', 'rogues you control'
+        ], 'Ladinos', 'Tribal'),
+
+        ('Wizards', 'wizards', [
+            'wizard', 'wizards you control'
+        ], 'Magos', 'Tribal'),
+
+        ('Shamans', 'shamans', [
+            'shaman', 'shamans you control'
+        ], 'Xamas', 'Tribal'),
+
+        ('Pirates', 'pirates', [
+            'pirate', 'pirates you control', 'pirate token'
+        ], 'Piratas', 'Tribal'),
+
+        ('Ninjas', 'ninjas', [
+            'ninja', 'ninjas you control', 'ninjutsu'
+        ], 'Ninjas', 'Tribal'),
+
+        ('Samurai', 'samurai', [
+            'samurai', 'samurai you control'
+        ], 'Samurais', 'Tribal'),
+
+        ('Assassins', 'assassins', [
+            'assassin', 'assassins you control'
+        ], 'Assassinos', 'Tribal'),
+
+        ('Monks', 'monks', [
+            'monk', 'monks you control'
+        ], 'Monges', 'Tribal'),
+
+        ('Druids', 'druids', [
+            'druid', 'druids you control'
+        ], 'Druidas', 'Tribal'),
+
+        ('Artificers', 'artificers', [
+            'artificer', 'artificers you control'
+        ], 'Artificers', 'Tribal'),
+
+        # === Tribais - Elfos/Fadas ===
+        ('Elves', 'elves', [
+            'elf', 'elves you control', 'elf token', 'elf creature'
+        ], 'Elfos', 'Tribal'),
+
+        ('Faeries', 'faeries', [
+            'faerie', 'faeries you control', 'faerie token'
+        ], 'Fadas', 'Tribal'),
+
+        # === Tribais - Monstros Pequenos ===
+        ('Goblins', 'goblins', [
+            'goblin', 'goblins you control', 'goblin token'
+        ], 'Goblins', 'Tribal'),
+
+        ('Kobolds', 'kobolds', [
+            'kobold', 'kobolds you control'
+        ], 'Kobolds', 'Tribal'),
+
+        ('Rats', 'rats', [
+            'rat', 'rats you control', 'rat token'
+        ], 'Ratos', 'Tribal'),
+
+        ('Squirrels', 'squirrels', [
+            'squirrel', 'squirrels you control', 'squirrel token'
+        ], 'Esquilos', 'Tribal'),
+
+        # === Tribais - Mortos-Vivos ===
+        ('Zombies', 'zombies', [
+            'zombie', 'zombies you control', 'zombie token', 'decayed'
+        ], 'Zumbis', 'Tribal'),
+
+        ('Vampires', 'vampires', [
+            'vampire', 'vampires you control', 'blood token'
+        ], 'Vampiros', 'Tribal'),
+
+        ('Skeletons', 'skeletons', [
+            'skeleton', 'skeletons you control'
+        ], 'Esqueletos', 'Tribal'),
+
+        ('Spirits', 'spirits', [
+            'spirit', 'spirits you control', 'spirit token', 'soulshift'
+        ], 'Espiritos', 'Tribal'),
+
+        ('Horrors', 'horrors', [
+            'horror', 'horrors you control'
+        ], 'Horrores', 'Tribal'),
+
+        # === Tribais - Bestas/Criaturas ===
+        ('Beasts', 'beasts', [
+            'beast', 'beasts you control', 'beast token'
+        ], 'Bestas', 'Tribal'),
+
+        ('Cats', 'cats', [
+            'cat', 'cats you control', 'cat token'
+        ], 'Gatos', 'Tribal'),
+
+        ('Dogs', 'dogs', [
+            'dog', 'dogs you control', 'dog token', 'hound'
+        ], 'Cachorros', 'Tribal'),
+
+        ('Wolves', 'wolves', [
+            'wolf', 'wolves you control', 'wolf token', 'werewolf'
+        ], 'Lobos', 'Tribal'),
+
+        ('Bears', 'bears', [
+            'bear', 'bears you control', 'bear token'
+        ], 'Ursos', 'Tribal'),
+
+        ('Birds', 'birds', [
+            'bird', 'birds you control', 'bird token', 'flying creature'
+        ], 'Passaros', 'Tribal'),
+
+        ('Snakes', 'snakes', [
+            'snake', 'snakes you control', 'snake token'
+        ], 'Serpentes', 'Tribal'),
+
+        ('Spiders', 'spiders', [
+            'spider', 'spiders you control', 'reach'
+        ], 'Aranhas', 'Tribal'),
+
+        ('Insects', 'insects', [
+            'insect', 'insects you control', 'insect token'
+        ], 'Insetos', 'Tribal'),
+
+        # === Tribais - Aquaticos ===
+        ('Merfolk', 'merfolk', [
+            'merfolk', 'merfolk you control', 'islandwalk'
+        ], 'Tritoes', 'Tribal'),
+
+        ('Fish', 'fish', [
+            'fish', 'fishes you control', 'kraken', 'leviathan', 'octopus', 'serpent'
+        ], 'Peixes e criaturas marinhas', 'Tribal'),
+
+        ('Crabs', 'crabs', [
+            'crab', 'crabs you control'
+        ], 'Caranguejos', 'Tribal'),
+
+        # === Tribais - Grandes Criaturas ===
+        ('Dragons', 'dragons', [
+            'dragon', 'dragons you control', 'dragon token'
+        ], 'Dragoes', 'Tribal'),
+
+        ('Angels', 'angels', [
+            'angel', 'angels you control', 'angel token'
+        ], 'Anjos', 'Tribal'),
+
+        ('Demons', 'demons', [
+            'demon', 'demons you control', 'demon token'
+        ], 'Demonios', 'Tribal'),
+
+        ('Giants', 'giants', [
+            'giant', 'giants you control'
+        ], 'Gigantes', 'Tribal'),
+
+        ('Hydras', 'hydras', [
+            'hydra', 'hydras you control', 'x +1/+1 counters'
+        ], 'Hidras', 'Tribal'),
+
+        ('Wurms', 'wurms', [
+            'wurm', 'wurms you control', 'wurm token'
+        ], 'Vermes gigantes', 'Tribal'),
+
+        # === Tribais - Dinossauros/Prehistoricos ===
+        ('Dinosaurs', 'dinosaurs', [
+            'dinosaur', 'dinosaurs you control', 'enrage'
+        ], 'Dinossauros', 'Tribal'),
+
+        # === Tribais - Elementais ===
+        ('Elementals', 'elementals', [
+            'elemental', 'elementals you control', 'elemental token', 'evoke'
+        ], 'Elementais', 'Tribal'),
+
+        ('Phoenixes', 'phoenixes', [
+            'phoenix', 'phoenixes you control', 'return .* from .* graveyard'
+        ], 'Fenix', 'Tribal'),
+
+        # === Tribais - Arvores/Plantas ===
+        ('Treefolk', 'treefolk', [
+            'treefolk', 'treefolk you control'
+        ], 'Homens-arvore', 'Tribal'),
+
+        ('Plants', 'plants', [
+            'plant', 'plants you control', 'saproling'
+        ], 'Plantas e Saprolings', 'Tribal'),
+
+        ('Fungus', 'fungus', [
+            'fungus', 'fungi you control', 'saproling', 'spore counter'
+        ], 'Fungos', 'Tribal'),
+
+        # === Tribais - Construtos ===
+        ('Golems', 'golems', [
+            'golem', 'golems you control'
+        ], 'Golems', 'Tribal'),
+
+        ('Constructs', 'constructs', [
+            'construct', 'constructs you control', 'artifact creature'
+        ], 'Construtos', 'Tribal'),
+
+        ('Thopters', 'thopters', [
+            'thopter', 'thopters you control', 'thopter token'
+        ], 'Thopters', 'Tribal'),
+
+        ('Myrs', 'myrs', [
+            'myr', 'myrs you control', 'myr token'
+        ], 'Myrs', 'Tribal'),
+
+        # === Tribais - Especiais ===
+        ('Slivers', 'slivers', [
+            'sliver', 'slivers you control', 'all slivers'
+        ], 'Fractius', 'Tribal'),
+
+        ('Eldrazi', 'eldrazi', [
+            'eldrazi', 'colorless creature', 'annihilator', 'spawn', 'scion'
+        ], 'Eldrazi', 'Tribal'),
+
+        ('Phyrexians', 'phyrexians', [
+            'phyrexian', 'compleated', 'toxic', 'corrupted', 'oil counter'
+        ], 'Phyrexianos', 'Tribal'),
+
+        ('Changelings', 'changelings', [
+            'changeling', 'all creature types', 'is every creature type'
+        ], 'Metamorfos (todas tribos)', 'Tribal'),
+
+        ('Allies', 'allies', [
+            'ally', 'allies you control', 'rally'
+        ], 'Aliados', 'Tribal'),
+
+        ('Party', 'party', [
+            'full party', 'cleric, rogue, warrior, and wizard', 'party has'
+        ], 'Party (Clerico, Ladino, Guerreiro, Mago)', 'Tribal'),
+
+        # === Artefatos ===
+        ('Equipment', 'equipment', [
+            'equipment', 'equip', 'equipped creature', 'attach', 'living weapon',
+            'reconfigure', 'for mirrodin'
+        ], 'Equipamentos', 'Artefatos'),
+
+        ('Artifact Creatures', 'artifact_creatures', [
+            'artifact creature', 'artifacts you control', 'metalcraft', 'affinity',
+            'improvise', 'modular', 'fabricate'
+        ], 'Criaturas artefato', 'Artefatos'),
+
+        ('Vehicles', 'vehicles', [
+            'vehicle', 'crew', 'vehicles you control'
+        ], 'Veiculos', 'Artefatos'),
+
+        ('Treasures', 'treasures', [
+            'treasure', 'treasure token', 'create a treasure'
+        ], 'Tesouros', 'Artefatos'),
+
+        ('Clues', 'clues', [
+            'clue', 'clue token', 'investigate'
+        ], 'Pistas', 'Artefatos'),
+
+        ('Food', 'food', [
+            'food', 'food token', 'create a food'
+        ], 'Comida', 'Artefatos'),
+
+        ('Blood Tokens', 'blood_tokens', [
+            'blood token', 'create a blood'
+        ], 'Tokens de sangue', 'Artefatos'),
+
+        ('Powerstones', 'powerstones', [
+            'powerstone', 'powerstone token'
+        ], 'Pedras de poder', 'Artefatos'),
+
+        ('Maps', 'maps', [
+            'map token', 'create a map'
+        ], 'Mapas', 'Artefatos'),
+
+        # === Encantamentos ===
+        ('Enchantress', 'enchantress', [
+            'enchantment', 'constellation', 'whenever an enchantment',
+            'enchantments you control'
+        ], 'Sinergias com encantamentos', 'Encantamentos'),
+
+        ('Auras', 'auras', [
+            'aura', 'enchant creature', 'enchanted creature', 'bestow', 'totem armor'
+        ], 'Auras', 'Encantamentos'),
+
+        ('Sagas', 'sagas', [
+            'saga', 'lore counter', 'chapter'
+        ], 'Sagas', 'Encantamentos'),
+
+        ('Curses', 'curses', [
+            'curse', 'enchant player', 'cursed player'
+        ], 'Maldicoes', 'Encantamentos'),
+
+        ('Shrines', 'shrines', [
+            'shrine', 'shrines you control'
+        ], 'Santuarios', 'Encantamentos'),
+
+        ('Rooms', 'rooms', [
+            'room', 'unlock', 'door'
+        ], 'Salas (Duskmourn)', 'Encantamentos'),
+
+        # === Tokens/Aggro ===
+        ('Token Generation', 'tokens', [
+            'create a', 'creature token', 'populate', 'tokens you control'
+        ], 'Geracao de tokens', 'Tokens'),
+
+        ('Going Wide', 'go_wide', [
+            'creatures you control get', 'for each creature you control',
+            'creatures you control have', 'anthem'
+        ], 'Muitas criaturas (Go Wide)', 'Tokens'),
+
+        ('Convoke', 'convoke', [
+            'convoke', 'tap an untapped creature'
+        ], 'Convoke', 'Tokens'),
+
+        # === Cemiterio ===
+        ('Reanimator', 'reanimator', [
+            'return .* from .* graveyard', 'graveyard to the battlefield',
+            'reanimate', 'unearth', 'embalm', 'eternalize'
+        ], 'Reanimar criaturas', 'Cemiterio'),
+
+        ('Self-Mill', 'selfmill', [
+            'mill', 'cards into your graveyard', 'dredge', 'surveil'
+        ], 'Encher o cemiterio', 'Cemiterio'),
+
+        ('Flashback', 'flashback', [
+            'flashback', 'escape', 'retrace', 'aftermath', 'jumpstart',
+            'cast .* from .* graveyard'
+        ], 'Lancar do cemiterio', 'Cemiterio'),
+
+        ('Delve', 'delve', [
+            'delve', 'exile .* from your graveyard'
+        ], 'Delve', 'Cemiterio'),
+
+        # === Combate ===
+        ('Extra Combat', 'extra_combat', [
+            'additional combat', 'extra combat phase', 'untap all creatures'
+        ], 'Fases de combate extras', 'Combate'),
+
+        ('Double Strike', 'double_strike', [
+            'double strike', 'first strike'
+        ], 'Golpe duplo/primeiro', 'Combate'),
+
+        ('Evasion', 'evasion', [
+            'flying', 'trample', 'menace', 'fear', 'intimidate', 'shadow',
+            "can't be blocked", 'unblockable'
+        ], 'Evasao', 'Combate'),
+
+        ('Voltron', 'voltron', [
+            'equipped creature', 'enchanted creature gets', 'commander damage',
+            'hexproof', 'indestructible', 'protection from'
+        ], 'Voltron (1 criatura grande)', 'Combate'),
+
+        ('Attack Triggers', 'attack_triggers', [
+            'whenever .* attacks', 'attacking creature', 'attack each combat',
+            'attack with', 'myriad', 'battle cry'
+        ], 'Triggers de ataque', 'Combate'),
+
+        # === Mana/Ramp ===
+        ('Mana Ramp', 'ramp', [
+            'search your library for .* land', 'put .* land .* onto the battlefield',
+            'add one mana of any', 'land onto the battlefield'
+        ], 'Acelerar mana', 'Mana'),
+
+        ('Mana Dorks', 'mana_dorks', [
+            '{t}: add', 'add one mana', 'tap .* add'
+        ], 'Criaturas que dao mana', 'Mana'),
+
+        ('Lands Matter', 'lands_matter', [
+            'landfall', 'whenever a land enters', 'lands you control',
+            'play an additional land', 'land creature'
+        ], 'Sinergias com terrenos', 'Mana'),
+
+        ('Land Destruction', 'land_destruction', [
+            'destroy target land', 'sacrifice a land', 'land an opponent controls'
+        ], 'Destruir terrenos', 'Mana'),
+
+        # === Magicas ===
+        ('Spellslinger', 'spellslinger', [
+            'instant or sorcery', 'whenever you cast .* instant', 'magecraft',
+            'prowess', 'storm'
+        ], 'Magicas (Spellslinger)', 'Magicas'),
+
+        ('Cantrips', 'cantrips', [
+            'draw a card', 'scry', 'look at the top'
+        ], 'Cantrips', 'Magicas'),
+
+        ('Counterspells', 'counterspells', [
+            'counter target spell', 'counter target'
+        ], 'Anular magicas', 'Magicas'),
+
+        ('Burn', 'burn', [
+            'deals .* damage to any target', 'deals .* damage to each',
+            'damage to target creature or player'
+        ], 'Burn (dano direto)', 'Magicas'),
+
+        ('Copy Spells', 'copy_spells', [
+            'copy target', 'copy that spell', 'cast a copy'
+        ], 'Copiar magicas', 'Magicas'),
+
+        # === Vida ===
+        ('Lifegain', 'lifegain', [
+            'gain .* life', 'whenever you gain life', 'lifelink'
+        ], 'Ganho de vida', 'Vida'),
+
+        ('Life Drain', 'drain', [
+            'each opponent loses', 'lose life and you gain', 'extort'
+        ], 'Drenar vida', 'Vida'),
+
+        ('Life Matters', 'life_matters', [
+            'life total', 'pay .* life', 'your life total is'
+        ], 'Usar vida como recurso', 'Vida'),
+
+        # === Sacrificio ===
+        ('Sacrifice', 'sacrifice', [
+            'sacrifice a creature', 'whenever .* dies', 'when .* dies'
+        ], 'Sacrificar criaturas', 'Sacrificio'),
+
+        ('Aristocrats', 'aristocrats', [
+            'whenever a creature you control dies', 'each opponent loses 1 life',
+            'blood artist'
+        ], 'Aristocrats', 'Sacrificio'),
+
+        ('Treasure Sac', 'treasure_sac', [
+            'sacrifice a treasure', 'sacrifice an artifact'
+        ], 'Sacrificar artefatos', 'Sacrificio'),
+
+        # === Compra/Descarte ===
+        ('Draw Matters', 'draw_matters', [
+            'whenever you draw', 'draw a card', 'no maximum hand size',
+            'for each card you\'ve drawn'
+        ], 'Sinergias de compra', 'Compra'),
+
+        ('Discard Matters', 'discard_matters', [
+            'discard', 'madness', 'whenever you discard', 'hellbent'
+        ], 'Sinergias de descarte', 'Compra'),
+
+        ('Wheels', 'wheels', [
+            'each player discards', 'draw seven', 'wheel'
+        ], 'Rodas (Wheel)', 'Compra'),
+
+        ('Looting', 'looting', [
+            'draw .* then discard', 'discard .* then draw', 'cycling', 'rummage'
+        ], 'Looting/Rummaging', 'Compra'),
+
+        # === Controle ===
+        ('Removal', 'removal', [
+            'destroy target', 'exile target', 'destroy all creatures'
+        ], 'Remocao', 'Controle'),
+
+        ('Theft', 'theft', [
+            'gain control of target', 'control of target', 'exchange control'
+        ], 'Roubar permanentes', 'Controle'),
+
+        ('Blink', 'blink', [
+            'exile .* return .* to the battlefield', 'flicker',
+            'enters the battlefield'
+        ], 'Piscar criaturas', 'Controle'),
+
+        ('Stax', 'stax', [
+            "can't .* more than", "opponents can't", 'costs .* more',
+            'each player can only'
+        ], 'Stax (restringir oponentes)', 'Controle'),
+
+        ('Pillowfort', 'pillowfort', [
+            "can't attack you", "can't be attacked", 'propaganda',
+            'ghostly prison'
+        ], 'Pillowfort (protecao)', 'Controle'),
+
+        # === Especiais ===
+        ('Planeswalkers', 'planeswalkers', [
+            'planeswalker', 'loyalty', 'planeswalkers you control'
+        ], 'Planeswalkers', 'Especiais'),
+
+        ('Copy/Clone', 'copy', [
+            'copy of', 'clone', 'becomes a copy', "that's a copy"
+        ], 'Copiar criaturas', 'Especiais'),
+
+        ('Transform', 'transform', [
+            'transform', 'daybound', 'nightbound', 'disturb'
+        ], 'Transformar', 'Especiais'),
+
+        ('Cascade', 'cascade', [
+            'cascade', 'discover', 'cast .* without paying'
+        ], 'Cascade/Discover', 'Especiais'),
+
+        ('Extra Turns', 'extra_turns', [
+            'extra turn', 'additional turn', 'take an extra turn'
+        ], 'Turnos extras', 'Especiais'),
+
+        ('Topdeck Matters', 'topdeck', [
+            'top of your library', 'look at the top', 'miracle', 'hideaway'
+        ], 'Topo do deck', 'Especiais'),
+
+        ('X Spells', 'x_spells', [
+            'where x is', 'pay x', 'x damage', 'x +1/+1 counters'
+        ], 'Magicas com X', 'Especiais'),
+
+        ('Modal', 'modal', [
+            'choose one', 'choose two', 'choose any number', 'entwine'
+        ], 'Magicas modais', 'Especiais'),
+
+        ('Monarch', 'monarch', [
+            'monarch', 'become the monarch', 'you are the monarch'
+        ], 'Monarca', 'Especiais'),
+
+        ('Initiative', 'initiative', [
+            'initiative', 'take the initiative', 'undercity'
+        ], 'Iniciativa/Undercity', 'Especiais'),
+
+        ('Dungeons', 'dungeons', [
+            'venture into', 'dungeon', 'completed a dungeon'
+        ], 'Dungeons', 'Especiais'),
+    ]
+
+    # Categorias para organizacao
+    CATEGORIES = [
+        ('Contadores', 'Temas com marcadores'),
+        ('Tribal', 'Sinergias tribais'),
+        ('Artefatos', 'Equipamentos, veiculos e tokens'),
+        ('Encantamentos', 'Auras, sagas e encantress'),
+        ('Tokens', 'Geracao e sinergias com tokens'),
+        ('Cemiterio', 'Usar o cemiterio como recurso'),
+        ('Combate', 'Estrategias de combate'),
+        ('Mana', 'Aceleracao e sinergias de terreno'),
+        ('Magicas', 'Spellslinger e instantes/feiticos'),
+        ('Vida', 'Ganho e dreno de vida'),
+        ('Sacrificio', 'Aristocrats e morte'),
+        ('Compra', 'Compra e descarte de cartas'),
+        ('Planeswalkers', 'Superfriends'),
+        ('Controle', 'Remocao e controle do jogo'),
+        ('Especiais', 'Mecanicas especiais'),
+    ]
+
+    def get_player_context(self, request):
+        """Helper para obter jogador atual da sessao/tab"""
+        from accounts.views import get_current_player, get_tab_id
+        return {
+            'player': get_current_player(request),
+            'tab_id': get_tab_id(request)
+        }
+
+    def get_color_identity_display(self, color_identity):
+        """Retorna nome legivel da identidade de cor"""
+        if not color_identity:
+            return 'Incolor'
+
+        colors = color_identity.split(',')
+        color_names = {
+            'W': 'Branco', 'U': 'Azul', 'B': 'Preto',
+            'R': 'Vermelho', 'G': 'Verde'
+        }
+
+        combos = {
+            frozenset(['W', 'U']): 'Azorius',
+            frozenset(['U', 'B']): 'Dimir',
+            frozenset(['B', 'R']): 'Rakdos',
+            frozenset(['R', 'G']): 'Gruul',
+            frozenset(['G', 'W']): 'Selesnya',
+            frozenset(['W', 'B']): 'Orzhov',
+            frozenset(['U', 'R']): 'Izzet',
+            frozenset(['B', 'G']): 'Golgari',
+            frozenset(['R', 'W']): 'Boros',
+            frozenset(['G', 'U']): 'Simic',
+            frozenset(['W', 'U', 'B']): 'Esper',
+            frozenset(['U', 'B', 'R']): 'Grixis',
+            frozenset(['B', 'R', 'G']): 'Jund',
+            frozenset(['R', 'G', 'W']): 'Naya',
+            frozenset(['G', 'W', 'U']): 'Bant',
+            frozenset(['W', 'B', 'G']): 'Abzan',
+            frozenset(['U', 'R', 'W']): 'Jeskai',
+            frozenset(['B', 'G', 'U']): 'Sultai',
+            frozenset(['R', 'W', 'B']): 'Mardu',
+            frozenset(['G', 'U', 'R']): 'Temur',
+            frozenset(['W', 'U', 'B', 'R', 'G']): '5 Cores',
+        }
+
+        color_set = frozenset(colors)
+        if color_set in combos:
+            return combos[color_set]
+
+        return ', '.join(color_names.get(c, c) for c in colors)
+
+    def calculate_theme_score(self, card, theme_ids):
+        """Calcula pontuacao de relevancia de uma carta para os temas selecionados"""
+        import re
+
+        if not theme_ids:
+            return 0
+
+        oracle = (card.oracle_text or '').lower()
+        type_line = (card.type_line or '').lower()
+        name = (card.name or '').lower()
+
+        total_score = 0
+        themes_matched = 0
+
+        for theme_id in theme_ids:
+            theme_score = 0
+            patterns_matched = 0
+
+            for theme_name, tid, patterns, desc, cat in self.DECK_THEMES:
+                if tid == theme_id:
+                    for pattern in patterns:
+                        # Limpar pattern - manter texto e simbolos de mana
+                        clean_pattern = pattern.replace('.*', ' ').replace('\\+', '+').replace('\\', '')
+                        clean_pattern = re.sub(r'[^a-zA-Z0-9\s\'/+-{}]', '', clean_pattern).strip().lower()
+
+                        # Exigir pelo menos 4 chars ou simbolo de mana
+                        if len(clean_pattern) < 4 and '{' not in clean_pattern:
+                            continue
+
+                        # Buscar no oracle_text
+                        if clean_pattern in oracle:
+                            theme_score += 3
+                            patterns_matched += 1
+
+                        # Buscar no type_line (importante para tribais)
+                        if clean_pattern in type_line:
+                            theme_score += 4  # Type line match vale mais
+                            patterns_matched += 1
+
+                        # Buscar no nome
+                        if clean_pattern in name:
+                            theme_score += 2
+                            patterns_matched += 1
+
+                    break
+
+            # Bonus por ter multiplos patterns matched do mesmo tema
+            if patterns_matched >= 2:
+                theme_score += patterns_matched * 2
+
+            if theme_score > 0:
+                themes_matched += 1
+                total_score += theme_score
+
+        # Bonus para cartas que combinam multiplos temas
+        if themes_matched > 1:
+            total_score += themes_matched * 8
+
+        return total_score
+
+    def get_theme_patterns(self, theme_id):
+        """Retorna patterns de um tema"""
+        for name, tid, patterns, desc, cat in self.DECK_THEMES:
+            if tid == theme_id:
+                return patterns
+        return []
+
+    def get(self, request):
+        from django.db.models import Min
+        import re
+
+        context = self.get_player_context(request)
+
+        # Filtros
+        filters = {
+            'search': request.GET.get('q', '').strip(),
+            'colors': request.GET.getlist('color'),
+            'color_mode': request.GET.get('color_mode', 'at_most'),
+            'themes': request.GET.getlist('theme'),
+            'card_type': request.GET.get('card_type', ''),
+            'cmc_min': request.GET.get('cmc_min', ''),
+            'cmc_max': request.GET.get('cmc_max', ''),
+            'rarity': request.GET.getlist('rarity'),
+            'order': request.GET.get('order', 'relevance'),  # Default para relevancia
+            'dir': request.GET.get('dir', 'desc'),
+        }
+
+        # Base query - excluir basic lands e tokens
+        queryset = Card.objects.exclude(
+            type_line__icontains='Basic Land'
+        ).exclude(
+            type_line__icontains='Token'
+        )
+
+        # Deduplicar por nome (pegar versao mais recente)
+        unique_ids = queryset.values('name').annotate(
+            first_id=Min('id')
+        ).values_list('first_id', flat=True)
+
+        queryset = Card.objects.filter(id__in=unique_ids)
+
+        # Filtro por nome/texto
+        if filters['search']:
+            queryset = queryset.filter(
+                Q(name__icontains=filters['search']) |
+                Q(oracle_text__icontains=filters['search']) |
+                Q(type_line__icontains=filters['search'])
+            )
+
+        # Filtro de cores (para commander identity)
+        if filters['colors']:
+            color_list = [c for c in filters['colors'] if c != 'C']
+
+            if 'C' in filters['colors']:
+                # Colorless - sem identidade de cor
+                queryset = queryset.filter(
+                    Q(color_identity='') | Q(color_identity__isnull=True)
+                )
+            elif filters['color_mode'] == 'exact':
+                color_str = ','.join(sorted(color_list))
+                queryset = queryset.filter(color_identity=color_str)
+            elif filters['color_mode'] == 'at_most':
+                # Exclui cores nao selecionadas - para caber na identidade do comandante
+                all_colors = {'W', 'U', 'B', 'R', 'G'}
+                excluded = all_colors - set(color_list)
+                for c in excluded:
+                    queryset = queryset.exclude(color_identity__icontains=c)
+            else:
+                # Inclui essas cores
+                for c in color_list:
+                    queryset = queryset.filter(color_identity__icontains=c)
+
+        # Filtro por tipo de carta
+        if filters['card_type']:
+            queryset = queryset.filter(type_line__icontains=filters['card_type'])
+
+        # CMC
+        if filters['cmc_min']:
+            queryset = queryset.filter(cmc__gte=float(filters['cmc_min']))
+        if filters['cmc_max']:
+            queryset = queryset.filter(cmc__lte=float(filters['cmc_max']))
+
+        # Raridade
+        if filters['rarity']:
+            queryset = queryset.filter(rarity__in=filters['rarity'])
+
+        # Filtro por temas/arquetipos - busca precisa
+        if filters['themes']:
+            # Lista de todas as tribos para buscar em type_line
+            tribal_themes = [
+                'humans', 'soldiers', 'warriors', 'knights', 'clerics', 'rogues', 'wizards',
+                'shamans', 'pirates', 'ninjas', 'samurai', 'assassins', 'monks', 'druids',
+                'artificers', 'elves', 'faeries', 'goblins', 'kobolds', 'rats', 'squirrels',
+                'zombies', 'vampires', 'skeletons', 'spirits', 'horrors', 'beasts', 'cats',
+                'dogs', 'wolves', 'bears', 'birds', 'snakes', 'spiders', 'insects', 'merfolk',
+                'fish', 'crabs', 'dragons', 'angels', 'demons', 'giants', 'hydras', 'wurms',
+                'dinosaurs', 'elementals', 'phoenixes', 'treefolk', 'plants', 'fungus',
+                'golems', 'constructs', 'thopters', 'myrs', 'slivers', 'eldrazi', 'phyrexians',
+                'changelings', 'allies'
+            ]
+
+            # Construir query para cada tema
+            theme_q = Q()
+
+            for theme_id in filters['themes']:
+                patterns = self.get_theme_patterns(theme_id)
+                theme_specific_q = Q()
+
+                for pattern in patterns:
+                    # Limpar pattern para busca SQL - manter texto util e simbolos de mana {X}
+                    simple = pattern.replace('.*', ' ').replace('\\+', '+').replace('\\', '')
+                    # Preservar {E}, {W}, {U}, etc - sao simbolos de mana importantes
+                    simple = re.sub(r'[^a-zA-Z0-9\s\'/+-{}]', '', simple).strip()
+
+                    # Exigir pelo menos 4 caracteres para evitar falsos positivos
+                    # Ou se for um simbolo de mana especifico como {E}
+                    if simple and (len(simple) >= 4 or '{' in simple):
+                        # Buscar no oracle_text
+                        theme_specific_q |= Q(oracle_text__icontains=simple)
+
+                        # Para tribais, buscar tambem no type_line
+                        if theme_id in tribal_themes:
+                            theme_specific_q |= Q(type_line__icontains=simple)
+
+                if theme_specific_q:
+                    theme_q |= theme_specific_q
+
+            if theme_q:
+                queryset = queryset.filter(theme_q)
+
+        # Obter cartas e calcular scores
+        # Limitar busca inicial para performance
+        cards_raw = list(queryset[:500])
+
+        # Calcular score de relevancia para cada carta
+        scored_cards = []
+        for card in cards_raw:
+            score = self.calculate_theme_score(card, filters['themes'])
+
+            # Bonus por ter oracle text (cartas mais interessantes)
+            if card.oracle_text and len(card.oracle_text) > 20:
+                score += 1
+
+            scored_cards.append({
+                'card': card,
+                'score': score
+            })
+
+        # Ordenacao
+        if filters['order'] == 'relevance' and filters['themes']:
+            # Ordenar por relevancia (score descendente)
+            scored_cards.sort(key=lambda x: (-x['score'], x['card'].name))
+        elif filters['order'] == 'cmc':
+            reverse = filters['dir'] == 'desc'
+            scored_cards.sort(key=lambda x: (x['card'].cmc or 0, x['card'].name), reverse=reverse)
+        elif filters['order'] == 'name':
+            reverse = filters['dir'] == 'desc'
+            scored_cards.sort(key=lambda x: x['card'].name, reverse=reverse)
+        else:
+            # Default: relevancia se tiver temas, senao nome
+            if filters['themes']:
+                scored_cards.sort(key=lambda x: (-x['score'], x['card'].name))
+            else:
+                scored_cards.sort(key=lambda x: x['card'].name)
+
+        # Filtrar cartas com score baixo se temas foram selecionados (remover falsos positivos)
+        if filters['themes']:
+            # Exigir score minimo de 3 para aparecer nos resultados
+            scored_cards = [sc for sc in scored_cards if sc['score'] >= 3]
+
+        # Limitar resultado final
+        cards = [sc['card'] for sc in scored_cards[:100]]
+
+        # Organizar temas por categoria
+        themes_by_category = {}
+        for name, tid, patterns, desc, cat in self.DECK_THEMES:
+            if cat not in themes_by_category:
+                themes_by_category[cat] = []
+            themes_by_category[cat].append({
+                'name': name,
+                'id': tid,
+                'description': desc,
+                'selected': tid in filters['themes'],
+            })
+
+        context.update({
+            'cards': cards,
+            'filters': filters,
+            'total_found': len(cards),
+            'themes_by_category': themes_by_category,
+            'categories': self.CATEGORIES,
+            'card_types': [
+                ('', 'Todos'),
+                ('Creature', 'Criaturas'),
+                ('Instant', 'Instantaneas'),
+                ('Sorcery', 'Feiticos'),
+                ('Artifact', 'Artefatos'),
+                ('Enchantment', 'Encantamentos'),
+                ('Planeswalker', 'Planeswalkers'),
+                ('Land', 'Terrenos'),
+            ],
+        })
+
+        return render(request, 'cards/archetype_finder.html', context)

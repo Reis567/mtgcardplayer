@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     CardListView, CardCatalogView, CardDetailView,
     CardAutocompleteView, RandomCardView, CardAssistantView,
-    CommanderIdeasView
+    CommanderIdeasView, ArchetypeFinderView
 )
 
 urlpatterns = [
@@ -14,6 +14,9 @@ urlpatterns = [
 
     # Ideias de comandantes
     path('commanders/', CommanderIdeasView.as_view(), name='commander_ideas'),
+
+    # Buscador de arquetipos
+    path('archetypes/', ArchetypeFinderView.as_view(), name='archetype_finder'),
 
     # Listagem simples (legado)
     path('list/', CardListView.as_view(), name='card_list'),

@@ -1,0 +1,892 @@
+{% load card_filters %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Arquetipos - MTG Commander</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero-section {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(233, 69, 96, 0.1));
+            border-radius: 20px;
+            margin-bottom: 25px;
+        }
+
+        .hero-section h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4ecdc4, #e94560);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-section p {
+            color: #888;
+            font-size: 1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* ===== LAYOUT 2 COLUNAS ===== */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== SIDEBAR FILTERS ===== */
+        .filters-sidebar {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .filters-sidebar h3 {
+            font-size: 1rem;
+            color: #4ecdc4;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .filter-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .filter-section-title {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        /* Color filters */
+        .color-filters {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .color-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .color-btn:hover { transform: scale(1.1); }
+        .color-btn.selected { border-color: #4ecdc4; box-shadow: 0 0 15px rgba(78, 205, 196, 0.5); }
+
+        .color-btn.W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+        .color-btn.U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+        .color-btn.B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #888; border: 3px solid #444; }
+        .color-btn.B.selected { border-color: #4ecdc4; }
+        .color-btn.R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+        .color-btn.G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+        .color-btn.C { background: linear-gradient(135deg, #888, #aaa); color: #333; }
+
+        .color-mode-info {
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .color-mode-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .color-mode-btn {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #888;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-mode-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .color-mode-btn.active {
+            background: rgba(78, 205, 196, 0.2);
+            border-color: #4ecdc4;
+            color: #4ecdc4;
+        }
+
+        /* Theme categories */
+        .theme-category {
+            margin-bottom: 12px;
+        }
+
+        .theme-category-title {
+            font-size: 0.7rem;
+            color: #e94560;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            padding-left: 2px;
+        }
+
+        .theme-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .theme-chip {
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #aaa;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-chip:hover {
+            background: rgba(78, 205, 196, 0.15);
+            border-color: rgba(78, 205, 196, 0.4);
+            color: #fff;
+        }
+
+        .theme-chip.selected {
+            background: rgba(78, 205, 196, 0.25);
+            border-color: #4ecdc4;
+            color: #4ecdc4;
+        }
+
+        /* Card type select */
+        .filter-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+
+        /* CMC inputs */
+        .cmc-inputs {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .cmc-inputs input {
+            width: 60px;
+            padding: 8px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .cmc-inputs input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+
+        .cmc-inputs span {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        /* Rarity filters */
+        .rarity-filters {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .rarity-checkbox {
+            cursor: pointer;
+        }
+
+        .rarity-checkbox input { display: none; }
+
+        .rarity-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .rarity-checkbox input:checked + .rarity-badge { border-color: #4ecdc4; }
+
+        .rarity-common { background: rgba(100, 100, 100, 0.2); color: #999; }
+        .rarity-uncommon { background: rgba(192, 192, 192, 0.2); color: #c0c0c0; }
+        .rarity-rare { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
+        .rarity-mythic { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+
+        /* Search input */
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+
+        /* Buttons */
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-search {
+            flex: 1;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #4ecdc4, #26a69a);
+            border: none;
+            border-radius: 10px;
+            color: #1a1a2e;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-clear {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #888;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clear:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        /* ===== RESULTS SECTION ===== */
+        .results-section {
+            min-height: 400px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .results-header h2 {
+            font-size: 1.3rem;
+            color: #fff;
+        }
+
+        .results-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .results-count {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .results-count strong {
+            color: #4ecdc4;
+        }
+
+        .sort-options {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sort-options label {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .sort-options select {
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.85rem;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .card-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card-item:hover {
+            transform: translateY(-6px);
+            border-color: rgba(78, 205, 196, 0.5);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-image-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .card-item:hover .card-image {
+            transform: scale(1.03);
+        }
+
+        .no-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 0.85rem;
+        }
+
+        .color-indicator {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            display: flex;
+            gap: 2px;
+        }
+
+        .color-pip {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .color-pip.W { background: linear-gradient(135deg, #f9faf4, #e8e4d4); color: #333; }
+        .color-pip.U { background: linear-gradient(135deg, #0e68ab, #1a8ccd); color: white; }
+        .color-pip.B { background: linear-gradient(135deg, #150b00, #2a1a0a); color: #888; }
+        .color-pip.R { background: linear-gradient(135deg, #d3202a, #e94560); color: white; }
+        .color-pip.G { background: linear-gradient(135deg, #00733e, #00a86b); color: white; }
+
+        .card-info {
+            padding: 10px;
+        }
+
+        .card-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-type {
+            color: #888;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-cmc {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #4ecdc4;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        .empty-state p {
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* Selected themes display */
+        .selected-themes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+
+        .selected-theme-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            background: rgba(78, 205, 196, 0.2);
+            border: 1px solid #4ecdc4;
+            border-radius: 15px;
+            color: #4ecdc4;
+            font-size: 0.75rem;
+        }
+
+        .selected-theme-tag .remove {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .selected-theme-tag .remove:hover {
+            opacity: 1;
+        }
+
+        /* Scrollbar styling */
+        .filters-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .filters-sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .filters-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .filters-sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 1024px) {
+            .filters-sidebar {
+                position: static;
+                max-height: none;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'includes/navbar.html' with active_page='archetypes' %}
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1>&#128270; Buscador de Arquetipos</h1>
+            <p>Encontre cartas para seu deck baseado em temas, sinergias e mecanicas. Selecione as cores do seu comandante e os temas que deseja explorar.</p>
+        </section>
+
+        <form method="get" id="filtersForm">
+            <div class="main-layout">
+                <!-- Sidebar Filters -->
+                <aside class="filters-sidebar">
+                    <h3>&#9881; Filtros</h3>
+
+                    <!-- Search -->
+                    <div class="filter-section">
+                        <input type="text" name="q" class="search-input" placeholder="Buscar por nome ou texto..." value="{{ filters.search }}">
+                    </div>
+
+                    <!-- Colors -->
+                    <div class="filter-section">
+                        <div class="filter-section-title">Cores</div>
+                        <div class="color-filters">
+                            <button type="button" class="color-btn W {% if 'W' in filters.colors %}selected{% endif %}" data-color="W" onclick="toggleColor(this)">W</button>
+                            <button type="button" class="color-btn U {% if 'U' in filters.colors %}selected{% endif %}" data-color="U" onclick="toggleColor(this)">U</button>
+                            <button type="button" class="color-btn B {% if 'B' in filters.colors %}selected{% endif %}" data-color="B" onclick="toggleColor(this)">B</button>
+                            <button type="button" class="color-btn R {% if 'R' in filters.colors %}selected{% endif %}" data-color="R" onclick="toggleColor(this)">R</button>
+                            <button type="button" class="color-btn G {% if 'G' in filters.colors %}selected{% endif %}" data-color="G" onclick="toggleColor(this)">G</button>
+                            <button type="button" class="color-btn C {% if 'C' in filters.colors %}selected{% endif %}" data-color="C" onclick="toggleColor(this)">C</button>
+                        </div>
+                        <div id="colorInputs"></div>
+
+                        <div class="filter-section-title" style="margin-top: 12px;">Modo de Cor</div>
+                        <div class="color-mode-buttons">
+                            <button type="button" class="color-mode-btn {% if filters.color_mode == 'at_most' %}active{% endif %}" data-mode="at_most" onclick="setColorMode(this)" title="Cabe na identidade do comandante">
+                                No maximo
+                            </button>
+                            <button type="button" class="color-mode-btn {% if filters.color_mode == 'include' %}active{% endif %}" data-mode="include" onclick="setColorMode(this)" title="Deve conter todas essas cores">
+                                Contem
+                            </button>
+                            <button type="button" class="color-mode-btn {% if filters.color_mode == 'exact' %}active{% endif %}" data-mode="exact" onclick="setColorMode(this)" title="Exatamente essas cores">
+                                Exato
+                            </button>
+                        </div>
+                        <input type="hidden" name="color_mode" id="colorModeInput" value="{{ filters.color_mode|default:'at_most' }}">
+                        <div class="color-mode-info" id="colorModeInfo">
+                            {% if filters.color_mode == 'include' %}
+                            Mostra cartas que contem todas as cores selecionadas.
+                            {% elif filters.color_mode == 'exact' %}
+                            Mostra apenas cartas com exatamente essas cores.
+                            {% else %}
+                            Mostra cartas que cabem na identidade do comandante.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Themes -->
+                    <div class="filter-section">
+                        <div class="filter-section-title">Temas e Arquetipos</div>
+                        {% for cat, desc in categories %}
+                        <div class="theme-category">
+                            <div class="theme-category-title">{{ cat }}</div>
+                            <div class="theme-chips">
+                                {% for theme in themes_by_category|get_item:cat %}
+                                <button type="button" class="theme-chip {% if theme.selected %}selected{% endif %}"
+                                        data-theme="{{ theme.id }}" onclick="toggleTheme(this)" title="{{ theme.description }}">
+                                    {{ theme.name }}
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div id="themeInputs"></div>
+                    </div>
+
+                    <!-- Card Type -->
+                    <div class="filter-section">
+                        <div class="filter-section-title">Tipo de Carta</div>
+                        <select name="card_type" class="filter-select">
+                            {% for value, label in card_types %}
+                            <option value="{{ value }}" {% if filters.card_type == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- CMC -->
+                    <div class="filter-section">
+                        <div class="filter-section-title">Custo de Mana (CMC)</div>
+                        <div class="cmc-inputs">
+                            <input type="number" name="cmc_min" placeholder="Min" min="0" max="20" value="{{ filters.cmc_min }}">
+                            <span>ate</span>
+                            <input type="number" name="cmc_max" placeholder="Max" min="0" max="20" value="{{ filters.cmc_max }}">
+                        </div>
+                    </div>
+
+                    <!-- Rarity -->
+                    <div class="filter-section">
+                        <div class="filter-section-title">Raridade</div>
+                        <div class="rarity-filters">
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="common" {% if 'common' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-common">C</span>
+                            </label>
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="uncommon" {% if 'uncommon' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-uncommon">U</span>
+                            </label>
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="rare" {% if 'rare' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-rare">R</span>
+                            </label>
+                            <label class="rarity-checkbox">
+                                <input type="checkbox" name="rarity" value="mythic" {% if 'mythic' in filters.rarity %}checked{% endif %}>
+                                <span class="rarity-badge rarity-mythic">M</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="filter-section">
+                        <input type="hidden" name="order" id="orderInput" value="{{ filters.order }}">
+                        <input type="hidden" name="dir" id="dirInput" value="{{ filters.dir }}">
+                        <div class="filter-buttons">
+                            <button type="button" class="btn-clear" onclick="clearFilters()">Limpar</button>
+                            <button type="submit" class="btn-search">Buscar</button>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Results -->
+                <section class="results-section">
+                    <div class="results-header">
+                        <div>
+                            <h2>Resultados</h2>
+                            {% if filters.themes %}
+                            <div class="selected-themes">
+                                {% for theme in themes_by_category.values %}
+                                    {% for t in theme %}
+                                        {% if t.selected %}
+                                        <span class="selected-theme-tag">
+                                            {{ t.name }}
+                                            <span class="remove" onclick="removeTheme('{{ t.id }}')">&times;</span>
+                                        </span>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="results-meta">
+                            <span class="results-count"><strong>{{ total_found }}</strong> cartas encontradas</span>
+                            <div class="sort-options">
+                                <label>Ordenar:</label>
+                                <select onchange="sortBy(this.value)">
+                                    <option value="relevance-desc" {% if filters.order == 'relevance' %}selected{% endif %}>Mais Relevantes</option>
+                                    <option value="name-asc" {% if filters.order == 'name' and filters.dir == 'asc' %}selected{% endif %}>Nome A-Z</option>
+                                    <option value="name-desc" {% if filters.order == 'name' and filters.dir == 'desc' %}selected{% endif %}>Nome Z-A</option>
+                                    <option value="cmc-asc" {% if filters.order == 'cmc' and filters.dir == 'asc' %}selected{% endif %}>CMC Menor</option>
+                                    <option value="cmc-desc" {% if filters.order == 'cmc' and filters.dir == 'desc' %}selected{% endif %}>CMC Maior</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if cards %}
+                    <div class="cards-grid">
+                        {% for card in cards %}
+                        <a href="{% url 'card_detail' card_id=card.id %}" class="card-item">
+                            <div class="card-image-container">
+                                {% if card.image_normal %}
+                                <img src="{{ card.image_small|default:card.image_normal }}" alt="{{ card.name }}" class="card-image" loading="lazy">
+                                {% else %}
+                                <div class="no-image">Sem imagem</div>
+                                {% endif %}
+                                {% if card.color_identity %}
+                                <div class="color-indicator">
+                                    {% for color in card.color_identity|make_list %}
+                                    {% if color != ',' %}
+                                    <span class="color-pip {{ color }}">{{ color }}</span>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <span class="card-cmc">{{ card.cmc|floatformat:0 }}</span>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-name" title="{{ card.name }}">{{ card.name }}</div>
+                                <div class="card-type">{{ card.type_line|truncatechars:30 }}</div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <h3>Nenhuma carta encontrada</h3>
+                        <p>Selecione pelo menos um tema ou use a busca por texto para encontrar cartas. As cores filtram pela identidade de comandante.</p>
+                    </div>
+                    {% endif %}
+                </section>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Color selection
+        const selectedColors = new Set([{% for c in filters.colors %}'{{ c }}',{% endfor %}]);
+        const selectedThemes = new Set([{% for t in filters.themes %}'{{ t }}',{% endfor %}]);
+
+        function toggleColor(btn) {
+            const color = btn.dataset.color;
+            if (selectedColors.has(color)) {
+                selectedColors.delete(color);
+                btn.classList.remove('selected');
+            } else {
+                selectedColors.add(color);
+                btn.classList.add('selected');
+            }
+            updateColorInputs();
+        }
+
+        function updateColorInputs() {
+            const container = document.getElementById('colorInputs');
+            container.innerHTML = '';
+            selectedColors.forEach(color => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'color';
+                input.value = color;
+                container.appendChild(input);
+            });
+        }
+
+        function setColorMode(btn) {
+            const mode = btn.dataset.mode;
+            document.querySelectorAll('.color-mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('colorModeInput').value = mode;
+
+            // Update info text
+            const infoEl = document.getElementById('colorModeInfo');
+            if (mode === 'include') {
+                infoEl.textContent = 'Mostra cartas que contem todas as cores selecionadas.';
+            } else if (mode === 'exact') {
+                infoEl.textContent = 'Mostra apenas cartas com exatamente essas cores.';
+            } else {
+                infoEl.textContent = 'Mostra cartas que cabem na identidade do comandante.';
+            }
+        }
+
+        function toggleTheme(btn) {
+            const theme = btn.dataset.theme;
+            if (selectedThemes.has(theme)) {
+                selectedThemes.delete(theme);
+                btn.classList.remove('selected');
+            } else {
+                selectedThemes.add(theme);
+                btn.classList.add('selected');
+            }
+            updateThemeInputs();
+        }
+
+        function removeTheme(themeId) {
+            selectedThemes.delete(themeId);
+            document.querySelector(`.theme-chip[data-theme="${themeId}"]`)?.classList.remove('selected');
+            updateThemeInputs();
+            document.getElementById('filtersForm').submit();
+        }
+
+        function updateThemeInputs() {
+            const container = document.getElementById('themeInputs');
+            container.innerHTML = '';
+            selectedThemes.forEach(theme => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'theme';
+                input.value = theme;
+                container.appendChild(input);
+            });
+        }
+
+        function sortBy(value) {
+            const [order, dir] = value.split('-');
+            document.getElementById('orderInput').value = order;
+            document.getElementById('dirInput').value = dir;
+            document.getElementById('filtersForm').submit();
+        }
+
+        function clearFilters() {
+            window.location.href = window.location.pathname;
+        }
+
+        // Initialize inputs
+        updateColorInputs();
+        updateThemeInputs();
+    </script>
+</body>
+</html>
